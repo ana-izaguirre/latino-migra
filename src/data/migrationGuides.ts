@@ -6,64 +6,112 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
     country: "España",
     flag: "🇪🇸",
     heroImage: "https://images.unsplash.com/photo-1543783207-ec64e4d95325?auto=format&fit=crop&w=1200&q=80",
-    estimatedTime: "3 - 6 Meses",
+    estimatedTime: "2 - 5 Meses",
+    officialImmigrationPortal: "https://www.inclusion.gob.es/web/migraciones/vivir-en-espana",
+    officialPortalName: "Ministerio de Inclusión, Seguridad Social y Migraciones de España",
     visas: [
       {
         id: "student-visa-es",
-        name: "Visado de Estudiante",
-        tag: "Más Solicitada",
-        description: "Para estancias superiores a 90 días con fines de estudio, formación, intercambio académico o investigación en centros autorizados.",
-        duration: "1 año (renovable por duración del programa)",
+        name: "Visado de Estudiante (Estancia por Estudios)",
+        category: "Estudios",
+        tag: "30h Trabajo Permitidas",
+        description: "Para realizar estudios superiores, másteres, doctorados o formación reglada superior a 90 días. Permite compatibilizar estudios con trabajo por cuenta ajena o propia hasta 30 horas semanales sin trámite extra.",
+        duration: "1 año (renovable anualmente hasta fin de carrera)",
+        workPermitHours: "Hasta 30 horas/semana",
+        officialSourceUrl: "https://www.inclusion.gob.es/web/migraciones/vivir-en-espana",
+        officialSourceLabel: "Extranjería España (inclusion.gob.es)",
+        estimatedCostOfVisa: "€80 - €120 (Tasa consular)",
+        proofOfFundsRequired: "100% IPREM mensual (aprox. 600€/mes o 7,200€/año)",
         keyRequirements: [
-          "Carta de admisión de universidad o centro oficial registrado.",
-          "Demostración de medios económicos (100% IPREM mensual: aprox. 600€/mes).",
-          "Seguro de salud privado sin copagos en España.",
-          "Antecedentes penales apostillados en país de origen (últimos 3 meses)."
+          "Carta de admisión oficial de universidad o escuela acreditada en España.",
+          "Acreditación de medios económicos propios o beca (IPREM 600€/mes).",
+          "Seguro médico privado sin copagos con cobertura completa en todo el territorio español.",
+          "Certificado de antecedentes penales apostillado (países de residencia últimos 5 años).",
+          "Certificado médico oficial (Reglamento Sanitario Internacional 2005)."
+        ]
+      },
+      {
+        id: "job-search-graduate-es",
+        name: "Autorización de Residencia para Búsqueda de Empleo",
+        category: "Búsqueda Empleo / Oportunidad",
+        tag: "Post-Graduación",
+        description: "Permiso de residencia no laboral concedido a graduados de Grado o Máster en España para buscar trabajo cualificado o emprender un proyecto empresarial durante 12 a 24 meses.",
+        duration: "12 a 24 meses",
+        workPermitHours: "Transición directa a cuenta ajena al encontrar contrato",
+        officialSourceUrl: "https://www.inclusion.gob.es",
+        officialSourceLabel: "Secretaría de Estado de Migraciones",
+        estimatedCostOfVisa: "€38.28 (Tasa 790 052)",
+        proofOfFundsRequired: "100% IPREM mensual durante la búsqueda",
+        keyRequirements: [
+          "Haber superado los estudios y obtenido el título oficial de Grado o Máster en España.",
+          "Seguro médico privado continuo.",
+          "Fondos económicos para la estancia.",
+          "Solicitar dentro de los 60 días antes o 90 días después de finalizar estudios."
         ]
       },
       {
         id: "nomad-visa-es",
-        name: "Nómada Digital",
-        tag: "Nueva Ley",
-        description: "Permite residir y teletrabajar desde España para empresas o clientes fuera del territorio español.",
-        duration: "3 años (inicial) + 2 años prórroga",
+        name: "Visado de Nómada Digital (Ley de Startups)",
+        category: "Nómada Digital",
+        tag: "Beneficio Fiscal Beckham",
+        description: "Permite residir en España a ciudadanos extranjeros mientras teletrabajan para empresas radicadas fuera del territorio español. Acceso al régimen fiscal especial reducido (24% hasta 600k€).",
+        duration: "3 años (inicial) + 2 años prórroga (conduce a residencia permanente)",
+        workPermitHours: "Teletrabajo internacional (máx. 20% facturación española)",
+        officialSourceUrl: "https://www.exteriores.gob.es/es/ServiciosAlCiudadano/Paginas/Visados-Nacionales.aspx",
+        officialSourceLabel: "Ministerio de Asuntos Exteriores de España",
+        estimatedCostOfVisa: "€80 - €140",
+        proofOfFundsRequired: "200% del Salario Mínimo Interprofesional (aprox. 2,640€/mes)",
         keyRequirements: [
-          "Demostrar relación laboral o profesional remota de al menos 3 meses.",
-          "Ingresos mínimos equivalentes al 200% del Salario Mínimo Interprofesional (aprox. 2,640€/mes).",
-          "Título universitario o 3 años de experiencia en la profesión."
+          "Demostrar antigüedad laboral o relación mercantil de al menos 3 meses con la empresa extranjera.",
+          "La empresa extranjera debe tener al menos 1 año de actividad real demostrable.",
+          "Graduado universitario o acreditar al menos 3 años de experiencia en el área.",
+          "Seguro médico público o privado con entidad autorizada a operar en España."
         ]
       },
       {
         id: "non-lucrative-es",
         name: "Residencia No Lucrativa",
-        tag: "Ingresos Pasivos",
-        description: "Para personas o familias con fondos propios demostrables que desean vivir en España sin trabajar localmente.",
-        duration: "1 año inicial",
+        category: "Residencia",
+        tag: "Fondos Propios",
+        description: "Autorización para vivir en España sin realizar actividad laboral ni profesional lucrativa en territorio español.",
+        duration: "1 año inicial (renovaciones de 2 años)",
+        workPermitHours: "No autoriza a trabajar localmente",
+        officialSourceUrl: "https://www.inclusion.gob.es",
+        officialSourceLabel: "Portal de Inmigración España",
+        estimatedCostOfVisa: "€80 consular + tasa TIE",
+        proofOfFundsRequired: "400% IPREM anual (aprox. 28,800€ para titular + 7,200€ por familiar)",
         keyRequirements: [
-          "Demostrar fondos propios de 400% IPREM anual (aprox. 28,800€).",
-          "Seguro médico privado completo sin copagos.",
-          "Informe de no antecedentes penales."
+          "Demostrar saldo en cuentas bancarias o ingresos pasivos recurrentes (rentas, dividendos, pensiones).",
+          "Seguro médico privado integral sin copago.",
+          "Historial penal limpio apostillado.",
+          "Certificado médico oficial."
         ]
       }
     ],
     costs: [
       {
-        category: "Alojamiento (Habitación)",
-        range: "€450 - €650",
-        percentage: 70,
+        category: "Alojamiento (Habitación/Piso)",
+        range: "€400 - €750",
+        percentage: 65,
         color: "bg-primary"
       },
       {
-        category: "Alimentación",
-        range: "€200 - €300",
-        percentage: 45,
+        category: "Alimentación y Supermercado",
+        range: "€200 - €320",
+        percentage: 40,
         color: "bg-secondary"
       },
       {
-        category: "Transporte",
-        range: "€20 - €50",
+        category: "Transporte Público (Abono Joven/Mes)",
+        range: "€10 - €40",
         percentage: 15,
         color: "bg-outline"
+      },
+      {
+        category: "Seguro Médico y Gastos Personales",
+        range: "€50 - €100",
+        percentage: 20,
+        color: "bg-sky-600"
       }
     ],
     documents: [
@@ -74,197 +122,597 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
         completed: true
       },
       {
+        id: "empadronamiento-doc",
+        title: "Certificado de Empadronamiento",
+        subtitle: "Trámite presencial en el Ayuntamiento al llegar con contrato de alquiler.",
+        completed: false
+      },
+      {
         id: "criminal",
-        title: "Antecedentes Penales",
-        subtitle: "Apostillados en país de origen, emitidos en los últimos 3 meses.",
+        title: "Antecedentes Penales Apostillados",
+        subtitle: "Emitidos por autoridad federal/nacional en los últimos 3 a 6 meses.",
         completed: false
       },
       {
         id: "insurance",
-        title: "Seguro Médico Privado",
-        subtitle: "Sin copagos ni carencias, válido para toda España.",
+        title: "Seguro Médico Privado Sin Copagos",
+        subtitle: "Válido en toda España, sin periodos de carencia ni copagos.",
         completed: false
       },
       {
         id: "funds",
         title: "Acreditación de Medios Económicos",
-        subtitle: "Estados de cuenta bancarios con sello o carta de patrocinio.",
+        subtitle: "Extractos bancarios sellados, carta de beca o aval bancario.",
         completed: false
       },
       {
-        id: "acceptance",
-        title: "Carta de Aceptación Universitaria",
-        subtitle: "Emitida por centro registrado en la RUCT de España.",
-        completed: true
-      },
-      {
-        id: "medical",
-        title: "Certificado Médico Oficial",
-        subtitle: "Conste ausencia de enfermedades de salud pública grave (RSI 2005).",
+        id: "tie-appointment",
+        title: "Cita de Huellas para TIE (Toma de Huellas)",
+        subtitle: "Solicitar cita previa en extranjería en los primeros 30 días de llegada.",
         completed: false
       }
     ],
     communityTip: {
-      title: "El empadronamiento es lo primero",
-      text: "Apenas llegues a tu ciudad en España, pide cita para empadronarte en el Ayuntamiento. Sin el certificado de empadronamiento no podrás tramitar tu TIE (Tarjeta de Identidad de Extranjero), abrir cuenta bancaria ni registrarte en la red médica.",
-      author: "Comunidad LatinoMigra Madrid"
+      title: "El empadronamiento es la llave de todo",
+      text: "Apenas pongas un pie en España y tengas contrato de alquiler (o autorización firmada del dueño del piso), empadrónate en el Ayuntamiento. Sin el 'padrón' no podrás sacar la TIE física, darte de alta en el centro de salud (SIP/CatSalut/etc.) ni abrir tu cuenta de banco definitiva.",
+      author: "Comunidad LatinoMigra Madrid y Barcelona"
     }
   },
-  DE: {
-    id: "DE",
-    country: "Alemania",
-    flag: "🇩🇪",
-    heroImage: "https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?auto=format&fit=crop&w=1200&q=80",
-    estimatedTime: "4 - 7 Meses",
+
+  CA: {
+    id: "CA",
+    country: "Canadá",
+    flag: "🇨🇦",
+    heroImage: "https://images.unsplash.com/photo-1503614472-8c93d56e92ce?auto=format&fit=crop&w=1200&q=80",
+    estimatedTime: "4 - 8 Meses",
+    officialImmigrationPortal: "https://www.canada.ca/en/immigration-refugees-citizenship.html",
+    officialPortalName: "Immigration, Refugees and Citizenship Canada (IRCC Oficial)",
     visas: [
       {
-        id: "student-visa-de",
-        name: "Visado de Estudiante (Visum zur Ausbildung)",
-        tag: "Recomendado",
-        description: "Para estudios universitarios de grado, máster o curso preparatorio (Studienkolleg).",
-        duration: "1-2 años renovables",
+        id: "study-permit-ca",
+        name: "Permiso de Estudio (Study Permit + PGWP Pathway)",
+        category: "Estudios",
+        tag: "Vía a Residencia",
+        description: "Permiso oficial para estudiar en una Institución de Aprendizaje Designada (DLI). Permite trabajar hasta 24 horas/semana durante el periodo académico y tiempo completo en recesos. Al graduarse, permite acceder al Post-Graduation Work Permit (PGWP de hasta 3 años).",
+        duration: "Duración de los estudios + 90 días",
+        workPermitHours: "Hasta 24 horas/semana fuera de campus (off-campus)",
+        officialSourceUrl: "https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada.html",
+        officialSourceLabel: "IRCC Canada - Study Permits",
+        estimatedCostOfVisa: "$150 CAD (Permiso) + $85 CAD (Biométricos)",
+        proofOfFundsRequired: "Matrícula primer año + $20,635 CAD de manutención individual (actualizado IRCC)",
         keyRequirements: [
-          "Cuenta bloqueada (Sperrkonto) con aprox. 11,208€/año.",
-          "Carta de admisión de la universidad alemana o uni-assist.",
-          "Seguro de salud público o privado reconocido en Alemania (GKV/PKV).",
-          "Certificado de nivel de idioma B2/C1 (Inglés o Alemán)."
+          "Carta de Aceptación (LOA) de una DLI (Designated Learning Institution).",
+          "Carta de Atestación Provincial (PAL - Provincial Attestation Letter) según la provincia de destino.",
+          "Demostración de solvencia económica ($20,635 CAD para el estudiante + tuition).",
+          "Certificado de idioma oficial: IELTS Académico o Celpip (Inglés) / TEF o TCF (Francés).",
+          "Biométricos y examen médico de panel (Panel Physician) si aplica.",
+          "Prueba de intención genuina de estudio (Letter of Explanation / SOP)."
         ]
       },
       {
-        id: "opportunity-card-de",
-        name: "Tarjeta de Oportunidad (Chancenkarte)",
-        tag: "Nueva Ley 2024",
-        description: "Basado en un sistema de puntos para buscar empleo directamente en territorio alemán.",
-        duration: "1 año",
+        id: "express-entry-ca",
+        name: "Express Entry (Federal Skilled Worker & CEC)",
+        category: "Trabajo / Express",
+        tag: "Residencia Permanente Directa",
+        description: "Sistema de gestión de solicitudes por puntos (CRS - Comprehensive Ranking System) para profesionales calificados con educación superior, experiencia laboral certificada y dominio de inglés/francés.",
+        duration: "Residencia Permanente (PR) indefinida",
+        workPermitHours: "Residencia plena (derecho a trabajar y vivir en cualquier provincia)",
+        officialSourceUrl: "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry.html",
+        officialSourceLabel: "IRCC - Express Entry Canada",
+        estimatedCostOfVisa: "$1,525 CAD (Procesamiento PR + Derecho de Residencia Permanente)",
+        proofOfFundsRequired: "Aprox. $14,690 CAD (para 1 persona sin oferta de trabajo en Canadá)",
         keyRequirements: [
-          "Título universitario o técnico reconocido.",
-          "Acumular mínimo 6 puntos (idiomas, experiencia, edad, vínculo).",
-          "Demostrar fondos de manutención mensual (aprox. 1,027€/mes)."
+          "Evaluación de Credenciales Educativas (ECA por WES, ICAS, etc.) para títulos universitarios.",
+          "Examen de idioma oficial con puntaje CLB 7 o superior (IELTS General o CELPIP).",
+          "Al menos 1 año continuo de experiencia laboral calificada (TEER 0, 1, 2 o 3 del NOC).",
+          "Puntaje competitivo en el corte del CRS o Nominación Provincial (PNP +600 puntos)."
+        ]
+      },
+      {
+        id: "pnp-provincial-ca",
+        name: "Programas de Nominación Provincial (PNP)",
+        category: "Trabajo / Express",
+        tag: "600 Pts Extra CRS",
+        description: "Provincias canadienses (Ontario OINP, British Columbia BC PNP, Alberta AAIP, Manitoba, New Brunswick) nominan a inmigrantes con perfiles de alta demanda laboral local o graduados en sus universidades.",
+        duration: "Conduce a Residencia Permanente",
+        workPermitHours: "Permiso de trabajo cerrado/abierto provincial mientras se procesa la PR",
+        officialSourceUrl: "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/provincial-nominees.html",
+        officialSourceLabel: "IRCC - Provincial Nominee Programs",
+        estimatedCostOfVisa: "Variable por provincia ($500 - $1,500 CAD adicionales)",
+        proofOfFundsRequired: "Demostración de fondos provinciales o contrato de trabajo local",
+        keyRequirements: [
+          "Cumplir con los criterios específicos de la provincia (e.g. área tecnológica, salud, oficios o egresado provincial).",
+          "Manifestación de interés (EOI) en el portal de inmigración de la provincia elegida.",
+          "Recibir la Letter of Advice to Apply (LAA) o Nominación oficial."
+        ]
+      },
+      {
+        id: "working-holiday-ca",
+        name: "Working Holiday / International Experience Canada (IEC)",
+        category: "Trabajo / Express",
+        tag: "Jóvenes 18 a 35 Años",
+        description: "Permiso de trabajo abierto (Open Work Permit) para jóvenes de países con convenio bilateral (como Chile, Costa Rica, etc.) para viajar y trabajar libremente en Canadá hasta 12 o 24 meses.",
+        duration: "12 a 24 meses",
+        workPermitHours: "Tiempo completo con cualquier empleador canadiense",
+        officialSourceUrl: "https://www.canada.ca/en/immigration-refugees-citizenship/services/work-canada/iec.html",
+        officialSourceLabel: "IRCC - IEC Working Holiday",
+        estimatedCostOfVisa: "$172 CAD (IEC) + $100 CAD (Open Work Permit) + $85 biométricos",
+        proofOfFundsRequired: "Mínimo $2,500 CAD al ingresar al país + seguro médico",
+        keyRequirements: [
+          "Tener nacionalidad de un país elegible (Chile, Costa Rica, España, etc.) y tener entre 18 y 35 años.",
+          "Pasaporte válido durante toda la estancia en Canadá.",
+          "Seguro de viaje que cubra hospitalización, repatriación y urgencias por todo el periodo.",
+          "Boleto de regreso o fondos para adquirirlo."
         ]
       }
     ],
     costs: [
       {
-        category: "Alojamiento (WG / Habitación)",
-        range: "€400 - €700",
+        category: "Alojamiento (Habitación/Basement/Apto)",
+        range: "$800 - $1,600 CAD",
         percentage: 75,
         color: "bg-primary"
       },
       {
-        category: "Alimentación",
-        range: "€250 - €350",
+        category: "Alimentación y Supermercado",
+        range: "$350 - $550 CAD",
         percentage: 50,
         color: "bg-secondary"
       },
       {
-        category: "Seguro Médico y Transporte",
-        range: "€120 - €160",
+        category: "Transporte Público (Pase Mensual)",
+        range: "$100 - $160 CAD",
         percentage: 25,
         color: "bg-outline"
+      },
+      {
+        category: "Telefonía Celular y Servicios",
+        range: "$50 - $90 CAD",
+        percentage: 20,
+        color: "bg-sky-600"
+      }
+    ],
+    documents: [
+      {
+        id: "dli-acceptance",
+        title: "Carta de Aceptación (LOA) de DLI",
+        subtitle: "Emitida por universidad, college o politécnico registrado ante IRCC.",
+        completed: true
+      },
+      {
+        id: "pal-letter",
+        title: "Provincial Attestation Letter (PAL)",
+        subtitle: "Documento provincial indispensable para postular al Study Permit.",
+        completed: false
+      },
+      {
+        id: "sin-number",
+        title: "Social Insurance Number (SIN)",
+        subtitle: "Trámite gratuito presencial en Service Canada el primer día para poder trabajar.",
+        completed: false
+      },
+      {
+        id: "funds-cad",
+        title: "Acreditación de Fondos ($20,635 CAD + Tuition)",
+        subtitle: "Estados de cuenta de los últimos 4 meses o crédito educativo/GIC.",
+        completed: false
+      },
+      {
+        id: "medical-exam-ca",
+        title: "Examen Médico Panel Physician",
+        subtitle: "Realizado con médicos autorizados por el gobierno de Canadá.",
+        completed: false
+      },
+      {
+        id: "biometrics-ca",
+        title: "Cita de Biométricos (VFS Global / VAC)",
+        subtitle: "Toma de huellas y fotografía oficial en el Centro de Solicitud de Visas.",
+        completed: false
+      }
+    ],
+    communityTip: {
+      title: "El SIN Number y la cuenta bancaria en las primeras 48h",
+      text: "Al aterrizar en Toronto, Vancouver, Montreal o Calgary y pasar migración con tu permiso impreso, ve a una oficina de Service Canada para sacar tu SIN (Social Insurance Number) en el acto. Con el SIN y tu pasaporte, abre tu cuenta bancaria (Scotiabank, TD, RBC, CIBC o BMO) para recibir tu nómina legalmente.",
+      author: "Comunidad LatinoMigra Toronto & Vancouver"
+    }
+  },
+
+  IE: {
+    id: "IE",
+    country: "Irlanda",
+    flag: "🇮🇪",
+    heroImage: "https://images.unsplash.com/photo-1590089415225-401ed6f9db8e?auto=format&fit=crop&w=1200&q=80",
+    estimatedTime: "2 - 4 Meses",
+    officialImmigrationPortal: "https://www.irishimmigration.ie",
+    officialPortalName: "Irish Immigration Service Delivery (ISD)",
+    visas: [
+      {
+        id: "stamp2-english-ie",
+        name: "Stamp 2: Curso de Inglés (25 Semanas + Trabajo)",
+        category: "Idiomas",
+        tag: "20h/40h Trabajo Permitido",
+        description: "El programa más popular para latinoamericanos: cursar 25 semanas de inglés en una academia acreditada en la lista oficial ILEP con un visado total de 8 meses. Permite trabajar legalmente 20 horas por semana (y 40 horas en temporada alta: junio a septiembre y del 15 de diciembre al 15 de enero). Renovable hasta 3 veces (2 años en total).",
+        duration: "8 meses por ciclo (renovable hasta 2 años en inglés)",
+        workPermitHours: "20h/semana (clases) y 40h/semana (verano y navidad)",
+        officialSourceUrl: "https://www.irishimmigration.ie/coming-to-study-in-ireland/what-are-my-study-options/english-language-courses/",
+        officialSourceLabel: "Irish Immigration - English Language Courses",
+        estimatedCostOfVisa: "€300 (Tasa IRP Irish Residence Permit en Dublín/Garda)",
+        proofOfFundsRequired: "€4,500 (o €10,000 según país que requiera visado previo)",
+        keyRequirements: [
+          "Carta de aceptación de un curso de inglés de mínimo 25 semanas (15 horas semanales) en una academia de la lista oficial ILEP.",
+          "Comprobante de pago del 100% del curso a la escuela.",
+          "Seguro médico privado para estudiantes internacionales en Irlanda.",
+          "Demostración de fondos financieros (€4,500 en extracto bancario con tarjeta de débito internacional o banco irlandés).",
+          "Pago del examen oficial al final del curso (IELTS, Cambridge o TIE)."
+        ]
+      },
+      {
+        id: "critical-skills-ie",
+        name: "Critical Skills Employment Permit (Stamp 1 / 4)",
+        category: "Trabajo / Express",
+        tag: "Vía Rápida a Residencia UE",
+        description: "Para profesionales altamente calificados en la lista oficial de ocupaciones críticas de Irlanda (ingeniería de software, ciberseguridad, finanzas, enfermería, biotecnología, arquitectura). Tras 2 años de trabajo se obtiene el Stamp 4 (residencia permanente sin restricción de empleador).",
+        duration: "2 años iniciales (luego Stamp 4 permanente)",
+        workPermitHours: "Tiempo completo con la empresa contratante",
+        officialSourceUrl: "https://enterprise.gov.ie/en/what-we-do/workplace-and-skills/employment-permits/permit-types/critical-skills-employment-permit/",
+        officialSourceLabel: "Department of Enterprise, Trade and Employment (DETE)",
+        estimatedCostOfVisa: "€1,000 (tasa del permiso) + €300 (IRP)",
+        proofOfFundsRequired: "Oferta de trabajo con salario mínimo de €38,000/año (o €64,000 si no está en la lista crítica)",
+        keyRequirements: [
+          "Oferta de empleo formal de al menos 2 años con una empresa registrada en Irlanda.",
+          "Título universitario oficial relacionado con la ocupación laboral.",
+          "El puesto debe figurar en la Critical Skills Occupations List oficial del DETE."
+        ]
+      },
+      {
+        id: "stamp1g-graduate-ie",
+        name: "Third Level Graduate Programme (Stamp 1G)",
+        category: "Búsqueda Empleo / Oportunidad",
+        tag: "Para Egresados de Universidad",
+        description: "Permite a los graduados latinoamericanos de licenciaturas (Grado) y maestrías en universidades irlandesas reconocidas permanecer en Irlanda y trabajar a tiempo completo durante 12 a 24 meses mientras buscan patrocinio de empleo calificado.",
+        duration: "12 meses (Grado) a 24 meses (Máster/PhD)",
+        workPermitHours: "Hasta 40 horas/semana",
+        officialSourceUrl: "https://www.irishimmigration.ie/my-situation-has-changed-since-i-arrived-in-ireland/third-level-graduate-programme/",
+        officialSourceLabel: "Irish Immigration - Stamp 1G",
+        estimatedCostOfVisa: "€300 (Tasa IRP)",
+        proofOfFundsRequired: "Graduación universitaria en institución acreditada irlandesa",
+        keyRequirements: [
+          "Carta de finalización de estudios y transcripción oficial de calificaciones de una universidad irlandesa.",
+          "Haber mantenido estatus regular de estudiante Stamp 2 durante la carrera.",
+          "Seguro médico privado vigente."
+        ]
+      }
+    ],
+    costs: [
+      {
+        category: "Alojamiento (Habitación compartida/individual)",
+        range: "€500 - €950",
+        percentage: 80,
+        color: "bg-primary"
+      },
+      {
+        category: "Alimentación y Supermercado (Lidl, Aldi, Tesco)",
+        range: "€200 - €300",
+        percentage: 45,
+        color: "bg-secondary"
+      },
+      {
+        category: "Transporte (Leap Card para estudiantes)",
+        range: "€40 - €80",
+        percentage: 20,
+        color: "bg-outline"
+      },
+      {
+        category: "Telefonía móvil y Extras",
+        range: "€20 - €50",
+        percentage: 15,
+        color: "bg-sky-600"
+      }
+    ],
+    documents: [
+      {
+        id: "ilep-letter",
+        title: "Carta de Aceptación Escuela ILEP",
+        subtitle: "Documento oficial que certifica las 25 semanas de curso de inglés abonadas.",
+        completed: true
+      },
+      {
+        id: "irp-appointment",
+        title: "Cita para Registro IRP (Irish Residence Permit)",
+        subtitle: "En Burgh Quay (Dublín) o en la estación local de la Garda si vives fuera de Dublín.",
+        completed: false
+      },
+      {
+        id: "pps-number",
+        title: "Obtención del PPS Number (Personal Public Service)",
+        subtitle: "Número fiscal indispensable para trabajar sin pagar impuesto de emergencia (Emergency Tax).",
+        completed: false
+      },
+      {
+        id: "bank-ie",
+        title: "Apertura de Cuenta Bancaria Irlandesa",
+        subtitle: "Revolut Irlanda, AIB o Bank of Ireland con prueba de domicilio.",
+        completed: false
+      },
+      {
+        id: "funds-ie",
+        title: "Extracto Bancario (€4,500 a €10,000)",
+        subtitle: "Saldo disponible demostrable en cuenta bancaria a tu nombre.",
+        completed: false
+      }
+    ],
+    communityTip: {
+      title: "Consigue el PPS Number y evita el Emergency Tax",
+      text: "Apenas consigas tu primera oferta o promesa de trabajo en Irlanda, tramita inmediatamente tu PPS Number a través de MyWelfare.ie. Si empiezas a trabajar sin registrar tu PPS en Revenue.ie, te retendrán hasta el 40% de tu sueldo por 'impuesto de emergencia' (aunque luego te lo devuelven al regularizarlo).",
+      author: "Comunidad LatinoMigra Dublín, Cork y Galway"
+    }
+  },
+
+  DE: {
+    id: "DE",
+    country: "Alemania",
+    flag: "🇩🇪",
+    heroImage: "https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?auto=format&fit=crop&w=1200&q=80",
+    estimatedTime: "3 - 6 Meses",
+    officialImmigrationPortal: "https://www.make-it-in-germany.com/es/",
+    officialPortalName: "Make it in Germany (Portal Oficial del Gobierno Federal Alemán)",
+    visas: [
+      {
+        id: "opportunity-card-de",
+        name: "Tarjeta de Oportunidad (Chancenkarte - Sistema de Puntos)",
+        category: "Búsqueda Empleo / Oportunidad",
+        tag: "Nueva Ley Inmigración",
+        description: "Permite ingresar a Alemania por hasta 1 año para buscar empleo calificado o realizar períodos de prueba laboral de hasta 2 semanas y minijobs de 20h semanales mientras encuentras tu contrato.",
+        duration: "1 año (prorrogable)",
+        workPermitHours: "Trabajo secundario hasta 20h/semana + prueba laboral",
+        officialSourceUrl: "https://www.make-it-in-germany.com/es/visado-y-residencia/tipos/tarjeta-de-oportunidad",
+        officialSourceLabel: "Make it in Germany - Chancenkarte",
+        estimatedCostOfVisa: "€75 (Tasa consular)",
+        proofOfFundsRequired: "Aprox. 1,027€/mes (aprox. 12,324€/año en cuenta bloqueada o contrato)",
+        keyRequirements: [
+          "Título universitario o título técnico reconocido de mínimo 2 años de formación.",
+          "Conocimiento de alemán (nivel A1/A2) o inglés (nivel B2).",
+          "Alcanzar al menos 6 puntos en la matriz (por edad, idioma, experiencia, vínculos previos).",
+          "Cuenta bloqueada (Sperrkonto) o declaración de compromiso formal (Verpflichtungserklärung)."
+        ]
+      },
+      {
+        id: "student-visa-de",
+        name: "Visado de Estudiante Universitario / Studienkolleg",
+        category: "Estudios",
+        tag: "140 Días Laborales",
+        description: "Para cursar estudios de grado, máster o doctorado en universidades públicas o privadas alemanas (donde las universidades públicas prácticamente no cobran matrícula). Permite trabajar hasta 140 días completos o 280 medios días al año.",
+        duration: "1 a 2 años renovables hasta final de estudios",
+        workPermitHours: "140 días completos o 280 medios días/año",
+        officialSourceUrl: "https://www.make-it-in-germany.com/es/estudios-formacion/estudios-en-alemania",
+        officialSourceLabel: "DAAD y Make it in Germany",
+        estimatedCostOfVisa: "€75 (Tasa consular)",
+        proofOfFundsRequired: "Cuenta bloqueada con 11,904€/año (aprox. 992€/mes)",
+        keyRequirements: [
+          "Carta de admisión universitaria o confirmación de uni-assist.",
+          "Apertura de cuenta bloqueada (Sperrkonto) en Fintiba, Coracle o Expatrio con los fondos oficiales.",
+          "Seguro de salud para estudiantes en Alemania (GKV: TK, AOK, Barmer o seguro privado homologado).",
+          "Certificado de idioma: Inglés (IELTS/TOEFL) o Alemán (TestDaF/Goethe C1)."
+        ]
+      },
+      {
+        id: "blue-card-eu-de",
+        name: "Tarjeta Azul UE (EU Blue Card)",
+        category: "Trabajo / Express",
+        tag: "Vía Exprés a Residencia Permanente",
+        description: "Para profesionales calificados con título universitario y contrato laboral en Alemania. Permite obtener la residencia permanente en solo 21 meses (con alemán B1) o 27 meses.",
+        duration: "Duración del contrato + 3 meses (hasta 4 años)",
+        workPermitHours: "Tiempo completo para la empresa contratante",
+        officialSourceUrl: "https://www.make-it-in-germany.com/es/visado-y-residencia/tipos/tarjeta-azul-ue",
+        officialSourceLabel: "Make it in Germany - EU Blue Card",
+        estimatedCostOfVisa: "€75",
+        proofOfFundsRequired: "Contrato laboral con salario bruto mínimo anual fijado por ley (reducido para áreas STEM/TI)",
+        keyRequirements: [
+          "Título universitario reconocido en la base de datos oficial Anabin (H+).",
+          "Oferta de empleo formal o contrato vinculante en Alemania acorde a tu titulación.",
+          "Salario acorde a los umbrales mínimos anuales vigentes."
+        ]
+      },
+      {
+        id: "ausbildung-visa-de",
+        name: "Visado de Formación Profesional Dual (Ausbildung)",
+        category: "Idiomas",
+        tag: "Salario Mensual desde Día 1",
+        description: "Sistema dual donde combinas clases técnicas con trabajo práctico en una empresa alemana que te paga un sueldo mensual de formación (aprox. 900€ a 1,400€/mes). Al graduarte tienes empleo asegurado.",
+        duration: "2 a 3.5 años",
+        workPermitHours: "Incluye trabajo práctico remunerado de formación",
+        officialSourceUrl: "https://www.make-it-in-germany.com/es/estudios-formacion/formacion-en-alemania",
+        officialSourceLabel: "Make it in Germany - Ausbildung",
+        estimatedCostOfVisa: "€75",
+        proofOfFundsRequired: "Contrato de formación remunerado (cubre la manutención)",
+        keyRequirements: [
+          "Contrato de formación (Ausbildungsvertrag) con empresa alemana y registro en IHK/HWK.",
+          "Certificado oficial de alemán B1 o B2 (indispensable para las clases teóricas).",
+          "Certificado de estudios secundarios o bachillerato homologado."
+        ]
+      }
+    ],
+    costs: [
+      {
+        category: "Alojamiento (WG / Habitación / Apartamento)",
+        range: "€400 - €750",
+        percentage: 70,
+        color: "bg-primary"
+      },
+      {
+        category: "Alimentación y Supermercado",
+        range: "€250 - €360",
+        percentage: 45,
+        color: "bg-secondary"
+      },
+      {
+        category: "Seguro de Salud Público (GKV)",
+        range: "€120 - €140",
+        percentage: 25,
+        color: "bg-outline"
+      },
+      {
+        category: "Transporte (Deutschlandticket)",
+        range: "€49 - €58",
+        percentage: 15,
+        color: "bg-sky-600"
       }
     ],
     documents: [
       {
         id: "sperrkonto",
         title: "Cuenta Bloqueada (Sperrkonto)",
-        subtitle: "Apertura previa en Fintiba, Coracle o Expatrio.",
+        subtitle: "Depósito oficial de manutención anual en Fintiba, Coracle o Expatrio.",
         completed: false
       },
       {
         id: "insurance-de",
-        title: "Seguro de Salud Aceptado",
-        subtitle: "Cobertura desde el día de llegada a Alemania.",
+        title: "Seguro de Salud Reconocido (GKV/PKV)",
+        subtitle: "Cobertura completa válida desde el aterrizaje en Alemania.",
         completed: true
       },
       {
         id: "anabin",
-        title: "Apostilla y Homologación Anabin",
-        subtitle: "Verificación de equivalencia del título universitario.",
+        title: "Certificado de Equivalencia Anabin / ZAB",
+        subtitle: "Verificación oficial de que tu universidad está catalogada como H+.",
+        completed: false
+      },
+      {
+        id: "anmeldung-doc",
+        title: "Registro de Domicilio (Anmeldung)",
+        subtitle: "Cita en el Bürgeramt en los primeros 14 días para obtener el Tax ID.",
         completed: false
       }
     ],
     communityTip: {
-      title: "Consigue la cita de la Anmeldung rápido",
-      text: "El registro de domicilio (Anmeldung) en Alemania es obligatorio en las primeras 2 semanas. Sin él no tendrás tu Tax ID ni tu cuenta bancaria operativa.",
-      author: "Comunidad LatinoMigra Berlín"
+      title: "La Anmeldung y la Wohnungsgeberbestätigung",
+      text: "Para registrarte en Alemania (Anmeldung), necesitas que el dueño del piso te firme el documento oficial llamado 'Wohnungsgeberbestätigung'. Pregunta siempre antes de alquilar si el piso ofrece Anmeldung, porque sin ese registro no podrás activar tu seguro médico ni tu cuenta bancaria.",
+      author: "Comunidad LatinoMigra Berlín, Múnich y Frankfurt"
     }
   },
+
   US: {
     id: "US",
     country: "Estados Unidos",
     flag: "🇺🇸",
     heroImage: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80",
-    estimatedTime: "5 - 8 Meses",
+    estimatedTime: "4 - 8 Meses",
+    officialImmigrationPortal: "https://travel.state.gov/content/travel/en/us-visas/study.html",
+    officialPortalName: "U.S. Department of State - Bureau of Consular Affairs",
     visas: [
       {
         id: "f1-visa-us",
-        name: "Visa de Estudiante F-1",
-        tag: "Más Popular",
-        description: "Para realizar programas académicos de tiempo completo en universidades o colegios aprobados por SEVP.",
-        duration: "Duración del programa + OPT",
+        name: "Visa de Estudiante F-1 (con OPT STEM hasta 3 años)",
+        category: "Estudios",
+        tag: "OPT STEM 36 Meses",
+        description: "Para cursar programas de grado, máster o doctorado a tiempo completo en universidades aprobadas por SEVP. Incluye autorización de trabajo en campus (20h) y acceso al OPT (Optional Practical Training de 12 meses, extendible a 36 meses para carreras STEM).",
+        duration: "Duración del programa (D/S - Duration of Status) + OPT",
+        workPermitHours: "20h/semana en campus durante clases / Tiempo completo en OPT",
+        officialSourceUrl: "https://studyinthestates.dhs.gov",
+        officialSourceLabel: "Study in the States (DHS Oficial)",
+        estimatedCostOfVisa: "$185 USD (DS-160) + $350 USD (SEVIS I-901)",
+        proofOfFundsRequired: "Matrícula total del primer año + gastos de vida (según Formulario I-20)",
         keyRequirements: [
-          "Formulario I-20 emitido por la universidad.",
-          "Pago de tarifa SEVIS I-901 y formulario DS-160.",
-          "Demostrar lazos financieros y lazos sólidos con el país de origen."
+          "Formulario I-20 oficial emitido por la universidad americana tras la admisión.",
+          "Pago del comprobante SEVIS I-901 y confirmación del formulario DS-160.",
+          "Acreditar solvencia económica demostrable para el primer año académico completo.",
+          "Aprobar la entrevista consular demostrando lazos y propósito académico genuino."
         ]
       },
       {
         id: "j1-visa-us",
-        name: "Visa J-1 (Intercambio)",
-        tag: "Becas Oficiales",
-        description: "Utilizada comunmente para becarios Fulbright, investigadores y pasantes.",
-        duration: "Variable",
+        name: "Visa J-1 (Visitante de Intercambio / Becas Fulbright)",
+        category: "Estudios",
+        tag: "Becas Gubernamentales",
+        description: "Diseñada para estudiantes becados (Fulbright, LASPAU), investigadores, docentes y pasantes patrocinados por entidades autorizadas.",
+        duration: "Variable según el programa (1 a 5 años)",
+        workPermitHours: "Según programa y autorización del sponsor",
+        officialSourceUrl: "https://j1visa.state.gov",
+        officialSourceLabel: "U.S. Department of State - J-1 Exchange Program",
+        estimatedCostOfVisa: "$185 USD (DS-160) + $220 USD (SEVIS J-1)",
+        proofOfFundsRequired: "Carta de beca o patrocinio institucional en Formulario DS-2019",
         keyRequirements: [
-          "Formulario DS-2019 de la entidad patrocinadora.",
-          "Acreditar fondos o beca del gobierno.",
-          "Cumplir con la regla de 2 años de residencia en país de origen tras concluir."
+          "Formulario DS-2019 (Certificate of Eligibility for Exchange Visitor Status).",
+          "Cumplir con los requisitos de idioma y antecedentes.",
+          "Revisar si aplica la sección 212(e) de retorno obligatorio de 2 años al país de origen."
+        ]
+      },
+      {
+        id: "eb2-niw-us",
+        name: "Residencia por Interés Nacional (EB-2 NIW)",
+        category: "Trabajo / Express",
+        tag: "Green Card Sin Patrocinador",
+        description: "Permite a profesionales con títulos avanzados (Máster o Doctorado) o habilidades excepcionales solicitar la Green Card directamente sin necesidad de una oferta de trabajo ni patrocinador empleador, demostrando que su proyecto beneficia sustancialmente a EE.UU.",
+        duration: "Residencia Permanente (Green Card) definitiva",
+        workPermitHours: "Residencia permanente irrestricta",
+        officialSourceUrl: "https://www.uscis.gov/working-in-the-united-states/permanent-workers/employment-based-immigration-second-preference-eb-2",
+        officialSourceLabel: "USCIS - Official US Citizenship & Immigration",
+        estimatedCostOfVisa: "$715 USD (I-140) + $1,440 USD (I-485)",
+        proofOfFundsRequired: "Evidencia de méritos y plan de proyecto en beneficio nacional",
+        keyRequirements: [
+          "Título universitario avanzado (Máster o PhD) o demostrar habilidad excepcional con al menos 10 años de experiencia.",
+          "El proyecto propuesto debe tener mérito sustancial e importancia nacional (criterios Matter of Dhanasar).",
+          "Estar bien posicionado para avanzar en la propuesta (publicaciones, patentes, cartas de expertos)."
         ]
       }
     ],
     costs: [
       {
-        category: "Alojamiento (Dorm/Apto)",
-        range: "$700 - $1,200 USD",
-        percentage: 85,
+        category: "Alojamiento (Dormitorio universitario / Apartamento)",
+        range: "$800 - $1,600 USD",
+        percentage: 80,
         color: "bg-primary"
       },
       {
-        category: "Alimentación",
-        range: "$300 - $500 USD",
-        percentage: 60,
+        category: "Alimentación y Supermercado",
+        range: "$350 - $600 USD",
+        percentage: 55,
         color: "bg-secondary"
       },
       {
-        category: "Seguro Médico Estudiantil",
-        range: "$150 - $300 USD",
+        category: "Seguro Médico Universitario Obligatorio",
+        range: "$150 - $320 USD",
         percentage: 30,
         color: "bg-outline"
+      },
+      {
+        category: "Transporte y Telefonía",
+        range: "$80 - $150 USD",
+        percentage: 20,
+        color: "bg-sky-600"
       }
     ],
     documents: [
       {
         id: "i20",
-        title: "Formulario I-20 / DS-2019",
-        subtitle: "Documento oficial de elegibilidad universitaria.",
+        title: "Formulario I-20 / DS-2019 Firmado",
+        subtitle: "Documento oficial de elegibilidad generado por el DSO de la universidad.",
         completed: true
       },
       {
         id: "sevis",
-        title: "Comprobante Pago SEVIS I-901",
-        subtitle: "Registrado previo a la cita en la embajada.",
+        title: "Recibo de Pago de Tarifa SEVIS I-901",
+        subtitle: "Abonado en línea en fmjfee.com antes de la cita consular.",
         completed: false
       },
       {
         id: "ds160",
-        title: "Formulario DS-160 Confirmado",
-        subtitle: "Solicitud electrónica de visa de no inmigrante.",
+        title: "Hoja de Confirmación DS-160 con Código de Barras",
+        subtitle: "Completar solicitud electrónica en ceac.state.gov.",
         completed: true
+      },
+      {
+        id: "financial-proof-us",
+        title: "Prueba Financiera de Fondos",
+        subtitle: "Cartas bancarias y declaración jurada de patrocinio (I-134 si aplica).",
+        completed: false
       }
     ],
     communityTip: {
-      title: "Prepárate para la entrevista consular",
-      text: "En la entrevista F-1, lo más crítico es demostrar con claridad que tienes los fondos suficientes y tu intención honesta de estudiar e inspirar el desarrollo de tu país de origen al graduarte.",
-      author: "Comunidad LatinoMigra Boston"
+      title: "Claridad absoluta en la entrevista F-1",
+      text: "Los oficiales consulares evalúan tres cosas principales: que tu programa académico sea coherente con tu trayectoria previa, que tengas los recursos financieros claros sin necesidad de trabajar ilegalmente, y que mantengas fuertes lazos con tu país de origen.",
+      author: "Comunidad LatinoMigra Boston, Austin y Miami"
     }
   }
 };
+

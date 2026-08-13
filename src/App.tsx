@@ -7,6 +7,10 @@ import { GuiaMigracion } from "./components/GuiaMigracion";
 import { MapaConsulados } from "./components/MapaConsulados";
 import { ChatIA } from "./components/ChatIA";
 import { Comunidad } from "./components/Comunidad";
+import { PlanificadorMigracion } from "./components/PlanificadorMigracion";
+import { FeedbackHub } from "./components/FeedbackHub";
+import { CalculadoraCostoVida } from "./components/CalculadoraCostoVida";
+import { FloatingChatWidget } from "./components/FloatingChatWidget";
 import { Footer } from "./components/Footer";
 import { AuthModal } from "./components/AuthModal";
 
@@ -92,7 +96,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-surface font-body-md text-on-surface dark:bg-slate-950 dark:text-slate-100 transition-colors flex flex-col justify-between">
+    <div className="min-h-screen bg-surface font-body-md text-on-surface dark:bg-slate-950 dark:text-slate-100 transition-colors flex flex-col justify-between relative">
       {/* Top Navigation */}
       <TopNavBar
         activeTab={activeTab}
@@ -109,12 +113,31 @@ export default function App() {
       <div className="flex-1">
         {activeTab === "home" && (
           <main className="animate-fade-in">
-            <HeroLanding setActiveTab={setActiveTab} />
+            <HeroLanding setActiveTab={setActiveTab} currentUser={currentUser} />
             <BecasExplorer
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               setActiveTab={setActiveTab}
               onAskAIAboutScholarship={handleAskAIAboutScholarship}
+            />
+          </main>
+        )}
+
+        {activeTab === "planificador" && (
+          <main className="animate-fade-in">
+            <PlanificadorMigracion setActiveTab={setActiveTab} currentUser={currentUser} />
+          </main>
+        )}
+
+        {activeTab === "calculadora" && (
+          <main className="animate-fade-in">
+            <CalculadoraCostoVida
+              setActiveTab={setActiveTab}
+              currentUser={currentUser}
+              onAskAIAboutBudget={(prompt) => {
+                setChatInitialPrompt(prompt);
+                setActiveTab("chat");
+              }}
             />
           </main>
         )}
@@ -151,6 +174,12 @@ export default function App() {
           </main>
         )}
 
+        {activeTab === "feedback" && (
+          <main className="animate-fade-in">
+            <FeedbackHub currentUser={currentUser} onOpenAuthModal={() => setAuthModalOpen(true)} />
+          </main>
+        )}
+
         {activeTab === "chat" && (
           <main className="animate-fade-in">
             <ChatIA
@@ -160,6 +189,15 @@ export default function App() {
           </main>
         )}
       </div>
+
+      {/* Floating Popup Chatbot */}
+      <FloatingChatWidget
+        currentUser={currentUser}
+        onNavigateToFullChat={(prompt) => {
+          if (prompt) setChatInitialPrompt(prompt);
+          setActiveTab("chat");
+        }}
+      />
 
       {/* Google Auth Modal */}
       <AuthModal

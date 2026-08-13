@@ -41,6 +41,62 @@
         "createdAt": { "type": "string" }
       },
       "required": ["userId", "title", "content"]
+    },
+    "forumPosts": {
+      "title": "Forum Posts",
+      "description": "Community questions and migration experiences",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string", "maxLength": 300 },
+        "content": { "type": "string", "maxLength": 5000 },
+        "author": { "type": "string", "maxLength": 100 },
+        "authorCountry": { "type": "string", "maxLength": 60 },
+        "country": { "type": "string", "maxLength": 60 },
+        "city": { "type": "string", "maxLength": 100 },
+        "category": { "type": "string", "maxLength": 80 },
+        "likes": { "type": "number" },
+        "repliesCount": { "type": "number" },
+        "createdAt": { "type": "string" },
+        "userId": { "type": "string" }
+      },
+      "required": ["title", "content", "category", "country"]
+    },
+    "forumReplies": {
+      "title": "Forum Replies",
+      "description": "Community answers to forum questions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "postId": { "type": "string" },
+        "author": { "type": "string", "maxLength": 100 },
+        "text": { "type": "string", "maxLength": 3000 },
+        "createdAt": { "type": "string" },
+        "userId": { "type": "string" }
+      },
+      "required": ["postId", "text", "author"]
+    }
+  },
+  "firestore": {
+    "/forumPosts/{postId}": {
+      "schema": { "$ref": "#/entities/forumPosts" },
+      "description": "Public community forum posts"
+    },
+    "/forumPosts/{postId}/replies/{replyId}": {
+      "schema": { "$ref": "#/entities/forumReplies" },
+      "description": "Subcollection of replies for each forum post"
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/users" },
+      "description": "User profile data"
+    },
+    "/savedScholarships/{docId}": {
+      "schema": { "$ref": "#/entities/savedScholarships" },
+      "description": "Saved scholarship bookmarks"
+    },
+    "/userNotes/{noteId}": {
+      "schema": { "$ref": "#/entities/userNotes" },
+      "description": "Personal notes created by users"
     }
   }
 }

@@ -13,9 +13,18 @@ import {
   ExternalLink,
   ChevronRight,
   User,
-  Trash2
+  Trash2,
+  Compass,
+  Briefcase,
+  GraduationCap,
+  Users,
+  DollarSign,
+  Languages,
+  X,
+  Globe
 } from "lucide-react";
 import { ChatMessage, ChatConversation, Scholarship } from "../types";
+import { useLanguage } from "../lib/i18n";
 
 interface ChatIAProps {
   initialPrompt?: string;
@@ -23,6 +32,7 @@ interface ChatIAProps {
 }
 
 export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContext }) => {
+  const { language, t } = useLanguage();
   const [conversations, setConversations] = useState<ChatConversation[]>([
     {
       id: "conv-1",
@@ -78,6 +88,16 @@ export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContex
   const [inputText, setInputText] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
+  const [showProfileDiagnosisModal, setShowProfileDiagnosisModal] = useState<boolean>(false);
+
+  // Profile Diagnosis Form state
+  const [diagCareer, setDiagCareer] = useState<string>("Ingeniería de Software / IT");
+  const [diagAge, setDiagAge] = useState<number>(28);
+  const [diagFamily, setDiagFamily] = useState<string>("Soltero/a sin hijos");
+  const [diagEnglish, setDiagEnglish] = useState<string>("Intermedio (B1/B2)");
+  const [diagBudget, setDiagBudget] = useState<string>("$3,000 - $8,000 USD");
+  const [diagGoal, setDiagGoal] = useState<string>("Beca de Maestría o Posgrado 100% financiada");
+  const [diagOrigin, setDiagOrigin] = useState<string>("Colombia");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -128,6 +148,7 @@ export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContex
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: prompt,
+          language: language,
           history: activeConv.messages.map((m) => ({
             role: m.role,
             content: m.content,
@@ -140,9 +161,9 @@ export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContex
       const assistantMessage: ChatMessage = {
         id: `msg-ai-${Date.now()}`,
         role: "assistant",
-        content: data.text || "No se pudo obtener la respuesta.",
+        content: data.reply || data.text || "No se pudo obtener la respuesta.",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        sources: [
+        sources: data.sources || [
           { title: "Ministerio de Asuntos Exteriores", url: "https://www.exteriores.gob.es" },
           { title: "Portal de Inmigración Oficial", url: "https://extranjeros.inclusion.gob.es" },
         ],
@@ -184,11 +205,33 @@ export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContex
     }
   };
 
+  const handleRunProfileDiagnosis = () => {
+    const generatedPrompt = `[DIAGNÓSTICO DE PERFIL MIGRATORIO PERSONALIZADO]
+Por favor analiza mi perfil completo y dime exactamente cuáles son mis mejores opciones de migración (¿Beca completa, Empleo calificado, Curso de idiomas con permiso laboral o Residencia?):
+- País de Origen: ${diagOrigin}
+- Carrera / Profesión: ${diagCareer}
+- Edad: ${diagAge} años
+- Situación Familiar: ${diagFamily}
+- Nivel de Idiomas: ${diagEnglish}
+- Presupuesto Disponible: ${diagBudget}
+- Meta Principal: ${diagGoal}
+
+Estructura tu diagnóstico con:
+1. 🏆 Top 2 Países recomendados acordes a mi carrera y edad.
+2. 🛣️ Vía óptima (Beca vs Trabajo vs Estudio) con programas oficiales reales (ej. DAAD, Chancenkarte, Stamp 2 Irlanda, Express Entry Canadá, Beca Carolina).
+3. 👨‍👩‍👧 Requisitos para mi familia (si aplica: permiso de trabajo para pareja, colegio público para hijos).
+4. 💰 Presupuesto estimado y fondos de manutención exigidos por consulados.
+5. 📋 3 Pasos concretos para empezar este mes.`;
+
+    setShowProfileDiagnosisModal(false);
+    handleSendMessage(generatedPrompt);
+  };
+
   const handleNewConversation = () => {
     const newConv: ChatConversation = {
       id: `conv-${Date.now()}`,
-      title: "Nueva Consulta",
-      updatedAt: "Ahora",
+      title: language === "en" ? "New Consultation" : "Nueva Consulta",
+      updatedAt: language === "en" ? "Just now" : "Ahora",
       messages: [],
     };
     setConversations((prev) => [newConv, ...prev]);
@@ -203,49 +246,64 @@ export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContex
 
   const promptSuggestions = [
     {
-      title: "Requisitos visa estudiante España",
-      subtitle: "Medios económicos IPREM, seguro y carta de aceptación",
+      title: "🎯 Diagnóstico según Carrera, Edad y Familia",
+      subtitle: "Evaluación completa de mejores países, becas o visas de empleo acordes a tu situación",
+      action: () => setShowProfileDiagnosisModal(true),
     },
     {
-      title: "Becas Medicina y Salud México",
-      subtitle: "Convocatorias para posgrados y especialidades",
+      title: "🇪🇸 Nacionalidad Española en 2 años",
+      subtitle: "Beneficio para ciudadanos latinoamericanos por 2 años de residencia legal",
+      action: () => handleSendMessage("¿Cómo funciona el beneficio de nacionalidad española en 2 años para ciudadanos de países latinoamericanos?"),
     },
     {
-      title: "Costo de vida en Alemania para latinos",
-      subtitle: "Desglose de Sperrkonto, alquiler y transporte",
+      title: "🇩🇪 Chancenkarte Alemania (Visa de Oportunidad)",
+      subtitle: "Sistema de puntos por título profesional, idiomas y edad para buscar trabajo",
+      action: () => handleSendMessage("Explícame la Chancenkarte de Alemania: sistema de puntos, homologación de título y cuenta bloqueada (Sperrkonto)."),
     },
     {
-      title: "Apostilla de la Haya paso a paso",
-      subtitle: "Trámites de homologación de títulos universitarios",
+      title: "🇮🇪 Irlanda Stamp 2: Estudiar y Trabajar 20h",
+      subtitle: "Cursos de inglés con permiso legal de trabajo, IRP y trámites",
+      action: () => handleSendMessage("¿Cuáles son los requisitos actuales para la visa Stamp 2 en Irlanda para cursos de idiomas y trabajo de 20h/semana?"),
     },
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 h-[calc(100vh-5rem)] flex flex-col md:flex-row gap-6">
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 h-[calc(100vh-5rem)] flex flex-col md:flex-row gap-6 animate-in fade-in duration-300">
       {/* Left Chat Sidebar */}
-      <aside className="w-full md:w-80 bg-surface-container-lowest dark:bg-slate-800 rounded-3xl border border-outline-variant/40 dark:border-slate-700 p-4 flex flex-col justify-between shrink-0">
+      <aside className="w-full md:w-80 bg-surface-container-lowest dark:bg-slate-800 rounded-3xl border border-outline-variant/40 dark:border-slate-700 p-4 flex flex-col justify-between shrink-0 shadow-xs">
         <div className="space-y-4">
-          <button
-            onClick={handleNewConversation}
-            id="new-chat-btn"
-            className="w-full bg-primary dark:bg-sky-600 hover:bg-primary-container text-white py-3 px-4 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 shadow-sm transition-colors"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Nueva Consulta</span>
-          </button>
+          <div className="space-y-2">
+            <button
+              onClick={() => setShowProfileDiagnosisModal(true)}
+              id="open-profile-diag-sidebar-btn"
+              className="w-full bg-linear-to-r from-secondary to-teal-600 dark:from-teal-600 dark:to-teal-500 text-white py-3 px-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 shadow-md hover:opacity-95 transition-all cursor-pointer hover:scale-101 active:scale-98"
+            >
+              <Compass className="w-4 h-4" />
+              <span>{t("chat.evalProfile", "🎯 Diagnosticar Mi Perfil")}</span>
+            </button>
+
+            <button
+              onClick={handleNewConversation}
+              id="new-chat-btn"
+              className="w-full bg-primary dark:bg-sky-600 hover:bg-primary-container text-white py-2.5 px-4 rounded-2xl font-semibold text-xs flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>{language === "en" ? "New Consultation" : "Nueva Consulta"}</span>
+            </button>
+          </div>
 
           <div className="space-y-1">
-            <span className="text-xs font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider px-2 block">
-              Historial de Consultas
+            <span className="text-[11px] font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider px-2 block">
+              {language === "en" ? "Consultation History" : "Historial de Consultas"}
             </span>
-            <div className="space-y-1 max-h-[50vh] md:max-h-[60vh] overflow-y-auto pr-1">
+            <div className="space-y-1 max-h-[45vh] md:max-h-[50vh] overflow-y-auto pr-1">
               {conversations.map((conv) => {
                 const isActive = conv.id === activeConvId;
                 return (
                   <button
                     key={conv.id}
                     onClick={() => setActiveConvId(conv.id)}
-                    className={`w-full text-left p-3 rounded-xl text-sm transition-colors flex items-center justify-between group ${
+                    className={`w-full text-left p-3 rounded-xl text-xs transition-colors flex items-center justify-between group cursor-pointer ${
                       isActive
                         ? "bg-primary/10 dark:bg-sky-900/40 text-primary dark:text-sky-300 font-bold"
                         : "text-on-surface-variant dark:text-slate-300 hover:bg-surface dark:hover:bg-slate-700/50"
@@ -268,29 +326,29 @@ export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContex
             <Bot className="w-4 h-4" />
           </div>
           <div>
-            <span className="font-bold block text-primary dark:text-sky-300">LatinoMigra IA</span>
-            <span>Potenciado por Gemini 3.6 Flash</span>
+            <span className="font-bold block text-primary dark:text-sky-300">LatinoMigra IA Advisor</span>
+            <span className="text-[11px] text-slate-500">Gemini 2.5 Flash • Perfil & Visas</span>
           </div>
         </div>
       </aside>
 
       {/* Main Chat Conversation Container */}
-      <main className="flex-1 bg-surface-container-lowest dark:bg-slate-800 rounded-3xl border border-outline-variant/40 dark:border-slate-700 flex flex-col justify-between overflow-hidden relative">
+      <main className="flex-1 bg-surface-container-lowest dark:bg-slate-800 rounded-3xl border border-outline-variant/40 dark:border-slate-700 flex flex-col justify-between overflow-hidden relative shadow-xs">
         {/* Chat Thread Area */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
           {activeConv.messages.length === 0 ? (
             /* Empty State */
-            <div className="h-full flex flex-col items-center justify-center text-center max-w-lg mx-auto space-y-6 py-12">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 dark:bg-sky-900/50 text-primary dark:text-sky-300 flex items-center justify-center">
-                <Sparkles className="w-8 h-8 text-secondary dark:text-teal-300" />
+            <div className="h-full flex flex-col items-center justify-center text-center max-w-xl mx-auto space-y-6 py-10">
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-sky-900/50 text-primary dark:text-sky-300 flex items-center justify-center">
+                <Sparkles className="w-7 h-7 text-secondary dark:text-teal-300" />
               </div>
 
               <div className="space-y-2">
                 <h2 className="font-headline-md text-2xl font-extrabold text-primary dark:text-sky-300">
-                  ¡Hola, Ana! ¿Cómo puedo ayudarte hoy?
+                  {t("chat.welcomeTitle", "¡Hola! ¿Cómo puedo orientar tu plan migratorio?")}
                 </h2>
-                <p className="text-sm text-on-surface-variant dark:text-slate-300 leading-relaxed">
-                  Soy tu asistente experto en visas, becas internacionales, apostillas y trámites migratorios para Latinoamérica.
+                <p className="text-xs text-on-surface-variant dark:text-slate-300 leading-relaxed max-w-md mx-auto">
+                  {t("chat.welcomeSubtitle", "Soy tu asesor de IA para becas completas, visas de trabajo, búsqueda de empleo y migración con o sin familia.")}
                 </p>
               </div>
 
@@ -299,13 +357,13 @@ export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContex
                 {promptSuggestions.map((item, idx) => (
                   <button
                     key={idx}
-                    onClick={() => handleSendMessage(item.title)}
-                    className="p-4 rounded-2xl bg-surface dark:bg-slate-900 border border-outline-variant/30 dark:border-slate-800 hover:border-secondary transition-all space-y-1 group"
+                    onClick={item.action}
+                    className="p-4 rounded-2xl bg-surface dark:bg-slate-900 border border-outline-variant/40 dark:border-slate-800 hover:border-secondary transition-all space-y-1 group cursor-pointer text-left hover:shadow-xs"
                   >
                     <span className="font-bold text-xs text-primary dark:text-sky-300 block group-hover:text-secondary">
                       {item.title}
                     </span>
-                    <span className="text-xs text-on-surface-variant dark:text-slate-400 block line-clamp-1">
+                    <span className="text-[11px] text-on-surface-variant dark:text-slate-400 block line-clamp-2 leading-relaxed">
                       {item.subtitle}
                     </span>
                   </button>
@@ -336,19 +394,19 @@ export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContex
 
                   {/* Message Bubble */}
                   <div
-                    className={`rounded-2xl p-4 md:p-5 text-sm space-y-3 leading-relaxed shadow-xs ${
+                    className={`rounded-2xl p-4 md:p-5 text-xs md:text-sm space-y-3 leading-relaxed shadow-xs ${
                       isUser
                         ? "bg-primary text-white rounded-tr-xs"
                         : "bg-surface dark:bg-slate-900 text-on-surface dark:text-slate-100 border border-outline-variant/30 dark:border-slate-800 rounded-tl-xs"
                     }`}
                   >
-                    <div className="whitespace-pre-line font-body-md">{msg.content}</div>
+                    <div className="whitespace-pre-line font-body-md leading-relaxed">{msg.content}</div>
 
                     {/* Sources Section if provided */}
                     {msg.sources && msg.sources.length > 0 && (
                       <div className="pt-3 border-t border-outline-variant/20 dark:border-slate-800 space-y-1.5">
-                        <span className="text-xs font-bold text-secondary dark:text-teal-300 uppercase tracking-wider block">
-                          Fuentes Oficiales Recomendadas
+                        <span className="text-[11px] font-bold text-secondary dark:text-teal-300 uppercase tracking-wider block">
+                          {language === "en" ? "Recommended Official Sources" : "Fuentes Oficiales Recomendadas"}
                         </span>
                         <div className="flex flex-wrap items-center gap-2">
                           {msg.sources.map((src, idx) => (
@@ -374,7 +432,7 @@ export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContex
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => copyToClipboard(msg.content, msg.id)}
-                            className="p-1 hover:text-primary dark:hover:text-sky-300 transition-colors"
+                            className="p-1 hover:text-primary dark:hover:text-sky-300 transition-colors cursor-pointer"
                             title="Copiar respuesta"
                           >
                             {copiedIndex === msg.id ? (
@@ -400,7 +458,9 @@ export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContex
               </div>
               <div className="bg-surface dark:bg-slate-900 px-4 py-3 rounded-2xl border border-outline-variant/30 dark:border-slate-800 flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-amber-500 animate-spin" />
-                <span className="font-semibold text-xs">LatinoMigra IA está procesando tu respuesta...</span>
+                <span className="font-semibold text-xs">
+                  {language === "en" ? "LatinoMigra AI is evaluating migration pathways..." : "LatinoMigra IA está analizando opciones para tu perfil..."}
+                </span>
               </div>
             </div>
           )}
@@ -415,40 +475,238 @@ export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContex
               e.preventDefault();
               handleSendMessage();
             }}
-            className="flex items-center gap-3 bg-surface dark:bg-slate-900 p-2.5 rounded-2xl border border-outline-variant/60 dark:border-slate-700 focus-within:border-secondary dark:focus-within:border-teal-400"
+            className="flex items-center gap-2 md:gap-3 bg-surface dark:bg-slate-900 p-2.5 rounded-2xl border border-outline-variant/60 dark:border-slate-700 focus-within:border-secondary dark:focus-within:border-teal-400"
           >
             <button
               type="button"
-              className="p-2 text-on-surface-variant dark:text-slate-400 hover:text-primary dark:hover:text-sky-300 transition-colors"
-              title="Adjuntar currículum o documento"
+              onClick={() => setShowProfileDiagnosisModal(true)}
+              className="p-2 text-secondary dark:text-teal-400 hover:bg-secondary/10 rounded-xl transition-colors cursor-pointer shrink-0"
+              title="Evaluar Perfil Completo"
             >
-              <Paperclip className="w-5 h-5" />
+              <Compass className="w-5 h-5" />
             </button>
 
             <input
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="Pregunta sobre visas, requisitos o becas específicas..."
+              placeholder={t("chat.inputPlaceholder", "Pregunta sobre visas, becas, ciudades o tu situación profesional...")}
               id="chat-input-field"
-              className="flex-1 bg-transparent border-none outline-none text-sm text-on-surface dark:text-slate-100 placeholder:text-on-surface-variant dark:placeholder:text-slate-500"
+              className="flex-1 bg-transparent border-none outline-none text-xs md:text-sm text-on-surface dark:text-slate-100 placeholder:text-on-surface-variant dark:placeholder:text-slate-500"
             />
 
             <button
               type="submit"
               disabled={!inputText.trim() || isLoading}
               id="send-chat-msg-btn"
-              className="bg-primary dark:bg-sky-600 hover:bg-primary-container disabled:opacity-50 text-white p-2.5 rounded-xl transition-colors shadow-xs"
+              className="bg-primary dark:bg-sky-600 hover:bg-primary-container disabled:opacity-50 text-white p-2.5 rounded-xl transition-colors shadow-xs cursor-pointer"
             >
               <Send className="w-4 h-4" />
             </button>
           </form>
 
           <p className="text-[11px] text-center text-on-surface-variant dark:text-slate-500">
-            LatinoMigra IA es una guía orientativa. Verifica siempre la información oficial en los consulados correspondientes.
+            {t("chat.disclaimer", "LatinoMigra IA es una guía orientativa. Verifica siempre la información oficial en los consulados correspondientes.")}
           </p>
         </div>
       </main>
+
+      {/* Profile Diagnosis Modal (Career + Age + Family + Goal Form) */}
+      {showProfileDiagnosisModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-surface-container-lowest dark:bg-slate-800 rounded-3xl max-w-xl w-full p-6 md:p-8 space-y-5 shadow-2xl border border-outline-variant/40 dark:border-slate-700 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-outline-variant/30 dark:border-slate-700 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-secondary/15 dark:bg-teal-500/20 text-secondary dark:text-teal-300 flex items-center justify-center">
+                  <Compass className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-headline-md text-lg font-bold text-primary dark:text-sky-300">
+                    {language === "en" ? "AI Migration Profile Diagnosis" : "Diagnóstico de Perfil Migratorio con IA"}
+                  </h3>
+                  <p className="text-xs text-on-surface-variant dark:text-slate-400">
+                    {language === "en"
+                      ? "Tell the AI your career, age and family status to get tailored recommendations"
+                      : "Indica tu carrera, edad y familia para recibir las mejores opciones y visas"}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowProfileDiagnosisModal(false)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              {/* País de Origen */}
+              <div>
+                <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5 text-secondary" />
+                  <span>{language === "en" ? "Country of Origin" : "País de Origen"}</span>
+                </label>
+                <select
+                  value={diagOrigin}
+                  onChange={(e) => setDiagOrigin(e.target.value)}
+                  className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
+                >
+                  <option value="Colombia">🇨🇴 Colombia</option>
+                  <option value="México">🇲🇽 México</option>
+                  <option value="Perú">🇵🇪 Perú</option>
+                  <option value="Argentina">🇦🇷 Argentina</option>
+                  <option value="Chile">🇨🇱 Chile</option>
+                  <option value="Ecuador">🇪🇨 Ecuador</option>
+                  <option value="Venezuela">🇻🇪 Venezuela</option>
+                  <option value="Bolivia">🇧🇴 Bolivia</option>
+                  <option value="Guatemala">🇬🇹 Guatemala</option>
+                  <option value="Costa Rica">🇨🇷 Costa Rica</option>
+                </select>
+              </div>
+
+              {/* Carrera y Edad */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center gap-1.5">
+                    <Briefcase className="w-3.5 h-3.5 text-secondary" />
+                    <span>{language === "en" ? "Career / Profession" : "Carrera o Profesión"}</span>
+                  </label>
+                  <select
+                    value={diagCareer}
+                    onChange={(e) => setDiagCareer(e.target.value)}
+                    className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
+                  >
+                    <option value="Ingeniería de Software / IT">Ingeniería de Software / IT / Datos</option>
+                    <option value="Medicina / Enfermería / Salud">Medicina / Enfermería / Salud</option>
+                    <option value="Administración / Finanzas / Negocios">Administración / Negocios / Finanzas</option>
+                    <option value="Ingeniería Industrial / Civil / Mecánica">Ingeniería Industrial / Civil / Mecánica</option>
+                    <option value="Educación / Docencia / Idiomas">Educación / Docencia / Idiomas</option>
+                    <option value="Marketing / Diseño / Comunicación">Marketing / Diseño / Comunicación</option>
+                    <option value="Derecho / Ciencias Sociales">Derecho / Ciencias Sociales</option>
+                    <option value="Gastronomía / Turismo / Hostelería">Gastronomía / Turismo / Hostelería</option>
+                    <option value="Oficios Técnicos / Electricidad / Construcción">Oficios Técnicos / Electricidad</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center justify-between">
+                    <span>{language === "en" ? "Age" : "Edad"}</span>
+                    <span className="text-secondary dark:text-teal-300 font-bold">{diagAge} años</span>
+                  </label>
+                  <input
+                    type="range"
+                    min={18}
+                    max={60}
+                    value={diagAge}
+                    onChange={(e) => setDiagAge(Number(e.target.value))}
+                    className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-secondary mt-2"
+                  />
+                  <div className="flex justify-between text-[10px] text-slate-400 mt-1">
+                    <span>18</span>
+                    <span>30 (Puntajes DAAD/Chancenkarte)</span>
+                    <span>60</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Situación Familiar y Idiomas */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-secondary" />
+                    <span>{language === "en" ? "Family Status" : "Situación Familiar"}</span>
+                  </label>
+                  <select
+                    value={diagFamily}
+                    onChange={(e) => setDiagFamily(e.target.value)}
+                    className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
+                  >
+                    <option value="Soltero/a sin hijos">🧍 Soltero/a sin hijos</option>
+                    <option value="En pareja sin hijos">👫 En pareja sin hijos</option>
+                    <option value="Familia con 1 hijo">👨‍👩‍👧 Familia con 1 hijo</option>
+                    <option value="Familia con 2 o más hijos">👨‍👩‍👧‍👦 Familia con 2 o más hijos</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center gap-1.5">
+                    <Languages className="w-3.5 h-3.5 text-secondary" />
+                    <span>{language === "en" ? "English / Languages" : "Nivel de Idiomas"}</span>
+                  </label>
+                  <select
+                    value={diagEnglish}
+                    onChange={(e) => setDiagEnglish(e.target.value)}
+                    className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
+                  >
+                    <option value="Solo español básico">Solo Español nativo</option>
+                    <option value="Inglés Básico (A2)">Inglés Básico (A2)</option>
+                    <option value="Inglés Intermedio (B1/B2)">Inglés Intermedio (B1/B2)</option>
+                    <option value="Inglés Avanzado (C1/C2)">Inglés Avanzado (C1/C2)</option>
+                    <option value="Alemán Básico/Intermedio">Alemán (A2/B1)</option>
+                    <option value="Francés Básico/Intermedio">Francés (B1/B2)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Presupuesto y Objetivo Principal */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center gap-1.5">
+                    <DollarSign className="w-3.5 h-3.5 text-secondary" />
+                    <span>{language === "en" ? "Available Budget / Savings" : "Presupuesto o Ahorro"}</span>
+                  </label>
+                  <select
+                    value={diagBudget}
+                    onChange={(e) => setDiagBudget(e.target.value)}
+                    className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
+                  >
+                    <option value="Menos de $2,000 USD">Menos de $2,000 USD (Prioridad Becas 100%)</option>
+                    <option value="$3,000 - $8,000 USD">$3,000 - $8,000 USD</option>
+                    <option value="$8,000 - $15,000 USD">$8,000 - $15,000 USD (Sperrkonto / Cursos)</option>
+                    <option value="Más de $15,000 USD">Más de $15,000 USD (Estudios familiares)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center gap-1.5">
+                    <GraduationCap className="w-3.5 h-3.5 text-secondary" />
+                    <span>{language === "en" ? "Main Goal" : "Meta Principal"}</span>
+                  </label>
+                  <select
+                    value={diagGoal}
+                    onChange={(e) => setDiagGoal(e.target.value)}
+                    className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
+                  >
+                    <option value="Beca de Maestría o Posgrado 100% financiada">🎓 Beca 100% (DAAD, Carolina, Erasmus)</option>
+                    <option value="Trabajo directo o Visa de Oportunidades">💼 Empleo directo / Visa Oportunidades</option>
+                    <option value="Curso de Idiomas con Trabajo (Stamp 2 / Co-op)">🗣️ Curso de Idiomas con permiso laboral</option>
+                    <option value="Nacionalidad en 2 años (España para latinos)">🇪🇸 Nacionalidad en 2 años (España)</option>
+                    <option value="Nómada Digital / Trabajo Remoto">💻 Nómada Digital / Trabajo remoto</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-3 border-t border-outline-variant/20 dark:border-slate-700">
+              <button
+                type="button"
+                onClick={() => setShowProfileDiagnosisModal(false)}
+                className="px-4 py-2.5 text-xs font-bold text-on-surface-variant hover:text-primary dark:hover:text-sky-300 cursor-pointer"
+              >
+                {language === "en" ? "Cancel" : "Cancelar"}
+              </button>
+              <button
+                type="button"
+                onClick={handleRunProfileDiagnosis}
+                className="bg-primary dark:bg-sky-600 text-white px-6 py-2.5 rounded-xl text-xs font-bold hover:bg-primary-container dark:hover:bg-sky-500 shadow-md transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4 text-amber-300" />
+                <span>{language === "en" ? "Generate AI Diagnosis" : "Generar Diagnóstico con IA"}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

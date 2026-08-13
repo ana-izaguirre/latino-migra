@@ -1,25 +1,25 @@
 import { LocationMarker } from "../types";
 
 export const LOCATIONS_DATA: LocationMarker[] = [
-  // Consulados y Embajadas en Latinoamérica
+  // --- MÉXICO ---
   {
-    id: "loc-1",
-    name: "Consulado General de España en Bogotá",
+    id: "loc-mx-1",
+    name: "Consulado General de España en Ciudad de México",
     type: "consulado",
     country: "España",
-    city: "Bogotá",
-    hostCountry: "Colombia",
-    address: "Calle 92 # 12-68, Bogotá, Colombia",
-    lat: 4.6762,
-    lng: -74.0531,
-    phone: "+57 (601) 628 3900",
-    website: "https://www.exteriores.gob.es/Consulados/bogota",
-    hours: "Lunes a Viernes: 8:00 - 13:00 (Con Cita Previa)",
-    description: "Sede consular responsable del trámite de visados de estudios (estancia por estudios superior a 90 días), TIE y homologaciones para ciudadanos colombianos.",
-    tips: "Se requiere pedir cita previa en la plataforma BLS España Colombia con mínimo 2 meses de anticipación."
+    city: "Ciudad de México",
+    hostCountry: "México",
+    address: "Calle Galileo 114, Polanco, Miguel Hidalgo, 11560 CDMX",
+    lat: 19.4308,
+    lng: -99.1932,
+    phone: "+52 55 5280 4508",
+    website: "https://www.exteriores.gob.es/Consulados/mexico",
+    hours: "Lunes a Viernes: 8:30 - 13:30 (Con Cita)",
+    description: "Trámite oficial de visados de estancia por estudios, homologación de títulos y legalizaciones consulares para ciudadanos en México.",
+    tips: "Los certificados de estudios deben contar con apostilla de la Secretaría de Gobernación."
   },
   {
-    id: "loc-2",
+    id: "loc-mx-2",
     name: "Embajada de Alemania en Ciudad de México",
     type: "embajada",
     country: "Alemania",
@@ -31,27 +31,61 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     phone: "+52 55 5283 2200",
     website: "https://mexiko.diplo.de/",
     hours: "Lunes a Jueves: 8:00 - 12:00",
-    description: "Oficina consular para la expedición de Visas Nacionales de Estudio (Visum zur Ausbildung/Studium) y verificación de cuenta bloqueada (Sperrkonto).",
-    tips: "Asegúrate de llevar la confirmación de la cuenta Sperrkonto con los €11,208 euros requeridos para el año académico."
+    description: "Expedición de Visa Nacional de Estudio (Visum zur Ausbildung) y verificación de fondos en cuenta bloqueada Sperrkonto.",
+    tips: "Asegúrate de llevar la confirmación de la cuenta Sperrkonto con los fondos vigentes requeridos."
   },
   {
-    id: "loc-3",
-    name: "Consulado General de España en Ciudad de México",
-    type: "consulado",
-    country: "España",
+    id: "loc-mx-3",
+    name: "Embajada de Estados Unidos en Ciudad de México",
+    type: "embajada",
+    country: "EE.UU.",
     city: "Ciudad de México",
     hostCountry: "México",
-    address: "Calle Galileo 114, Polanco, CDMX, México",
-    lat: 19.4308,
-    lng: -99.1932,
-    phone: "+52 55 5280 4508",
-    website: "https://www.exteriores.gob.es/Consulados/mexico",
-    hours: "Lunes a Viernes: 8:30 - 13:30",
-    description: "Trámite de visados de larga duración para estudiantes de posgrado y maestría, así como legalizaciones consulares.",
-    tips: "Los títulos universitarios mexicanos deben estar previamente apostillados por la Secretaría de Gobernación."
+    address: "Paseo de la Reforma 305, Cuauhtémoc, 06500 CDMX",
+    lat: 19.427,
+    lng: -99.1677,
+    phone: "+52 55 5080 2000",
+    website: "https://mx.usembassy.gov/",
+    hours: "Lunes a Viernes: 8:00 - 16:30",
+    description: "Entrevistas para visas de estudiante F-1, M-1 y de intercambio J-1 (Fulbright).",
+    tips: "Presentar formulario I-20 original firmado y comprobante de tarifa SEVIS I-901."
+  },
+
+  // --- COLOMBIA ---
+  {
+    id: "loc-co-1",
+    name: "Consulado General de España en Bogotá",
+    type: "consulado",
+    country: "España",
+    city: "Bogotá",
+    hostCountry: "Colombia",
+    address: "Calle 92 # 12-68, Bogotá, Colombia",
+    lat: 4.6762,
+    lng: -74.0531,
+    phone: "+57 (601) 628 3900",
+    website: "https://www.exteriores.gob.es/Consulados/bogota",
+    hours: "Lunes a Viernes: 8:00 - 13:00 (Con Cita Previa)",
+    description: "Sede consular responsable del trámite de visados de estudios superiores a 90 días y homologaciones para colombianos.",
+    tips: "Se requiere agendar cita previa en BLS España Colombia con mínimo 2 meses de anticipación."
   },
   {
-    id: "loc-4",
+    id: "loc-co-2",
+    name: "Embajada de Alemania en Bogotá",
+    type: "embajada",
+    country: "Alemania",
+    city: "Bogotá",
+    hostCountry: "Colombia",
+    address: "Edificio Advance, Calle 90 # 11-13, Piso 9, Bogotá",
+    lat: 4.6749,
+    lng: -74.0543,
+    phone: "+57 (601) 423 2600",
+    website: "https://bogota.diplo.de/",
+    hours: "Lunes a Jueves: 7:30 - 12:00",
+    description: "Sección de visados de larga duración para estudios de posgrado, doctorados y becas DAAD.",
+    tips: "Requisito de seguro médico internacional válido en territorio Schengen desde el primer día."
+  },
+  {
+    id: "loc-co-3",
     name: "Embajada de Estados Unidos en Bogotá",
     type: "embajada",
     country: "EE.UU.",
@@ -66,8 +100,60 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     description: "Entrevistas para Visados F-1 (Estudiantes) y J-1 (Exchange Visitors / Beca Fulbright).",
     tips: "Debes presentar el formulario I-20 impreso y la constancia del pago del SEVIS I-901."
   },
+
+  // --- PERÚ ---
   {
-    id: "loc-5",
+    id: "loc-pe-1",
+    name: "Consulado General de España en Lima",
+    type: "consulado",
+    country: "España",
+    city: "Lima",
+    hostCountry: "Perú",
+    address: "Calle Los Ficus 330, San Isidro, Lima, Perú",
+    lat: -12.0912,
+    lng: -77.0371,
+    phone: "+51 1 513 0550",
+    website: "https://www.exteriores.gob.es/Consulados/lima",
+    hours: "Lunes a Viernes: 8:30 - 13:00",
+    description: "Visados de estancia por estudios para universidades españolas y becas Fundación Carolina en Perú.",
+    tips: "Se solicita certificación de antecedentes penales legalizados y apostillados por RREE Perú."
+  },
+  {
+    id: "loc-pe-2",
+    name: "Embajada de Alemania en Lima",
+    type: "embajada",
+    country: "Alemania",
+    city: "Lima",
+    hostCountry: "Perú",
+    address: "Av. Arequipa 4210, Miraflores, Lima, Perú",
+    lat: -12.1098,
+    lng: -77.0298,
+    phone: "+51 1 212 5000",
+    website: "https://lima.diplo.de/",
+    hours: "Lunes a Viernes: 8:00 - 11:30",
+    description: "Atención de solicitudes de visa nacional para estudios superiores en Alemania.",
+    tips: "Presentar constancia de idioma según el programa de estudios (Goethe-Zertifikat o TOEFL)."
+  },
+
+  // --- ARGENTINA ---
+  {
+    id: "loc-ar-1",
+    name: "Consulado General de España en Buenos Aires",
+    type: "consulado",
+    country: "España",
+    city: "Buenos Aires",
+    hostCountry: "Argentina",
+    address: "Guido 1770, C1016 CABA, Argentina",
+    lat: -34.5886,
+    lng: -58.3888,
+    phone: "+54 11 4811 0070",
+    website: "https://www.exteriores.gob.es/Consulados/buenosaires",
+    hours: "Lunes a Viernes: 8:30 - 13:30",
+    description: "Visados de estudio, convenios de doble nacionalidad (Ley de Memoria Democrática) y legalizaciones.",
+    tips: "Verificar turnos vía web los primeros días hábiles de cada mes."
+  },
+  {
+    id: "loc-ar-2",
     name: "Consulado General de Canadá en Buenos Aires",
     type: "consulado",
     country: "Canadá",
@@ -80,18 +166,70 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     website: "https://www.canada.ca/",
     hours: "Lunes a Jueves: 8:30 - 12:30",
     description: "Centro de Solicitud de Visados (VAC) para toma de datos biométricos y permisos de estudio (Study Permit).",
-    tips: "El trámite es principalmente en línea a través del portal IRCC de Canadá."
+    tips: "El trámite se inicia en línea a través del portal oficial IRCC de Canadá."
   },
 
-  // Universidades Destacadas de Destino
+  // --- CHILE ---
   {
-    id: "loc-6",
+    id: "loc-cl-1",
+    name: "Consulado General de España en Santiago de Chile",
+    type: "consulado",
+    country: "España",
+    city: "Santiago",
+    hostCountry: "Chile",
+    address: "Av. Nueva Providencia 2353, Providencia, Santiago",
+    lat: -33.4219,
+    lng: -70.6083,
+    phone: "+56 2 2663 3000",
+    website: "https://www.exteriores.gob.es/Consulados/santiagodechile",
+    hours: "Lunes a Viernes: 8:30 - 13:00",
+    description: "Tramitación de visados de estudiante, becas AUIP y convenios de movilidad académica.",
+    tips: "Títulos universitarios chilenos con apostilla electrónica del MINEDUC."
+  },
+
+  // --- ECUADOR ---
+  {
+    id: "loc-ec-1",
+    name: "Consulado General de España en Quito",
+    type: "consulado",
+    country: "España",
+    city: "Quito",
+    hostCountry: "Ecuador",
+    address: "Calle La Pinta E4-411 y Amazonas, Quito",
+    lat: -0.2014,
+    lng: -78.4907,
+    phone: "+593 2 256 4141",
+    website: "https://www.exteriores.gob.es/Consulados/quito",
+    hours: "Lunes a Viernes: 8:00 - 13:00",
+    description: "Visados de estudio, becas Senescyt y validación de títulos universitarios.",
+    tips: "Presentar certificado de antecedentes penales ecuatoriano apostillado."
+  },
+
+  // --- UNIVERSIDADES DESTACADAS EN EUROPA Y NORTEAMÉRICA ---
+  {
+    id: "loc-u-1",
+    name: "Universidad de Salamanca (USAL)",
+    type: "universidad",
+    country: "España",
+    city: "Salamanca",
+    hostCountry: "España",
+    address: "Patio de Escuelas 1, 37008 Salamanca, España",
+    lat: 40.9616,
+    lng: -5.6661,
+    phone: "+34 923 294 400",
+    website: "https://www.usal.es",
+    hours: "Campus Abierto",
+    description: "Universidad histórica fundada en 1218, sede de las Becas Internacionales de Máster USAL-Banco Santander.",
+    tips: "Los becarios cuentan con alojamiento cubierto en Colegio Mayor y exención completa de tasas académicas."
+  },
+  {
+    id: "loc-u-2",
     name: "Universidad Complutense de Madrid (UCM)",
     type: "universidad",
     country: "España",
     city: "Madrid",
     hostCountry: "España",
-    address: "Av. Seneca 2, Ciudad Universitaria, 28040 Madrid, España",
+    address: "Av. Séneca 2, Ciudad Universitaria, 28040 Madrid, España",
     lat: 40.4488,
     lng: -3.7332,
     phone: "+34 913 941 000",
@@ -101,7 +239,23 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     tips: "Alojamiento recomendado cerca de Moncloa o Cuatro Caminos con acceso directo en Metro Línea 6."
   },
   {
-    id: "loc-7",
+    id: "loc-u-3",
+    name: "ETH Zurich",
+    type: "universidad",
+    country: "Suiza",
+    city: "Zurich",
+    hostCountry: "Suiza",
+    address: "Rämistrasse 101, 8092 Zurich, Suiza",
+    lat: 47.3763,
+    lng: 8.548,
+    phone: "+41 44 632 11 11",
+    website: "https://ethz.ch",
+    hours: "Campus Abierto",
+    description: "Instituto Federal de Tecnología de Zurich, institución líder mundial en ingeniería y ciencias que ofrece el programa ESOP.",
+    tips: "La beca ESOP otorga 12.000 CHF semestrales y exención total de aranceles."
+  },
+  {
+    id: "loc-u-4",
     name: "Universidad Técnica de Múnich (TUM)",
     type: "universidad",
     country: "Alemania",
@@ -114,11 +268,11 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     website: "https://www.tum.de",
     hours: "Campus Abierto",
     description: "Universidad de excelencia en ingeniería y tecnología. Convenios con becas DAAD.",
-    tips: "Aplica al Studentenwerk con mucha anticipación para conseguir residencia universitaria de bajo costo."
+    tips: "Aplica al Studentenwerk con anticipación para conseguir residencia universitaria de bajo costo."
   },
   {
-    id: "loc-8",
-    name: "Universidad de Toronto (U of T)",
+    id: "loc-u-5",
+    name: "University of Toronto (U of T)",
     type: "universidad",
     country: "Canadá",
     city: "Toronto",
@@ -129,7 +283,23 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     phone: "+1 416 978 2011",
     website: "https://www.utoronto.ca",
     hours: "Campus Abierto",
-    description: "Principal universidad investigadora de Canadá, hogar de becarios Vanier CGS.",
-    tips: "Permite trabajar hasta 20 horas semanales fuera del campus con tu permiso de estudio vigente."
+    description: "Principal universidad de Canadá y sede de las prestigiosas becas Lester B. Pearson.",
+    tips: "Permite trabajar legalmente durante los estudios con tu permiso Study Permit de Canadá."
+  },
+  {
+    id: "loc-u-6",
+    name: "University of Cambridge",
+    type: "universidad",
+    country: "Reino Unido",
+    city: "Cambridge",
+    hostCountry: "Reino Unido",
+    address: "The Old Schools, Trinity Ln, Cambridge CB2 1TN, UK",
+    lat: 52.2053,
+    lng: 0.1167,
+    phone: "+44 1223 337733",
+    website: "https://www.cam.ac.uk",
+    hours: "Campus Abierto",
+    description: "Sede de las becas Gates Cambridge con financiamiento total para posgrado y doctorado.",
+    tips: "Requiere carta de motivación de alto impacto social y liderazgo probado."
   }
 ];
