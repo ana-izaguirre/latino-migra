@@ -12,7 +12,15 @@ import { AuthModal } from "./components/AuthModal";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavigationTab>("home");
-  const [theme, setTheme] = useState<ThemeMode>("light");
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    try {
+      const saved = localStorage.getItem("latinomigra_theme");
+      if (saved === "light" || saved === "dark") return saved;
+      return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    } catch {
+      return "light";
+    }
+  });
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [chatInitialPrompt, setChatInitialPrompt] = useState<string>("");
   const [selectedScholarshipForChat, setSelectedScholarshipForChat] = useState<Scholarship | null>(null);
@@ -28,13 +36,19 @@ export default function App() {
   });
   const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
 
-  // Apply dark mode class to HTML element
+  // Apply dark mode class to HTML element and persist
   useEffect(() => {
+    const root = document.documentElement;
     if (theme === "dark") {
-      document.documentElement.classList.add("dark");
+      root.classList.add("dark");
+      root.style.colorScheme = "dark";
     } else {
-      document.documentElement.classList.remove("dark");
+      root.classList.remove("dark");
+      root.style.colorScheme = "light";
     }
+    try {
+      localStorage.setItem("latinomigra_theme", theme);
+    } catch {}
   }, [theme]);
 
   const toggleTheme = () => {
