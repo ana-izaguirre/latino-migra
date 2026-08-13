@@ -1,0 +1,46 @@
+{
+  "entities": {
+    "users": {
+      "title": "Users",
+      "description": "User profiles for authenticated LatinoMigra users",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "countryOfOrigin": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["uid", "email"]
+    },
+    "savedScholarships": {
+      "title": "Saved Scholarships",
+      "description": "Scholarships bookmarked by users",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "scholarshipId": { "type": "string" },
+        "scholarshipTitle": { "type": "string" },
+        "country": { "type": "string" },
+        "savedAt": { "type": "string" }
+      },
+      "required": ["userId", "scholarshipId"]
+    },
+    "userNotes": {
+      "title": "User Notes",
+      "description": "Personal notes and saved AI guidance for users",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "category": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "title", "content"]
+    }
+  }
+}
