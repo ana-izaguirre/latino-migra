@@ -25,6 +25,7 @@ import { ForumPost } from "../types";
 import { useLanguage } from "../lib/i18n";
 import {
   fetchCommunityPosts,
+  fetchCommunityPostsPaginated,
   createCommunityPost,
   likeCommunityPost,
   fetchPostReplies,
@@ -33,6 +34,7 @@ import {
   CloudForumReply,
   auth,
 } from "../lib/firebase";
+import { QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 
 const INITIAL_SEED_POSTS: Omit<CloudForumPost, "id">[] = [
   {
@@ -107,6 +109,9 @@ export const Comunidad: React.FC = () => {
 
   // Loading and error states for Firestore
   const [isLoadingPosts, setIsLoadingPosts] = useState<boolean>(true);
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+  const [hasMorePosts, setHasMorePosts] = useState<boolean>(false);
+  const [lastVisibleDoc, setLastVisibleDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [isSubmittingPost, setIsSubmittingPost] = useState<boolean>(false);
   const [loadingRepliesPostId, setLoadingRepliesPostId] = useState<string | null>(null);
   const [isSubmittingReply, setIsSubmittingReply] = useState<boolean>(false);
@@ -141,14 +146,17 @@ export const Comunidad: React.FC = () => {
     return `Hace ${diffDays} días`;
   };
 
-  // Load posts from Firestore on component mount
+  // Load first page of posts from Firestore on component mount (6 posts per page for efficient reading)
   const loadPostsFromCloud = async () => {
     setIsLoadingPosts(true);
     try {
-      const cloudPosts = await fetchCommunityPosts(30);
-      if (cloudPosts.length > 0) {
+      const result = await fetchCommunityPostsPaginated(6, null, selectedCategory);
+      setLastVisibleDoc(result.lastDoc);
+      setHasMorePosts(result.hasMore);
+
+      if (result.posts.length > 0) {
         setPosts(
-          cloudPosts.map((cp) => ({
+          result.posts.map((cp) => ({
             id: cp.id,
             title: cp.title,
             author: cp.author,
@@ -191,6 +199,37 @@ export const Comunidad: React.FC = () => {
       console.error("Error loading cloud community posts:", e);
     } finally {
       setIsLoadingPosts(false);
+    }
+  };
+
+  // Load subsequent page on demand
+  const handleLoadMore = async () => {
+    if (!lastVisibleDoc || isLoadingMore || !hasMorePosts) return;
+
+    setIsLoadingMore(true);
+    try {
+      const result = await fetchCommunityPostsPaginated(6, lastVisibleDoc, selectedCategory);
+      setLastVisibleDoc(result.lastDoc);
+      setHasMorePosts(result.hasMore);
+
+      const nextPosts = result.posts.map((cp) => ({
+        id: cp.id,
+        title: cp.title,
+        author: cp.author,
+        country: cp.country,
+        city: cp.city,
+        date: formatTime(cp.createdAt),
+        likes: cp.likes,
+        replies: cp.replies,
+        category: cp.category,
+        content: cp.content,
+      }));
+
+      setPosts((prev) => [...prev, ...nextPosts]);
+    } catch (e) {
+      console.error("Error loading more posts:", e);
+    } finally {
+      setIsLoadingMore(false);
     }
   };
 
@@ -674,6 +713,30 @@ export const Comunidad: React.FC = () => {
               </div>
             );
           })
+        )}
+
+        {/* Cursor-based pagination footer button */}
+        {!isLoadingPosts && hasMorePosts && (
+          <div className="flex justify-center pt-4 pb-2">
+            <button
+              onClick={handleLoadMore}
+              disabled={isLoadingMore}
+              id="load-more-posts-btn"
+              className="inline-flex items-center gap-2 bg-surface-container-lowest dark:bg-slate-800 hover:bg-surface-container dark:hover:bg-slate-700 text-primary dark:text-sky-300 px-6 py-3 rounded-2xl border border-outline-variant/60 dark:border-slate-700 font-bold text-xs shadow-sm transition-all cursor-pointer hover:scale-102 active:scale-98 disabled:opacity-60"
+            >
+              {isLoadingMore ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-secondary" />
+                  <span>{language === "en" ? "Loading more topics..." : "Cargando más temas..."}</span>
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4 text-secondary" />
+                  <span>{language === "en" ? "Load More Discussions (Paginated)" : "Cargar Más Temas (Paginación Firestore)"}</span>
+                </>
+              )}
+            </button>
+          </div>
         )}
       </div>
 

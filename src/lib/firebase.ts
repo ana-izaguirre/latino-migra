@@ -236,7 +236,7 @@ export async function fetchCommunityPostsPaginated(
     const newLastDoc = itemsToReturn.length > 0 ? itemsToReturn[itemsToReturn.length - 1] : null;
 
     const posts: CloudForumPost[] = itemsToReturn.map((docSnap) => {
-      const data = docSnap.data();
+      const data = docSnap.data() as Record<string, any>;
       return {
         id: docSnap.id,
         title: data.title || "",

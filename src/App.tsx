@@ -11,6 +11,7 @@ import { PlanificadorMigracion } from "./components/PlanificadorMigracion";
 import { FeedbackHub } from "./components/FeedbackHub";
 import { CalculadoraCostoVida } from "./components/CalculadoraCostoVida";
 import { FloatingChatWidget } from "./components/FloatingChatWidget";
+import { ScrollTopBottomButton } from "./components/ScrollTopBottomButton";
 import { Footer } from "./components/Footer";
 import { AuthModal } from "./components/AuthModal";
 
@@ -198,6 +199,9 @@ export default function App() {
           setActiveTab("chat");
         }}
       />
+
+      {/* Floating Scroll Top / Bottom Button */}
+      <ScrollTopBottomButton />
 
       {/* Google Auth Modal */}
       <AuthModal
