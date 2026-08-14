@@ -68,7 +68,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               </li>
               <li>
                 <button onClick={() => setActiveTab("becas")} className="hover:text-secondary dark:hover:text-teal-400 transition-colors text-left cursor-pointer">
-                  🎓 {t("nav.becas", "Buscador de Becas Internacionales")}
+                  🎓 Catálogo de Becas 2026
                 </button>
               </li>
               <li>
@@ -78,7 +78,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               </li>
               <li>
                 <button onClick={() => setActiveTab("guia")} className="hover:text-secondary dark:hover:text-teal-400 transition-colors text-left cursor-pointer">
-                  📖 {t("nav.guia", "Guías Migratorias (Empadronamiento & Visas)")}
+                  📖 Guía Migratoria España & Internacional
                 </button>
               </li>
             </ul>

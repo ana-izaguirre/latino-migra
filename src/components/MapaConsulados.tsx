@@ -65,17 +65,8 @@ export const MapaConsulados: React.FC = () => {
   const [destinationFilter, setDestinationFilter] = useState<string>("todos");
   const [searchQuery, setSearchQuery] = useState<string>("");
   
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(() => {
-    const saved = localStorage.getItem("latino_migra_user_coords");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return null;
-      }
-    }
-    return null;
-  });
+  // Sensitive location data is kept in-memory state only (not stored in plain-text storage)
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   const [isDetectingLocation, setIsDetectingLocation] = useState<boolean>(false);
   const [locationStatus, setLocationStatus] = useState<string | null>(null);
@@ -117,7 +108,6 @@ export const MapaConsulados: React.FC = () => {
           lng: position.coords.longitude,
         };
         setUserLocation(coords);
-        localStorage.setItem("latino_migra_user_coords", JSON.stringify(coords));
         setIsDetectingLocation(false);
         setLocationStatus("¡Ubicación detectada con éxito!");
 

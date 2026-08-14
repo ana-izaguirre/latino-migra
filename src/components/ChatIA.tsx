@@ -326,7 +326,7 @@ Estructura tu diagnóstico con:
             <Bot className="w-4 h-4" />
           </div>
           <div>
-            <span className="font-bold block text-primary dark:text-sky-300">LatinoMigra IA Advisor</span>
+            <span className="font-bold block text-primary dark:text-sky-300">LatinoMigra IA</span>
             <span className="text-[11px] text-slate-500">Gemini 2.5 Flash • Perfil & Visas</span>
           </div>
         </div>
@@ -345,7 +345,7 @@ Estructura tu diagnóstico con:
 
               <div className="space-y-2">
                 <h2 className="font-headline-md text-2xl font-extrabold text-primary dark:text-sky-300">
-                  {t("chat.welcomeTitle", "¡Hola! ¿Cómo puedo orientar tu plan migratorio?")}
+                  {t("chat.welcomeTitle", "¡Hola! ¿Cómo puedo ayudarte hoy?")}
                 </h2>
                 <p className="text-xs text-on-surface-variant dark:text-slate-300 leading-relaxed max-w-md mx-auto">
                   {t("chat.welcomeSubtitle", "Soy tu asesor de IA para becas completas, visas de trabajo, búsqueda de empleo y migración con o sin familia.")}
@@ -490,7 +490,7 @@ Estructura tu diagnóstico con:
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder={t("chat.inputPlaceholder", "Pregunta sobre visas, becas, ciudades o tu situación profesional...")}
+              placeholder={t("chat.inputPlaceholder", "Pregunta sobre visas, requisitos o becas específicas...")}
               id="chat-input-field"
               className="flex-1 bg-transparent border-none outline-none text-xs md:text-sm text-on-surface dark:text-slate-100 placeholder:text-on-surface-variant dark:placeholder:text-slate-500"
             />

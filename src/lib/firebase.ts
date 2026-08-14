@@ -28,12 +28,11 @@ import {
   DocumentData,
 } from "firebase/firestore";
 // Dynamically look for local configuration file if present without failing the build if missing (e.g. on CI/Git)
-const meta = import.meta as any;
-const configModules = typeof meta.glob === "function" ? meta.glob("../../firebase-applet-config.json", { eager: true }) : {};
+const configModules = import.meta.glob("../../firebase-applet-config.json", { eager: true });
 const configKey = "../../firebase-applet-config.json";
 const localConfig: Record<string, any> = (configModules[configKey] as any)?.default || configModules[configKey] || {};
 
-const env = meta.env || {};
+const env: Record<string, any> = (import.meta as any).env || {};
 
 const firebaseConfig = {
   apiKey: env.VITE_FIREBASE_API_KEY || localConfig.apiKey || "",

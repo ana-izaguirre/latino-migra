@@ -13,17 +13,24 @@ on:
         default: 'false'
         type: boolean
 
+permissions:
+  contents: read
+
 jobs:
   unit-tests:
     name: Fast Unit Tests & Typecheck
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: 'npm'
+        env:
+          NODE_ENV: test
       - name: Install dependencies
         run: npm ci || npm install
       - name: Run TypeScript Check
@@ -36,6 +43,9 @@ jobs:
     needs: unit-tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
     # Run fast E2E on main/PRs (or full matrix when manually triggered)
     steps:
       - uses: actions/checkout@v4

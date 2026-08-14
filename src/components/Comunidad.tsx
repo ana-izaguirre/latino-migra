@@ -404,7 +404,7 @@ export const Comunidad: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 text-secondary dark:text-teal-300 text-xs font-bold uppercase tracking-wider mb-1">
             <MessageSquare className="w-4 h-4" />
-            <span>{language === "en" ? "LatinoMigra Community Forum" : "Comunidad y Foros de Migrantes"}</span>
+            <span>{language === "en" ? "LatinoMigra Community Forum" : "Comunidad LatinoMigra"}</span>
             <span className="inline-flex items-center gap-1 ml-2 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border border-emerald-300 dark:border-emerald-800">
               <Cloud className="w-3 h-3" />
               <span>{language === "en" ? "Cloud Firestore (Permanent)" : "Nube Firestore (Permanente)"}</span>
@@ -530,7 +530,7 @@ export const Comunidad: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={t("community.searchPlaceholder", "Buscar tema, ciudad o pregunta...")}
+            placeholder={t("community.searchPlaceholder", "Buscar tema o ciudad...")}
             className="w-full pl-9 pr-4 py-2 bg-surface-container-lowest dark:bg-slate-800 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
           />
         </div>
@@ -749,7 +749,7 @@ export const Comunidad: React.FC = () => {
                 <h3 className="font-headline-md text-xl font-bold text-primary dark:text-sky-300 flex items-center gap-2">
                   <MessageSquare className="w-5 h-5 text-secondary" />
                   <span>
-                    {language === "en" ? "Create New Community Topic" : "Crear Nueva Publicación en la Comunidad"}
+                    {language === "en" ? "Create New Community Topic" : "Nueva Publicación en la Comunidad"}
                   </span>
                 </h3>
                 <p className="text-xs text-on-surface-variant dark:text-slate-400">

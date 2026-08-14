@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { X, CheckCircle2, ShieldCheck, Bookmark, Calendar, Sparkles, User, Globe, LogOut } from "lucide-react";
 import { GoogleUser } from "../types";
 import { signInWithGoogle, signOutUser } from "../lib/firebase";
+import { getSafeImageUrl } from "../lib/sanitize";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -91,8 +92,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <div className="space-y-6">
             <div className="bg-surface-container/60 dark:bg-slate-800/80 p-4 rounded-2xl border border-outline-variant/40 dark:border-slate-700 flex items-center gap-4">
               <img
-                src={currentUser.avatar}
+                src={getSafeImageUrl(currentUser.avatar)}
                 alt={currentUser.name}
+                referrerPolicy="no-referrer"
                 className="w-14 h-14 rounded-full object-cover border-2 border-primary/30"
               />
               <div className="flex-1 min-w-0">
@@ -145,7 +147,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <button
               onClick={handleFirebaseGoogleSignIn}
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm py-3 px-4 rounded-xl border border-slate-300 shadow-sm transition-all hover:shadow-md disabled:opacity-50"
+              id="google-signin-btn"
+              aria-label="Continuar con Google"
+              className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm py-3 px-4 rounded-xl border border-slate-300 shadow-sm transition-all hover:shadow-md disabled:opacity-50 cursor-pointer"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path

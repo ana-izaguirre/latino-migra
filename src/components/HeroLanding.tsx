@@ -1,6 +1,7 @@
 import React from "react";
 import { Search, Compass, Bot, Award, ArrowRight, Sparkles, CheckCircle2, MapPin, Calculator, ThumbsUp } from "lucide-react";
 import { NavigationTab, GoogleUser } from "../types";
+import { getSafeImageUrl } from "../lib/sanitize";
 
 interface HeroLandingProps {
   setActiveTab: (tab: NavigationTab) => void;
@@ -16,8 +17,9 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ setActiveTab, currentU
           <div className="bg-gradient-to-r from-primary/10 via-secondary/10 to-transparent dark:from-sky-950/60 dark:via-teal-950/40 dark:to-slate-900/40 p-6 rounded-3xl border border-secondary/30 dark:border-teal-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
             <div className="flex items-center gap-4">
               <img
-                src={currentUser.avatar}
+                src={getSafeImageUrl(currentUser.avatar)}
                 alt={currentUser.name}
+                referrerPolicy="no-referrer"
                 className="w-14 h-14 rounded-2xl object-cover border-2 border-secondary dark:border-teal-400 shadow-md"
               />
               <div>
@@ -56,7 +58,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ setActiveTab, currentU
             {/* Tag Badge */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-secondary-container/40 dark:bg-teal-500/20 text-secondary dark:text-teal-300 font-label-md text-xs font-bold tracking-wide uppercase">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Tu viaje migratorio y académico 100% seguro</span>
+              <span>Tu viaje comienza aquí — Plataforma 100% segura</span>
             </div>
 
             {/* Main Headline */}
@@ -72,30 +74,33 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ setActiveTab, currentU
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-3.5 pt-2">
               <button
-                onClick={() => setActiveTab("planificador")}
-                id="hero-btn-planificador"
-                className="inline-flex items-center gap-2 bg-secondary dark:bg-teal-600 hover:bg-secondary/90 text-white px-5 py-3 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all"
-              >
-                <Calculator className="w-4 h-4" />
-                <span>Armar Mi Plan de Migración</span>
-              </button>
-
-              <button
                 onClick={() => setActiveTab("becas")}
                 id="hero-btn-becas"
+                aria-label="Buscar Becas"
                 className="inline-flex items-center gap-2 bg-primary dark:bg-sky-600 hover:bg-primary-container text-on-primary dark:text-white px-5 py-3 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all"
               >
                 <Search className="w-4 h-4" />
-                <span>Explorar Becas</span>
+                <span>Buscar Becas</span>
               </button>
 
               <button
-                onClick={() => setActiveTab("mapa")}
-                id="hero-btn-mapa"
+                onClick={() => setActiveTab("guia")}
+                id="hero-btn-guias"
+                aria-label="Ver Guías Migratorias"
+                className="inline-flex items-center gap-2 bg-secondary dark:bg-teal-600 hover:bg-secondary/90 text-white px-5 py-3 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all"
+              >
+                <Compass className="w-4 h-4" />
+                <span>Ver Guías Migratorias</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("planificador")}
+                id="hero-btn-planificador"
+                aria-label="Armar Mi Plan de Migración"
                 className="inline-flex items-center gap-2 bg-surface-container dark:bg-slate-800 hover:bg-surface-container-high text-primary dark:text-sky-300 px-4 py-3 rounded-xl font-semibold text-sm border border-outline-variant/60 dark:border-slate-700 transition-all"
               >
-                <MapPin className="w-4 h-4 text-sky-500" />
-                <span>Mapa Consular</span>
+                <Calculator className="w-4 h-4 text-emerald-500" />
+                <span>Planificador 360°</span>
               </button>
             </div>
 

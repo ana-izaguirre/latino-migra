@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Globe, Search, Moon, Sun, Menu, X, User, MapPin, ShieldCheck, LogOut, Languages, Bell } from "lucide-react";
 import { NavigationTab, ThemeMode, GoogleUser } from "../types";
 import { useLanguage } from "../lib/i18n";
+import { getSafeImageUrl } from "../lib/sanitize";
 
 interface TopNavBarProps {
   activeTab: NavigationTab;
@@ -33,11 +34,11 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
     { id: "planificador", label: t("nav.planificador", "Planificador 360°") },
     { id: "calculadora", label: t("nav.calculadora", "Calculadora Costo de Vida") },
     { id: "becas", label: t("nav.becas", "Becas") },
-    { id: "guia", label: t("nav.guia", "Guías de Migración") },
+    { id: "guia", label: t("nav.guia", "Guía de Migración") },
     { id: "mapa", label: t("nav.mapa", "Mapa Consular"), icon: <MapPin className="w-3.5 h-3.5 text-sky-400 inline ml-1" /> },
     { id: "comunidad", label: t("nav.comunidad", "Comunidad") },
     { id: "feedback", label: t("nav.feedback", "Sugerencias") },
-    { id: "chat", label: t("nav.chat", "Asesor IA") },
+    { id: "chat", label: t("nav.chat", "Chat IA") },
   ];
 
   const toggleLanguage = () => {
@@ -71,6 +72,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
                   id={`nav-item-${item.id}`}
+                  aria-label={item.id === "guia" ? "Guía de Migración" : item.label}
                   className={`font-body-md text-xs xl:text-sm font-medium transition-colors py-1 relative flex items-center gap-1 cursor-pointer whitespace-nowrap ${
                     isActive
                       ? "text-primary dark:text-sky-300 font-bold"
@@ -156,20 +158,22 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
           <button
             onClick={onOpenAuthModal}
             id="login-profile-btn"
+            aria-label={currentUser ? `Cuenta de ${currentUser.name}` : (language === "en" ? "Sign In with Google" : "Acceder con Google")}
             className="flex items-center gap-2 bg-primary dark:bg-sky-600 text-white px-3 md:px-3.5 py-2 rounded-xl font-label-md text-xs font-bold hover:bg-primary-container dark:hover:bg-sky-500 transition-colors shadow-sm shrink-0 cursor-pointer"
           >
             {currentUser ? (
               <>
                 <img
-                  src={currentUser.avatar}
+                  src={getSafeImageUrl(currentUser.avatar)}
                   alt={currentUser.name}
+                  referrerPolicy="no-referrer"
                   className="w-5 h-5 rounded-full object-cover border border-white"
                 />
                 <span className="hidden md:inline max-w-[100px] truncate">{currentUser.name}</span>
               </>
             ) : (
               <>
-                <svg className="w-4 h-4 bg-white rounded-full p-0.5" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 bg-white rounded-full p-0.5 shrink-0" viewBox="0 0 24 24">
                   <path
                     fill="#4285F4"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -187,7 +191,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                   />
                 </svg>
-                <span>{language === "en" ? "Sign In" : "Acceder"}</span>
+                <span>{language === "en" ? "Sign In" : "Acceder con Google"}</span>
               </>
             )}
           </button>

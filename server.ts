@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
+import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -10,6 +11,30 @@ const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 app.use(express.json({ limit: "10mb" }));
+
+// Rate limiter for general API routes to mitigate DoS & brute force
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 120, // Limit each IP to 120 requests per window
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    error: "Demasiadas solicitudes desde esta IP. Por favor, inténtalo de nuevo en unos minutos.",
+  },
+});
+
+// Stricter rate limiter for AI generation endpoint
+const chatLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 40, // Limit each IP to 40 AI chats per 15 minutes
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    error: "Has alcanzado el límite de consultas de IA por periodo. Por favor espera unos minutos.",
+  },
+});
+
+app.use("/api/", apiLimiter);
 
 // Lazy Google GenAI Client Initialization
 let aiClient: GoogleGenAI | null = null;
@@ -32,7 +57,7 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok", app: "LatinoMigra" });
 });
 
-app.post("/api/chat", async (req, res) => {
+app.post("/api/chat", chatLimiter, async (req, res) => {
   try {
     const { message, history } = req.body;
 

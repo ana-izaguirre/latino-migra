@@ -104,7 +104,7 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
           <div className="space-y-1.5">
             <div className="flex items-center gap-2 text-secondary dark:text-teal-300 text-xs font-bold uppercase tracking-wider">
               <Compass className="w-4 h-4" />
-              <span>Guías Oficiales Actualizadas • Fuentes Gubernamentales</span>
+              <span>Guías Oficiales Paso a Paso • Fuentes Gubernamentales</span>
             </div>
             <h1 className="font-headline-lg text-3xl md:text-4xl font-extrabold text-primary dark:text-sky-300 flex items-center gap-3">
               <span>{guide.flag}</span>
@@ -215,7 +215,7 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 className="font-headline-md text-2xl font-bold text-primary dark:text-sky-300">
-                Tipos de Visas y Permisos en {guide.country}
+                Tipos de Visado en {guide.country}
               </h3>
               <p className="text-xs text-on-surface-variant dark:text-slate-400">
                 Explora estudios, cursos de idiomas, trabajo express, nómadas y residencia.
@@ -223,10 +223,11 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
             </div>
             <button
               onClick={() => onAskAIAboutGuide(guide.country)}
-              className="text-xs font-bold bg-secondary/10 dark:bg-teal-950/50 text-secondary dark:text-teal-300 px-3.5 py-2 rounded-xl flex items-center gap-1.5 hover:bg-secondary hover:text-white transition-colors self-start sm:self-auto"
+              aria-label="Preguntar a IA cuál me conviene"
+              className="text-xs font-bold bg-secondary/10 dark:bg-teal-950/50 text-secondary dark:text-teal-300 px-3.5 py-2 rounded-xl flex items-center gap-1.5 hover:bg-secondary hover:text-white transition-colors self-start sm:self-auto cursor-pointer"
             >
               <Bot className="w-4 h-4" />
-              <span>Evaluar mi perfil con IA</span>
+              <span>Preguntar a IA cuál me conviene</span>
             </button>
           </div>
 
@@ -461,7 +462,7 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
           <div>
             <h3 className="font-headline-md text-xl font-bold text-primary dark:text-sky-300 flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              <span>Checklist Oficial de Documentación ({guide.country})</span>
+              <span>Documentación Clave Requerida ({guide.country})</span>
             </h3>
             <p className="text-xs text-on-surface-variant dark:text-slate-400 mt-0.5">
               Marca las casillas conforme reúnas cada documento para tu cita consular o trámites de llegada.
