@@ -27,7 +27,23 @@ import {
   QueryDocumentSnapshot,
   DocumentData,
 } from "firebase/firestore";
-import firebaseConfig from "../../firebase-applet-config.json";
+// Dynamically look for local configuration file if present without failing the build if missing (e.g. on CI/Git)
+const meta = import.meta as any;
+const configModules = typeof meta.glob === "function" ? meta.glob("../../firebase-applet-config.json", { eager: true }) : {};
+const configKey = "../../firebase-applet-config.json";
+const localConfig: Record<string, any> = (configModules[configKey] as any)?.default || configModules[configKey] || {};
+
+const env = meta.env || {};
+
+const firebaseConfig = {
+  apiKey: env.VITE_FIREBASE_API_KEY || localConfig.apiKey || "",
+  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || localConfig.authDomain || "",
+  projectId: env.VITE_FIREBASE_PROJECT_ID || localConfig.projectId || "",
+  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || localConfig.storageBucket || "",
+  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || localConfig.messagingSenderId || "",
+  appId: env.VITE_FIREBASE_APP_ID || localConfig.appId || "",
+  firestoreDatabaseId: env.VITE_FIREBASE_DATABASE_ID || localConfig.firestoreDatabaseId || "",
+};
 
 // Initialize Firebase App
 const app = initializeApp(firebaseConfig);
