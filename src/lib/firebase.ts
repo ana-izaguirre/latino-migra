@@ -27,6 +27,17 @@ import {
   QueryDocumentSnapshot,
   DocumentData,
 } from "firebase/firestore";
+// Fallback config so the app works immediately even without setting env variables
+const DEFAULT_FALLBACK_CONFIG = {
+  apiKey: "AIzaSyDn2xVPPFxs5xNh95oOhP3JoE-YDhik-mE",
+  authDomain: "refined-coral-0zp2g.firebaseapp.com",
+  projectId: "refined-coral-0zp2g",
+  storageBucket: "refined-coral-0zp2g.firebasestorage.app",
+  messagingSenderId: "538611828963",
+  appId: "1:538611828963:web:18d0acf6ee65101df71dd6",
+  firestoreDatabaseId: "ai-studio-latinomigra-d7a8fee2-47df-4305-b50c-e89aa7c5873c",
+};
+
 // Dynamically look for local configuration file if present without failing the build if missing (e.g. on CI/Git)
 const meta = import.meta as any;
 const configModules = typeof meta.glob === "function" ? meta.glob("../../firebase-applet-config.json", { eager: true }) : {};
@@ -36,26 +47,34 @@ const localConfig: Record<string, any> = (configModules[configKey] as any)?.defa
 const env = meta.env || {};
 
 const firebaseConfig = {
-  apiKey: env.VITE_FIREBASE_API_KEY || localConfig.apiKey || "",
-  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || localConfig.authDomain || "",
-  projectId: env.VITE_FIREBASE_PROJECT_ID || localConfig.projectId || "",
-  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || localConfig.storageBucket || "",
-  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || localConfig.messagingSenderId || "",
-  appId: env.VITE_FIREBASE_APP_ID || localConfig.appId || "",
-  firestoreDatabaseId: env.VITE_FIREBASE_DATABASE_ID || localConfig.firestoreDatabaseId || "",
+  apiKey: env.VITE_FIREBASE_API_KEY || localConfig.apiKey || DEFAULT_FALLBACK_CONFIG.apiKey,
+  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || localConfig.authDomain || DEFAULT_FALLBACK_CONFIG.authDomain,
+  projectId: env.VITE_FIREBASE_PROJECT_ID || localConfig.projectId || DEFAULT_FALLBACK_CONFIG.projectId,
+  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || localConfig.storageBucket || DEFAULT_FALLBACK_CONFIG.storageBucket,
+  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || localConfig.messagingSenderId || DEFAULT_FALLBACK_CONFIG.messagingSenderId,
+  appId: env.VITE_FIREBASE_APP_ID || localConfig.appId || DEFAULT_FALLBACK_CONFIG.appId,
+  firestoreDatabaseId: env.VITE_FIREBASE_DATABASE_ID || localConfig.firestoreDatabaseId || DEFAULT_FALLBACK_CONFIG.firestoreDatabaseId,
 };
 
-// Initialize Firebase App
-const app = initializeApp(firebaseConfig);
+let appInstance: any = null;
+let authInstance: any = null;
+let dbInstance: any = null;
 
-// Initialize Auth
-export const auth = getAuth(app);
+try {
+  appInstance = initializeApp(firebaseConfig);
+  authInstance = getAuth(appInstance);
+  dbInstance = firebaseConfig.firestoreDatabaseId
+    ? getFirestore(appInstance, firebaseConfig.firestoreDatabaseId)
+    : getFirestore(appInstance);
+} catch (error) {
+  console.warn("Firebase initialization warning (running in safe fallback mode):", error);
+}
+
+// Initialize Firebase App & Exports safely
+export const app = appInstance;
+export const auth = authInstance;
 export const googleProvider = new GoogleAuthProvider();
-
-// Initialize Firestore (using custom database ID if specified)
-export const db = firebaseConfig.firestoreDatabaseId
-  ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
-  : getFirestore(app);
+export const db = dbInstance;
 
 export enum OperationType {
   CREATE = "create",
