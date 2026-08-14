@@ -14,6 +14,7 @@ import { FloatingChatWidget } from "./components/FloatingChatWidget";
 import { ScrollTopBottomButton } from "./components/ScrollTopBottomButton";
 import { Footer } from "./components/Footer";
 import { AuthModal } from "./components/AuthModal";
+import { NotificationSettingsModal } from "./components/NotificationSettingsModal";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavigationTab>("home");
@@ -29,6 +30,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [chatInitialPrompt, setChatInitialPrompt] = useState<string>("");
   const [selectedScholarshipForChat, setSelectedScholarshipForChat] = useState<Scholarship | null>(null);
+  const [alertsModalOpen, setAlertsModalOpen] = useState<boolean>(false);
 
   // Google User Auth State
   const [currentUser, setCurrentUser] = useState<GoogleUser | null>(() => {
@@ -108,6 +110,7 @@ export default function App() {
         setSearchQuery={setSearchQuery}
         currentUser={currentUser}
         onOpenAuthModal={() => setAuthModalOpen(true)}
+        onOpenAlertsModal={() => setAlertsModalOpen(true)}
       />
 
       {/* Dynamic Tab Views */}
@@ -210,6 +213,13 @@ export default function App() {
         currentUser={currentUser}
         onSignIn={handleSignIn}
         onSignOut={handleSignOut}
+      />
+
+      {/* Migration & Scholarship Alerts Center Modal */}
+      <NotificationSettingsModal
+        isOpen={alertsModalOpen}
+        onClose={() => setAlertsModalOpen(false)}
+        currentUser={currentUser}
       />
 
       {/* Shared Footer */}

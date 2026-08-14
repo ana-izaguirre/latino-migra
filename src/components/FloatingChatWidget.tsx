@@ -100,21 +100,21 @@ export const FloatingChatWidget: React.FC<FloatingChatWidgetProps> = ({
   };
 
   return (
-    <div className="fixed bottom-5 right-5 z-50">
+    <div className="fixed bottom-4 right-4 sm:bottom-5 sm:right-5 z-50">
       {/* Floating Trigger Button */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
           id="floating-chat-trigger-btn"
           aria-label="Abrir asistente de chat bot"
-          className="flex items-center gap-2.5 bg-gradient-to-r from-primary to-secondary dark:from-sky-600 dark:to-teal-500 text-white px-4 py-3 rounded-full shadow-2xl hover:scale-105 transition-all duration-200 group border border-white/20"
+          className="flex items-center gap-2 bg-gradient-to-r from-primary to-secondary dark:from-sky-600 dark:to-teal-500 text-white px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-full shadow-2xl hover:scale-105 transition-all duration-200 group border border-white/20"
         >
           <div className="relative">
-            <Bot className="w-6 h-6 text-white" />
+            <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full" />
           </div>
-          <span className="font-bold text-xs tracking-wide">
+          <span className="font-bold text-[11px] sm:text-xs tracking-wide">
             Chatbot LatinoMigra
           </span>
         </button>
@@ -124,7 +124,7 @@ export const FloatingChatWidget: React.FC<FloatingChatWidgetProps> = ({
       {isOpen && (
         <div
           id="floating-chat-popup"
-          className="w-[90vw] sm:w-[380px] md:w-[420px] h-[540px] max-h-[85vh] bg-surface dark:bg-slate-900 rounded-3xl shadow-2xl border border-outline-variant/60 dark:border-slate-800 flex flex-col overflow-hidden animate-fade-in"
+          className="w-[calc(100vw-2rem)] sm:w-[380px] md:w-[420px] h-[520px] max-h-[80vh] bg-surface dark:bg-slate-900 rounded-3xl shadow-2xl border border-outline-variant/60 dark:border-slate-800 flex flex-col overflow-hidden animate-fade-in"
         >
           {/* Header */}
           <div className="bg-gradient-to-r from-primary to-secondary dark:from-sky-800 dark:to-slate-800 p-4 text-white flex items-center justify-between shadow-md">

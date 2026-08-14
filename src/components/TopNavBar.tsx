@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Globe, Search, Moon, Sun, Menu, X, User, MapPin, ShieldCheck, LogOut, Languages } from "lucide-react";
+import { Globe, Search, Moon, Sun, Menu, X, User, MapPin, ShieldCheck, LogOut, Languages, Bell } from "lucide-react";
 import { NavigationTab, ThemeMode, GoogleUser } from "../types";
 import { useLanguage } from "../lib/i18n";
 
@@ -12,6 +12,7 @@ interface TopNavBarProps {
   setSearchQuery: (q: string) => void;
   currentUser: GoogleUser | null;
   onOpenAuthModal: () => void;
+  onOpenAlertsModal?: () => void;
 }
 
 export const TopNavBar: React.FC<TopNavBarProps> = ({
@@ -23,6 +24,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
   setSearchQuery,
   currentUser,
   onOpenAuthModal,
+  onOpenAlertsModal,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { language, setLanguage, t } = useLanguage();
@@ -116,6 +118,19 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
             />
           </div>
 
+          {/* Notification Alerts Center Button */}
+          {onOpenAlertsModal && (
+            <button
+              onClick={onOpenAlertsModal}
+              id="alerts-center-btn"
+              title={language === "en" ? "Configure Alerts & Notifications" : "Configurar Alertas y Avisos"}
+              className="relative p-2 rounded-xl text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              <Bell className="w-4 h-4 md:w-5 md:h-5 text-amber-500 dark:text-amber-400" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+            </button>
+          )}
+
           {/* Language Switcher Button (ES / EN) */}
           <button
             onClick={toggleLanguage}
@@ -208,6 +223,22 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
               <span>{language === "es" ? "🇪🇸 Español" : "🇺🇸 English"}</span>
             </button>
           </div>
+
+          {onOpenAlertsModal && (
+            <button
+              onClick={() => {
+                onOpenAlertsModal();
+                setMobileMenuOpen(false);
+              }}
+              className="w-full flex items-center justify-between py-2.5 px-3 rounded-xl bg-amber-500/10 dark:bg-amber-400/15 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-xs font-bold"
+            >
+              <div className="flex items-center gap-2">
+                <Bell className="w-4 h-4 text-amber-500" />
+                <span>{language === "en" ? "Manage Migration & Scholarship Alerts" : "Gestionar Alertas de Becas y Visas"}</span>
+              </div>
+              <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+            </button>
+          )}
 
           <div className="relative mb-3">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />

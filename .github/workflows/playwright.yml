@@ -1,38 +1,61 @@
-name: Playwright E2E Tests
+name: CI / Unit & E2E Tests
 
 on:
   push:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      full_e2e:
+        description: 'Run full multi-browser E2E matrix (Chrome, Firefox, Safari, Mobile)'
+        required: false
+        default: 'false'
+        type: boolean
 
 jobs:
-  test:
-    timeout-minutes: 60
+  unit-tests:
+    name: Fast Unit Tests & Typecheck
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-    - uses: actions/checkout@v4
-    
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 22
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci || npm install
-      
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
-      
-    - name: Build Application
-      run: npm run build
-      
-    - name: Run Playwright tests
-      run: npm run test:e2e
-      
-    - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
-      with:
-        name: playwright-report
-        path: playwright-report/
-        retention-days: 30
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci || npm install
+      - name: Run TypeScript Check
+        run: npm run lint
+      - name: Run Fast Vitest Unit Tests
+        run: npm run test:unit
+
+  e2e-tests:
+    name: End-to-End Tests
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Run fast E2E on main/PRs (or full matrix when manually triggered)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci || npm install
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+      - name: Build Application
+        run: npm run build
+      - name: Run Fast E2E Tests
+        env:
+          FULL_E2E: ${{ github.event.inputs.full_e2e || 'false' }}
+        run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

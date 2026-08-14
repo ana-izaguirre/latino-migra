@@ -19,6 +19,12 @@
 
 :root {
   color-scheme: light;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 html.dark {

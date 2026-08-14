@@ -155,3 +155,14 @@ export interface ForumPost {
   category: string;
   content: string;
 }
+
+export interface UserAlertPreferences {
+  email: string;
+  notifyScholarshipDeadlines: boolean;
+  notifyVisaPolicyChanges: boolean;
+  notifyForumReplies: boolean;
+  notifyWeeklyDigest: boolean;
+  destinationCountry: string;
+  preferredArea: string;
+  pushEnabled: boolean;
+}
