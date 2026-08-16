@@ -27,20 +27,25 @@ import {
   QueryDocumentSnapshot,
   DocumentData,
 } from "firebase/firestore";
-// Dynamically look for local configuration file if present without failing the build if missing (e.g. on CI/Git)
-const configModules = import.meta.glob("../../firebase-applet-config.json", { eager: true });
-const configKey = "../../firebase-applet-config.json";
-const localConfig: Record<string, any> = (configModules[configKey] as any)?.default || configModules[configKey] || {};
+// Dynamically look for local configuration file if present without failing the build if missing
+const configModules = import.meta.glob(["/firebase-applet-config.json", "../../firebase-applet-config.json"], { eager: true });
+let localConfig: Record<string, any> = {};
+for (const path in configModules) {
+  if (configModules[path]) {
+    localConfig = (configModules[path] as any)?.default || configModules[path] || {};
+    break;
+  }
+}
 
 const env: Record<string, any> = (import.meta as any).env || {};
 
 const firebaseConfig = {
-  apiKey: env.VITE_FIREBASE_API_KEY || localConfig.apiKey || "",
-  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || localConfig.authDomain || "",
-  projectId: env.VITE_FIREBASE_PROJECT_ID || localConfig.projectId || "",
-  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || localConfig.storageBucket || "",
-  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || localConfig.messagingSenderId || "",
-  appId: env.VITE_FIREBASE_APP_ID || localConfig.appId || "",
+  apiKey: env.VITE_FIREBASE_API_KEY || localConfig.apiKey || "AIzaSyDummyKeyForSafeInitialization0000",
+  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || localConfig.authDomain || "refined-coral-0zp2g.firebaseapp.com",
+  projectId: env.VITE_FIREBASE_PROJECT_ID || localConfig.projectId || "refined-coral-0zp2g",
+  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || localConfig.storageBucket || "refined-coral-0zp2g.appspot.com",
+  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || localConfig.messagingSenderId || "123456789",
+  appId: env.VITE_FIREBASE_APP_ID || localConfig.appId || "1:123456789:web:abcdef",
   firestoreDatabaseId: env.VITE_FIREBASE_DATABASE_ID || localConfig.firestoreDatabaseId || undefined,
 };
 
@@ -51,7 +56,7 @@ let dbInstance: any = null;
 try {
   appInstance = initializeApp(firebaseConfig);
   authInstance = getAuth(appInstance);
-  dbInstance = firebaseConfig.firestoreDatabaseId
+  dbInstance = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)"
     ? getFirestore(appInstance, firebaseConfig.firestoreDatabaseId)
     : getFirestore(appInstance);
 } catch (error) {
@@ -63,6 +68,24 @@ export const app = appInstance;
 export const auth = authInstance;
 export const googleProvider = new GoogleAuthProvider();
 export const db = dbInstance;
+
+/**
+ * Safe subscriber to auth state changes that never throws even if auth is not initialized
+ */
+export function subscribeToAuthState(callback: (user: FirebaseUser | null) => void): () => void {
+  if (!auth) {
+    console.info("Firebase Auth running in local guest mode");
+    return () => {};
+  }
+  try {
+    return onAuthStateChanged(auth, callback, (error) => {
+      console.warn("Auth state change error:", error);
+    });
+  } catch (err) {
+    console.warn("Could not attach onAuthStateChanged listener:", err);
+    return () => {};
+  }
+}
 
 export enum OperationType {
   CREATE = "create",
@@ -77,8 +100,8 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   const errInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
-      userId: auth.currentUser?.uid || null,
-      email: auth.currentUser?.email || null,
+      userId: auth?.currentUser?.uid || null,
+      email: auth?.currentUser?.email || null,
     },
     operationType,
     path,
@@ -88,13 +111,22 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 }
 
 // Helper for Google Sign In
-export async function signInWithGoogle() {
+export async function signInWithGoogle(countryOfOrigin?: string) {
+  if (!auth) {
+    throw new Error("Firebase Auth no está inicializado.");
+  }
   try {
     const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
 
-    // Save/Update user document in Firestore
+    // Check if user already exists to preserve countryOfOrigin if set
     const userRef = doc(db, "users", user.uid);
+    const existingSnap = await getDoc(userRef);
+    const existingData = existingSnap.exists() ? existingSnap.data() : null;
+
+    const finalCountry = countryOfOrigin || existingData?.countryOfOrigin || "Colombia";
+
+    // Save/Update user document in Firestore
     await setDoc(
       userRef,
       {
@@ -104,21 +136,64 @@ export async function signInWithGoogle() {
         photoURL:
           user.photoURL ||
           "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+        countryOfOrigin: finalCountry,
         updatedAt: new Date().toISOString(),
       },
       { merge: true }
     );
 
-    return user;
+    return { user, countryOfOrigin: finalCountry };
   } catch (error) {
     console.error("Error al iniciar sesión con Google:", error);
     throw error;
   }
 }
 
+// Update User Profile (e.g. Country of Origin) in Firestore
+export async function updateUserProfile(userId: string, data: { countryOfOrigin?: string; displayName?: string }) {
+  const path = `users/${userId}`;
+  try {
+    const userRef = doc(db, "users", userId);
+    await setDoc(userRef, { ...data, updatedAt: new Date().toISOString() }, { merge: true });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, path);
+    throw err;
+  }
+}
+
+// Fetch User Profile from Firestore
+export async function getUserProfile(userId: string) {
+  const path = `users/${userId}`;
+  try {
+    const userRef = doc(db, "users", userId);
+    const snap = await getDoc(userRef);
+    if (snap.exists()) {
+      return snap.data();
+    }
+    return null;
+  } catch (err) {
+    handleFirestoreError(err, OperationType.GET, path);
+    return null;
+  }
+}
+
 // Sign Out Helper
 export async function signOutUser() {
+  if (!auth) return;
   return firebaseSignOut(auth);
+}
+
+// Firestore Helper: Fetch User's Saved Scholarships
+export async function fetchUserBookmarks(userId: string): Promise<string[]> {
+  const path = "savedScholarships";
+  try {
+    const q = query(collection(db, path), where("userId", "==", userId));
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => d.data().scholarshipId as string);
+  } catch (err) {
+    handleFirestoreError(err, OperationType.LIST, path);
+    return [];
+  }
 }
 
 // Firestore Helper: Save Scholarship Bookmark
@@ -150,6 +225,118 @@ export async function toggleBookmarkScholarship(userId: string, scholarshipId: s
     }
   } catch (err) {
     handleFirestoreError(err, OperationType.WRITE, path);
+    throw err;
+  }
+}
+
+// Firestore Helper: Save / Update Migration Plan
+export async function saveUserMigrationPlan(userId: string, planData: any) {
+  const path = `migrationPlans/${userId}`;
+  try {
+    const planRef = doc(db, "migrationPlans", userId);
+    await setDoc(planRef, {
+      ...planData,
+      userId,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+    return true;
+  } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, path);
+    throw err;
+  }
+}
+
+// Firestore Helper: Get User Migration Plan
+export async function getUserMigrationPlan(userId: string) {
+  const path = `migrationPlans/${userId}`;
+  try {
+    const planRef = doc(db, "migrationPlans", userId);
+    const snap = await getDoc(planRef);
+    if (snap.exists()) {
+      return snap.data();
+    }
+    return null;
+  } catch (err) {
+    handleFirestoreError(err, OperationType.GET, path);
+    return null;
+  }
+}
+
+// Firestore Helper: Save User Alert Preferences
+export async function saveUserAlertPreferences(userId: string, prefs: any) {
+  const path = `userPreferences/${userId}`;
+  try {
+    const prefRef = doc(db, "userPreferences", userId);
+    await setDoc(prefRef, {
+      ...prefs,
+      userId,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+    return true;
+  } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, path);
+    throw err;
+  }
+}
+
+// Firestore Helper: Get User Alert Preferences
+export async function getUserAlertPreferences(userId: string) {
+  const path = `userPreferences/${userId}`;
+  try {
+    const prefRef = doc(db, "userPreferences", userId);
+    const snap = await getDoc(prefRef);
+    if (snap.exists()) {
+      return snap.data();
+    }
+    return null;
+  } catch (err) {
+    handleFirestoreError(err, OperationType.GET, path);
+    return null;
+  }
+}
+
+// Firestore Helper: Fetch Feedback Suggestions
+export async function fetchFeedbackSuggestions(): Promise<any[]> {
+  const path = "feedbackSuggestions";
+  try {
+    const q = query(collection(db, path), orderBy("createdAt", "desc"), limit(50));
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({
+      id: d.id,
+      ...d.data()
+    }));
+  } catch (err) {
+    handleFirestoreError(err, OperationType.LIST, path);
+    return [];
+  }
+}
+
+// Firestore Helper: Create Feedback Suggestion
+export async function createFeedbackSuggestion(suggestionData: any): Promise<string> {
+  const path = "feedbackSuggestions";
+  try {
+    const docRef = await addDoc(collection(db, path), {
+      ...suggestionData,
+      createdAt: new Date().toISOString(),
+      upvotes: 1
+    });
+    return docRef.id;
+  } catch (err) {
+    handleFirestoreError(err, OperationType.CREATE, path);
+    throw err;
+  }
+}
+
+// Firestore Helper: Upvote Feedback Suggestion
+export async function upvoteFeedbackSuggestion(suggestionId: string, incrementAmount: number = 1): Promise<void> {
+  const path = `feedbackSuggestions/${suggestionId}`;
+  try {
+    const sugRef = doc(db, "feedbackSuggestions", suggestionId);
+    await updateDoc(sugRef, {
+      upvotes: increment(incrementAmount)
+    });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, path);
     throw err;
   }
 }
@@ -341,7 +528,7 @@ export async function createCommunityPost(postData: Omit<CloudForumPost, "id">):
       likes: 1,
       repliesCount: 0,
       createdAt: new Date().toISOString(),
-      userId: auth.currentUser?.uid || null,
+      userId: auth?.currentUser?.uid || null,
     });
     return docRef.id;
   } catch (err) {
@@ -403,7 +590,7 @@ export async function addPostReply(postId: string, author: string, text: string)
       author,
       text,
       createdAt: new Date().toISOString(),
-      userId: auth.currentUser?.uid || null,
+      userId: auth?.currentUser?.uid || null,
     });
 
     // Update parent post replies count
@@ -416,6 +603,89 @@ export async function addPostReply(postId: string, author: string, text: string)
   } catch (err) {
     handleFirestoreError(err, OperationType.CREATE, path);
     throw err;
+  }
+}
+
+// ----------------------------------------------------
+// DYNAMIC SCHOLARSHIPS FIRESTORE SYNC & PAGINATION
+// ----------------------------------------------------
+
+/**
+ * Fetch scholarships from Firestore. Falls back to static dataset if Firestore is empty or fails.
+ */
+export async function fetchScholarshipsFromDB(): Promise<any[]> {
+  const path = "scholarships";
+  try {
+    const q = query(collection(db, path), orderBy("deadlineDate", "asc"), limit(100));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      return [];
+    }
+
+    return snapshot.docs.map((docSnap) => ({
+      id: docSnap.id,
+      ...docSnap.data(),
+    }));
+  } catch (err) {
+    console.warn("Could not fetch scholarships from Firestore, using fallback cache:", err);
+    return [];
+  }
+}
+
+/**
+ * Seed or update the Firestore scholarships collection from a list of scholarships
+ */
+export async function seedScholarshipsToDB(scholarships: any[]): Promise<number> {
+  const path = "scholarships";
+  let count = 0;
+  try {
+    for (const item of scholarships) {
+      const docRef = doc(db, path, item.id);
+      await setDoc(
+        docRef,
+        {
+          ...item,
+          updatedAt: new Date().toISOString(),
+          lastVerifiedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+      count++;
+    }
+    return count;
+  } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, path);
+    throw err;
+  }
+}
+
+/**
+ * Trigger automated scholarship sync / AI crawler
+ */
+export async function triggerScholarshipSync(academicYear: string = "2026-2027"): Promise<{ success: boolean; updatedCount: number; message: string; data?: any[] }> {
+  try {
+    const response = await fetch("/api/cron/sync-scholarships", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ academicYear }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    console.error("Error triggering scholarship sync:", error);
+    return {
+      success: false,
+      updatedCount: 0,
+      message: error.message || "Error al sincronizar becas.",
+    };
   }
 }
 

@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { NavigationTab, VisaType } from "../types";
 import { MIGRATION_GUIDES_DATA } from "../data/migrationGuides";
+import { COUNTRY_ANTI_SCAM_DATA } from "../data/antiScamData";
 import { CalendarAgendaButton } from "./CalendarAgendaButton";
 
 interface GuiaMigracionProps {
@@ -515,6 +516,92 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
           })}
         </div>
       </div>
+
+      {/* Dynamic Country-Specific Anti-Scam Guide Section */}
+      {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode] && (
+        <div className="bg-rose-500/5 dark:bg-rose-950/20 border-2 border-rose-500/30 rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-rose-500/20 pb-4">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 text-xs font-bold uppercase tracking-wider">
+                <ShieldCheck className="w-4 h-4 text-rose-600" />
+                <span>Protocolo de Protección & Prevención de Fraudes</span>
+              </div>
+              <h3 className="font-headline-md text-xl md:text-2xl font-bold text-rose-950 dark:text-rose-200">
+                Guía Anti-Estafas Oficial para {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].country} {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].flag}
+              </h3>
+              <p className="text-xs text-rose-900/80 dark:text-rose-300/80 max-w-2xl leading-relaxed">
+                Estafas más frecuentes reportadas por migrantes y estudiantes en este país, cómo detectarlas y canales directos de denuncia oficial.
+              </p>
+            </div>
+
+            <div className="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-rose-200 dark:border-rose-900/50 text-xs space-y-1 self-start sm:self-auto">
+              <div className="font-bold text-rose-900 dark:text-rose-200">🚨 Teléfono de Emergencia / Denuncia:</div>
+              <div className="font-mono font-bold text-rose-600 dark:text-rose-400">
+                {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].emergencyPhone}
+              </div>
+              <a
+                href={COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].policeUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[11px] font-bold text-secondary dark:text-teal-400 hover:underline inline-flex items-center gap-1"
+              >
+                <span>Portal de Denuncias Telemáticas</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          </div>
+
+          {/* Housing & Rental Safety Advice */}
+          <div className="p-4 bg-white/80 dark:bg-slate-900/80 rounded-2xl border border-rose-200 dark:border-slate-800 text-xs space-y-1.5">
+            <h4 className="font-bold text-primary dark:text-sky-300 flex items-center gap-2">
+              <Building className="w-4 h-4 text-secondary" />
+              <span>Reglas de Oro para Alquiler Seguro en {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].country}:</span>
+            </h4>
+            <p className="text-on-surface-variant dark:text-slate-300 leading-relaxed">
+              {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].officialRentalPortalInfo}
+            </p>
+          </div>
+
+          {/* Common Scams Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].keyScamAlerts.map((scam, i) => (
+              <div
+                key={i}
+                className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-rose-200/80 dark:border-rose-900/40 space-y-3 shadow-xs"
+              >
+                <div className="font-bold text-sm text-rose-950 dark:text-rose-200 flex items-start gap-2">
+                  <span className="text-rose-600 font-black">⚠️</span>
+                  <span>{scam.scamType}</span>
+                </div>
+
+                <div className="space-y-1 text-xs">
+                  <div className="font-bold text-on-surface dark:text-slate-200">Señal de Alerta:</div>
+                  <p className="text-on-surface-variant dark:text-slate-400 leading-relaxed italic">
+                    "{scam.warningSign}"
+                  </p>
+                </div>
+
+                <div className="space-y-1 text-xs pt-1 border-t border-rose-100 dark:border-slate-800">
+                  <div className="font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>Cómo Protegerte:</span>
+                  </div>
+                  <p className="text-on-surface dark:text-slate-300 leading-relaxed font-medium">
+                    {scam.howToProtect}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-xs text-on-surface-variant dark:text-slate-400 flex items-center gap-1.5 pt-1">
+            <span>Organismo oficial de defensa al consumidor: </span>
+            <strong className="text-primary dark:text-sky-300">
+              {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].officialConsumerProtectionAgency}
+            </strong>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

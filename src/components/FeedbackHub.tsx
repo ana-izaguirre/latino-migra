@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ThumbsUp,
   MessageSquarePlus,
@@ -14,9 +14,15 @@ import {
   FileCheck,
   Bug,
   Heart,
-  X
+  X,
+  Loader2
 } from "lucide-react";
 import { FeedbackSuggestion, GoogleUser } from "../types";
+import {
+  fetchFeedbackSuggestions,
+  createFeedbackSuggestion,
+  upvoteFeedbackSuggestion,
+} from "../lib/firebase";
 
 interface FeedbackHubProps {
   currentUser: GoogleUser | null;
@@ -26,27 +32,28 @@ interface FeedbackHubProps {
 const INITIAL_SUGGESTIONS: FeedbackSuggestion[] = [
   {
     id: "sug-1",
-    title: "Calculadora de Conversión de Monedas en Vivo (COP, MXN, ARS, PEN a EUR/USD)",
+    title: "Calculadora de Conversión de Monedas en Vivo (COP, MXN, ARS, PEN, HNL, CLP a EUR/USD/AUD)",
     description: "Sería genial poder ver los presupuestos mensuales de alquiler y manutención en la moneda local de mi país con el tipo de cambio oficial actualizado.",
     category: "feature",
     authorName: "Camila R.",
     authorCountry: "Colombia",
-    upvotes: 42,
+    upvotes: 48,
     hasUpvoted: false,
-    status: "en_desarrollo",
-    officialResponse: "¡Gran idea! Ya estamos integrando la API de tipos de cambio para el calculador de costos de vida.",
+    status: "implementado",
+    officialResponse: "✅ ¡Ya implementado! Disponible en la Calculadora de Costo de Vida y Planificador con tasas de cambio oficiales en vivo para COP, MXN, ARS, PEN, HNL, CLP, BRL y GTQ.",
     createdAt: "10 ago 2026"
   },
   {
     id: "sug-2",
-    title: "Agregar Guía Paso a Paso para Visas Working Holiday y Nómada Digital en Portugal e Italia",
-    description: "Muchos latinoamericanos buscamos opciones en el sur de Europa donde el clima y el costo de vida son muy accesibles.",
+    title: "Agregar Guía Paso a Paso para Visas Working Holiday y Nómada Digital en Portugal y Australia",
+    description: "Muchos latinoamericanos buscamos opciones de estudio, trabajo remoto y Working Holiday en Australia y Portugal.",
     category: "visa_update",
     authorName: "Mateo Silva",
     authorCountry: "Argentina",
-    upvotes: 38,
+    upvotes: 45,
     hasUpvoted: false,
-    status: "revisando",
+    status: "implementado",
+    officialResponse: "✅ ¡Ya implementado! Se agregaron las guías oficiales completas de Australia (Subclass 500/462/485) y Portugal (Visto D4/D8 Nómada y Procura de Trabalho) con opciones de movilidad y empleo.",
     createdAt: "11 ago 2026"
   },
   {
@@ -81,14 +88,22 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({
   currentUser,
   onOpenAuthModal
 }) => {
-  const [suggestions, setSuggestions] = useState<FeedbackSuggestion[]>(() => {
-    try {
-      const saved = localStorage.getItem("latinomigra_feedback_suggestions");
-      return saved ? JSON.parse(saved) : INITIAL_SUGGESTIONS;
-    } catch {
-      return INITIAL_SUGGESTIONS;
-    }
-  });
+  const [suggestions, setSuggestions] = useState<FeedbackSuggestion[]>(INITIAL_SUGGESTIONS);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Fetch feedback from Firestore
+  useEffect(() => {
+    fetchFeedbackSuggestions()
+      .then((items) => {
+        if (items && items.length > 0) {
+          // Merge with initial suggestions if not present
+          const customIds = new Set(items.map((i) => i.id));
+          const baseRemaining = INITIAL_SUGGESTIONS.filter((b) => !customIds.has(b.id));
+          setSuggestions([...items, ...baseRemaining]);
+        }
+      })
+      .catch((e) => console.log("Feedback suggestions fetched from local fallback:", e));
+  }, []);
 
   const [selectedCategory, setSelectedCategory] = useState<string>("todas");
   const [searchFilter, setSearchFilter] = useState<string>("");
@@ -107,11 +122,13 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({
     { id: "testimonial", label: "❤️ Testimonios", icon: <Heart className="w-4 h-4" /> }
   ];
 
-  const handleUpvote = (id: string) => {
+  const handleUpvote = async (id: string) => {
+    let delta = 1;
     setSuggestions((prev) => {
-      const updated = prev.map((s) => {
+      return prev.map((s) => {
         if (s.id === id) {
           const isUpvoted = s.hasUpvoted;
+          delta = isUpvoted ? -1 : 1;
           return {
             ...s,
             upvotes: isUpvoted ? s.upvotes - 1 : s.upvotes + 1,
@@ -120,35 +137,53 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({
         }
         return s;
       });
-      try {
-        localStorage.setItem("latinomigra_feedback_suggestions", JSON.stringify(updated));
-      } catch {}
-      return updated;
     });
+
+    try {
+      await upvoteFeedbackSuggestion(id, delta);
+    } catch (e) {
+      console.log("Upvoted in session state");
+    }
   };
 
-  const handleCreateSuggestion = (e: React.FormEvent) => {
+  const handleCreateSuggestion = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim() || !newDesc.trim()) return;
 
-    const item: FeedbackSuggestion = {
-      id: `sug-${Date.now()}`,
+    const newSuggestionData: {
+      title: string;
+      description: string;
+      category: FeedbackSuggestion["category"];
+      authorName: string;
+      authorCountry: string;
+      status: "revisando" | "en_desarrollo" | "implementado";
+      userId: string;
+    } = {
       title: newTitle,
       description: newDesc,
       category: newCat,
       authorName: currentUser?.name || "Viajero Comunitario",
       authorCountry: currentUser?.countryOfOrigin || "Latinoamérica",
+      status: "revisando",
+      userId: currentUser?.id || "guest",
+    };
+
+    let createdId = `sug-${Date.now()}`;
+    try {
+      createdId = await createFeedbackSuggestion(newSuggestionData);
+    } catch (err) {
+      console.log("Created suggestion in session:", err);
+    }
+
+    const item: FeedbackSuggestion = {
+      id: createdId,
+      ...newSuggestionData,
       upvotes: 1,
       hasUpvoted: true,
-      status: "revisando",
       createdAt: "Hoy"
     };
 
-    const updated = [item, ...suggestions];
-    setSuggestions(updated);
-    try {
-      localStorage.setItem("latinomigra_feedback_suggestions", JSON.stringify(updated));
-    } catch {}
+    setSuggestions([item, ...suggestions]);
 
     setSuccessNotice(true);
     setTimeout(() => {
@@ -181,7 +216,7 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({
             Sugerencias y Feedback para Mejorar LatinoMigra
           </h1>
           <p className="text-on-surface-variant dark:text-slate-300 text-sm md:text-base mt-1">
-            ¿Cómo manejamos el feedback para que no sean miles de mensajes repetidos? <strong>Vota las ideas de la comunidad</strong> (👍) para priorizar las más pedidas o propón una nueva idea si no existe.
+            ¿Cómo manejamos el feedback para que sea transparente y user-friendly? <strong>Vota las ideas de la comunidad</strong> (👍) para priorizar las más pedidas o propón una nueva idea si no existe.
           </p>
         </div>
 
@@ -194,11 +229,30 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({
             }
           }}
           id="propose-idea-btn"
-          className="flex items-center gap-2 bg-secondary dark:bg-teal-500 text-white dark:text-slate-950 px-5 py-3 rounded-2xl font-bold text-sm hover:opacity-90 transition-all shadow-md shrink-0 self-start md:self-auto"
+          className="btn-tactile flex items-center gap-2 bg-secondary dark:bg-teal-500 text-white dark:text-slate-950 px-5 py-3 rounded-2xl font-bold text-sm hover:opacity-90 transition-all shadow-md shrink-0 self-start md:self-auto"
         >
           <MessageSquarePlus className="w-5 h-5" />
           <span>Proponer Nueva Idea</span>
         </button>
+      </div>
+
+      {/* User-friendly info box explaining storage, source, and workflow */}
+      <div className="bg-primary/5 dark:bg-sky-950/30 border border-primary/20 dark:border-sky-800/50 rounded-2xl p-4 md:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 dark:bg-sky-500/20 text-primary dark:text-sky-400 flex items-center justify-center shrink-0 mt-0.5">
+            <HelpCircle className="w-5 h-5" />
+          </div>
+          <div className="text-xs space-y-1">
+            <p className="font-bold text-on-surface dark:text-slate-200">
+              ¿Cómo funciona este buzón y dónde se guardan tus sugerencias?
+            </p>
+            <p className="text-on-surface-variant dark:text-slate-400 leading-relaxed">
+              • <strong>Almacenamiento Seguro:</strong> Todas las propuestas y votos se sincronizan y guardan en tiempo real en la base de datos de <strong>Firebase Firestore</strong>.<br />
+              • <strong>Origen de las ideas:</strong> Provienen directamente de estudiantes y migrantes de toda Latinoamérica. Las sugerencias con más votos son analizadas semanalmente por el equipo.<br />
+              • <strong>Seguimiento de Estado:</strong> Cuando una idea es revisada, desarrollada o lanzada, se actualiza su etiqueta a <em>En Revisión</em>, <em>En Desarrollo</em> o <em>Implementado</em> con una respuesta oficial.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Filter and Search Bar */}

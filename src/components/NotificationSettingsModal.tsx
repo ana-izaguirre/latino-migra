@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { GoogleUser, UserAlertPreferences } from "../types";
 import { useLanguage } from "../lib/i18n";
+import { saveUserAlertPreferences, getUserAlertPreferences } from "../lib/firebase";
 
 interface NotificationSettingsModalProps {
   isOpen: boolean;
@@ -28,30 +29,34 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
   currentUser,
 }) => {
   const { language } = useLanguage();
-  const [preferences, setPreferences] = useState<UserAlertPreferences>(() => {
-    try {
-      const saved = localStorage.getItem("latinomigra_alert_preferences");
-      if (saved) return JSON.parse(saved);
-    } catch {}
-
-    return {
-      email: currentUser?.email || "",
-      notifyScholarshipDeadlines: true,
-      notifyVisaPolicyChanges: true,
-      notifyForumReplies: true,
-      notifyWeeklyDigest: false,
-      destinationCountry: "España",
-      preferredArea: "Todas las áreas",
-      pushEnabled: false,
-    };
+  const [preferences, setPreferences] = useState<UserAlertPreferences>({
+    email: currentUser?.email || "",
+    notifyScholarshipDeadlines: true,
+    notifyVisaPolicyChanges: true,
+    notifyForumReplies: true,
+    notifyWeeklyDigest: false,
+    destinationCountry: "España",
+    preferredArea: "Todas las áreas",
+    pushEnabled: false,
   });
 
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
   const [permissionState, setPermissionState] = useState<string>("default");
 
+  // Load user alert preferences from Firestore
   useEffect(() => {
-    if (currentUser?.email && !preferences.email) {
-      setPreferences((prev) => ({ ...prev, email: currentUser.email }));
+    if (currentUser?.id) {
+      getUserAlertPreferences(currentUser.id).then((saved) => {
+        if (saved) {
+          setPreferences((prev) => ({
+            ...prev,
+            ...saved,
+            email: saved.email || currentUser.email || prev.email
+          }));
+        } else if (currentUser.email) {
+          setPreferences((prev) => ({ ...prev, email: currentUser.email }));
+        }
+      }).catch((e) => console.log("Preferences load error:", e));
     }
   }, [currentUser]);
 
@@ -81,10 +86,12 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      localStorage.setItem("latinomigra_alert_preferences", JSON.stringify(preferences));
+      if (currentUser?.id) {
+        await saveUserAlertPreferences(currentUser.id, preferences);
+      }
       setSavedSuccess(true);
       setTimeout(() => {
         setSavedSuccess(false);

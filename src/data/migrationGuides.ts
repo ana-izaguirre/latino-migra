@@ -713,6 +713,176 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
       text: "Los oficiales consulares evalúan tres cosas principales: que tu programa académico sea coherente con tu trayectoria previa, que tengas los recursos financieros claros sin necesidad de trabajar ilegalmente, y que mantengas fuertes lazos con tu país de origen.",
       author: "Comunidad LatinoMigra Boston, Austin y Miami"
     }
+  },
+  PT: {
+    id: "PT",
+    country: "Portugal",
+    flag: "🇵🇹",
+    heroImage: "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?auto=format&fit=crop&w=1200&q=80",
+    estimatedTime: "2 - 4 Meses",
+    officialImmigrationPortal: "https://aima.gov.pt",
+    officialPortalName: "AIMA (Agência para a Integração, Migrações e Asilo de Portugal)",
+    visas: [
+      {
+        id: "d8-nomad-pt",
+        name: "Visto D8 - Nómada Digital (Trabalho Remoto)",
+        category: "Nómada Digital",
+        tag: "Renda Remota",
+        description: "Para profissionais e prestadores de serviços remotos que trabalham para empresas sediadas fora de Portugal. Modalidade de estada temporária (1 ano) ou residência (2 anos renováveis).",
+        duration: "1 ano (estada) ou 2 anos (residência)",
+        workPermitHours: "Teletrabajo internacional ilimitado",
+        officialSourceUrl: "https://vistos.mne.gov.pt/pt/vistos-nacionais/documentacao-instrutoria/residencia",
+        officialSourceLabel: "Portal Diplomático de Portugal (vistos.mne.gov.pt)",
+        estimatedCostOfVisa: "€90 (Tasa consular nacional)",
+        proofOfFundsRequired: "4x Salario Mínimo Nacional (aprox. 3.280€/mes últimos 3 meses)",
+        keyRequirements: [
+          "Contrato de trabajo o prestación de servicios con empresa fuera de Portugal.",
+          "Comprobante de ingresos medios mensuales equivalentes a cuatro salarios mínimos portugueses.",
+          "Alojamiento asegurado en Portugal (contrato de alquiler registrado o carta convite).",
+          "Certificado de antecedentes penales apostillado y seguro de salud."
+        ]
+      },
+      {
+        id: "d4-student-pt",
+        name: "Visto D4 - Estudante de Ensino Superior",
+        category: "Estudios",
+        tag: "Universidades Asequibles",
+        description: "Para cursar licenciaturas, másteres o doctorados en universidades politécnicas o públicas portuguesas. Permite trabajar notificando a la AIMA.",
+        duration: "1 año (renovable anualmente)",
+        workPermitHours: "Permitido compatibilizar con contrato laboral o recibos verdes",
+        officialSourceUrl: "https://aima.gov.pt",
+        officialSourceLabel: "AIMA Portugal",
+        estimatedCostOfVisa: "€90",
+        proofOfFundsRequired: "100% Salario Mínimo Nacional (aprox. 820€/mes o 9.840€/año)",
+        keyRequirements: [
+          "Carta de aceptación oficial de universidad portuguesa reconocida por la DGES.",
+          "Comprobante de medios de subsistencia y alojamiento.",
+          "Seguro médico internacional o PB4 para brasileños.",
+          "Antecedentes penales limpios apostillados."
+        ]
+      },
+      {
+        id: "procura-trabalho-pt",
+        name: "Visto de Procura de Trabalho (Búsqueda de Empleo)",
+        category: "Búsqueda Empleo / Oportunidad",
+        tag: "Entrada Legal para Buscar Empleo",
+        description: "Permite entrar a Portugal durante 120 días (prorrogable por 60 días más) exclusivamente para buscar empleo y formalizar un contrato de trabajo.",
+        duration: "120 días (+ 60 días prórroga)",
+        workPermitHours: "Autoriza a trabajar en cuanto se formalice contrato",
+        officialSourceUrl: "https://www.iefp.pt",
+        officialSourceLabel: "IEFP (Instituto do Emprego e Formação Profissional)",
+        estimatedCostOfVisa: "€90",
+        proofOfFundsRequired: "3x Salario Mínimo Nacional (aprox. 2.460€ en cuenta)",
+        keyRequirements: [
+          "Declaración de manifestación de interés registrada en el portal del IEFP.",
+          "Comprobante de disponibilidad de fondos equivalentes a 3 salarios mínimos.",
+          "Pasaje de regreso o comprobante de solvencia extra.",
+          "Seguro de viaje y antecedentes penales apostillados."
+        ]
+      }
+    ],
+    costs: [
+      { category: "Alojamiento (Habitación privada)", range: "€350 - €600", percentage: 55, color: "bg-primary" },
+      { category: "Alimentación y Supermercado", range: "€180 - €260", percentage: 40, color: "bg-secondary" },
+      { category: "Transporte Público (Passe Navegante)", range: "€30 - €40", percentage: 10, color: "bg-emerald-600" },
+      { category: "Salud y Servicios Básicos", range: "€50 - €90", percentage: 20, color: "bg-outline" }
+    ],
+    documents: [
+      { id: "nif-pt", title: "NIF (Número de Identificação Fiscal)", subtitle: "Número tributario indispensable para alquilar y abrir cuenta bancaria.", completed: true },
+      { id: "contrato-arrendamento", title: "Contrato de Alquiler Registrado en Finanças", subtitle: "Requisito obligatorio para empadronamiento (Junta de Freguesia).", completed: false },
+      { id: "seguro-saude-pt", title: "Seguro de Salud o Seguro de Viaje", subtitle: "Cobertura médica de al menos 30.000€.", completed: true },
+      { id: "antecedentes-pt", title: "Certificado de Antecedentes Penales Apostillado", subtitle: "Emitido en país de origen dentro de los 90 días.", completed: false }
+    ],
+    communityTip: {
+      title: "Consigue el NIF y cuenta bancaria de inmediato",
+      text: "En Portugal, el NIF es la llave para todo: alquilar, contratar internet, matricularte en la universidad o trabajar. Tramítalo en cualquier 'Loja do Cidadão' o 'Serviço de Finanças' apenas llegues.",
+      author: "Comunidad LatinoMigra Lisboa & Oporto"
+    }
+  },
+  AU: {
+    id: "AU",
+    country: "Australia",
+    flag: "🇦🇺",
+    heroImage: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=1200&q=80",
+    estimatedTime: "1 - 3 Meses",
+    officialImmigrationPortal: "https://immi.homeaffairs.gov.au",
+    officialPortalName: "Department of Home Affairs - Australian Government",
+    visas: [
+      {
+        id: "student-subclass-500",
+        name: "Student Visa (Subclass 500)",
+        category: "Estudios",
+        tag: "48h Quincenales de Trabajo",
+        description: "Permite estudiar en universidades (Higher Education), institutos VET o cursos de inglés (ELICOS) en instituciones registradas en CRICOS. Incluye permiso de trabajo de 48 horas por quincena durante clases y tiempo completo en vacaciones.",
+        duration: "Hasta 5 años según la duración del curso",
+        workPermitHours: "48 horas quincenales durante clases / Full-time en recesos",
+        officialSourceUrl: "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/student-500",
+        officialSourceLabel: "Home Affairs Subclass 500",
+        estimatedCostOfVisa: "$1,600 AUD (Tasa de solicitud oficial)",
+        proofOfFundsRequired: "Fondos de manutención de $29,710 AUD/año + matrícula primer año + pasajes",
+        keyRequirements: [
+          "CoE (Confirmation of Enrolment) emitido por una institución aprobada por CRICOS.",
+          "Cumplir con el Genuine Student (GS) requirement demostrando proyecto de carrera.",
+          "Seguro médico OSHC (Overseas Student Health Cover) obligatorio durante toda la estancia.",
+          "Nivel de inglés certificado (IELTS, PTE Academic o TOEFL)."
+        ]
+      },
+      {
+        id: "subclass-485-graduate",
+        name: "Temporary Graduate Visa (Subclass 485)",
+        category: "Trabajo / Express",
+        tag: "Post-Study Work 2 a 4 Años",
+        description: "Permiso de trabajo abierto a jornada completa para graduados de licenciaturas, másteres o doctorados en Australia.",
+        duration: "2 años (Bachelor), 3 años (Master), 4 años (PhD)",
+        workPermitHours: "Jornada completa sin restricciones de empleador",
+        officialSourceUrl: "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/temporary-graduate-485",
+        officialSourceLabel: "Department of Home Affairs (Subclass 485)",
+        estimatedCostOfVisa: "$1,895 AUD",
+        proofOfFundsRequired: "Haber completado 2 años académicos en Australia (CRICOS)",
+        keyRequirements: [
+          "Tener menos de 35 años (o 50 para PhD).",
+          "Haber completado un título calificado de al menos 92 semanas en Australia.",
+          "Nivel de inglés IELTS 6.5 global (mínimo 5.5 en cada banda).",
+          "Seguro de salud OVHC vigente."
+        ]
+      },
+      {
+        id: "subclass-462-work-holiday",
+        name: "Work and Holiday Visa (Subclass 462)",
+        category: "Búsqueda Empleo / Oportunidad",
+        tag: "Jóvenes 18 a 30 Años",
+        description: "Para jóvenes de Argentina, Chile, Perú, Uruguay y Ecuador para viajar y trabajar a jornada completa durante 12 meses.",
+        duration: "12 meses (extendible a 2º y 3er año por trabajo regional)",
+        workPermitHours: "Jornada completa (máx. 6 meses por empleador)",
+        officialSourceUrl: "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/work-holiday-462",
+        officialSourceLabel: "Home Affairs Subclass 462",
+        estimatedCostOfVisa: "$635 AUD",
+        proofOfFundsRequired: "$5,000 AUD de solvencia en cuenta bancaria",
+        keyRequirements: [
+          "Edad entre 18 y 30 años al postular.",
+          "Pasaporte de país participante con cupos disponibles.",
+          "Nivel de inglés funcional demostrado (IELTS 4.5).",
+          "Al menos 2 años de estudios universitarios completados."
+        ]
+      }
+    ],
+    costs: [
+      { category: "Alojamiento (Habitación compartida/privada)", range: "$220 - $450 AUD/semana", percentage: 65, color: "bg-primary" },
+      { category: "Alimentación y Supermercado", range: "$100 - $180 AUD/semana", percentage: 40, color: "bg-secondary" },
+      { category: "Transporte (Opal / Myki / Translink)", range: "$40 - $65 AUD/semana", percentage: 20, color: "bg-emerald-600" },
+      { category: "Seguro OSHC Obligatorio", range: "$50 - $80 AUD/mes", percentage: 15, color: "bg-outline" }
+    ],
+    documents: [
+      { id: "coe-au", title: "CoE (Confirmation of Enrolment)", subtitle: "Documento emitido tras pagar la matrícula del curso CRICOS.", completed: true },
+      { id: "oshc-au", title: "Póliza de Seguro Médico OSHC", subtitle: "Cobertura obligatoria por ley durante toda la estancia.", completed: false },
+      { id: "tfn-au", title: "TFN (Tax File Number) en la ATO", subtitle: "Número fiscal indispensable para trabajar legalmente.", completed: false },
+      { id: "usie-statement", title: "Genuine Student (GS) Statement", subtitle: "Carta explicativa de coherencia académica y profesional.", completed: true }
+    ],
+    communityTip: {
+      title: "Abre tu cuenta bancaria y solicita el TFN antes de aterrizar",
+      text: "Bancos como Commonwealth Bank permiten abrir la cuenta desde tu país de origen hasta 14 días antes. Apenas llegues a Australia, solicita tu TFN en el portal de la ATO para evitar retenciones del 45% en tus nóminas.",
+      author: "Comunidad LatinoMigra Sídney, Melbourne & Brisbane"
+    }
   }
 };
 

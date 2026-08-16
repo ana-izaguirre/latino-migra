@@ -1,6 +1,21 @@
-export type NavigationTab = "home" | "planificador" | "calculadora" | "becas" | "guia" | "comunidad" | "chat" | "mapa" | "feedback";
+export type NavigationTab = "home" | "planificador" | "calculadora" | "becas" | "voluntariados" | "guia" | "comunidad" | "chat" | "mapa" | "feedback" | "admin";
 
 export type ThemeMode = "light" | "dark";
+
+export type EducationLevel = 
+  | "todos" 
+  | "pregrado" 
+  | "postgrado" 
+  | "doctorado" 
+  | "postdoctorado" 
+  | "intercambio_voluntariado"
+  | "Pregrado"
+  | "Postgrado"
+  | "Doctorado"
+  | "Postdoctorado"
+  | "Intercambio / Voluntariado"
+  | "Todos los niveles"
+  | string;
 
 export interface GoogleUser {
   id: string;
@@ -24,6 +39,7 @@ export interface MigrationPlan {
   estimatedMonthlyBudgetEur: number;
   initialSavingsBudgetEur: number;
   hasTraveledBefore: boolean;
+  completedSteps?: string[];
   notes?: string;
   createdAt?: string;
 }
@@ -66,6 +82,7 @@ export interface Scholarship {
   country: string;
   countryCode: string;
   area: string; // e.g. "STEM", "Artes y Humanidades", "Salud", "Negocios", "Todas las áreas"
+  educationLevel?: EducationLevel;
   supportType: "Beca Completa" | "Beca Parcial" | "Manutención";
   deadline: string;
   deadlineDate: string; // YYYY-MM-DD for sorting

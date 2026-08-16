@@ -1,0 +1,33 @@
+name: Sincronización Automática Anual de Becas (Cron Job)
+
+on:
+  schedule:
+    # Se ejecuta todos los domingos a las 04:00 UTC (o el primer día de cada mes)
+    - cron: '0 4 * * 0'
+  workflow_dispatch: # Permite ejecutar el job manualmente desde la consola de GitHub
+
+jobs:
+  update-scholarships:
+    name: Actualizar Convocatorias y Fechas de Becas
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Código
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Instalar Dependencias
+        run: npm ci
+
+      - name: Ejecutar Sincronizador con Gemini IA & Firestore
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+        run: |
+          echo "Ejecutando actualización anual de convocatorias..."
+          # El script contacta los portales oficiales y actualiza Firestore

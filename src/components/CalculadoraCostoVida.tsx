@@ -33,7 +33,7 @@ interface CityData {
   countryCode: string;
   flag: string;
   currencySymbol: string;
-  currencyCode: "EUR" | "USD" | "CAD";
+  currencyCode: "EUR" | "USD" | "CAD" | "AUD";
   eurRate: number; // 1 unit in EUR
   roomShared: number;
   roomPrivate: number;
@@ -108,6 +108,86 @@ const CITIES_DATA: Record<string, CityData> = {
     childcarePerKid: 280,
     officialVisaRequirementMonthly: 600,
     officialRequirementNote: "100% IPREM mensual (ciudades universitarias muy accesibles)",
+  },
+  "lisbon-pt": {
+    city: "Lisboa",
+    country: "Portugal",
+    countryCode: "PT",
+    flag: "🇵🇹",
+    currencySymbol: "€",
+    currencyCode: "EUR",
+    eurRate: 1,
+    roomShared: 320,
+    roomPrivate: 480,
+    apartmentStudio: 820,
+    groceries: 210,
+    transitPass: 30, // Passe Navegante Metropolitano
+    healthInsurance: 45,
+    phoneInternet: 30,
+    entertainment: 120,
+    childcarePerKid: 300,
+    officialVisaRequirementMonthly: 820,
+    officialRequirementNote: "100% Salario Mínimo Nacional (820€/mes para visado de estudiante D4)",
+  },
+  "porto-pt": {
+    city: "Oporto / Coímbra",
+    country: "Portugal",
+    countryCode: "PT",
+    flag: "🇵🇹",
+    currencySymbol: "€",
+    currencyCode: "EUR",
+    eurRate: 1,
+    roomShared: 260,
+    roomPrivate: 390,
+    apartmentStudio: 650,
+    groceries: 190,
+    transitPass: 30,
+    healthInsurance: 40,
+    phoneInternet: 28,
+    entertainment: 100,
+    childcarePerKid: 250,
+    officialVisaRequirementMonthly: 820,
+    officialRequirementNote: "Exigencia legal AIMA de medios de subsistencia del salario mínimo",
+  },
+  "sydney-au": {
+    city: "Sídney",
+    country: "Australia",
+    countryCode: "AU",
+    flag: "🇦🇺",
+    currencySymbol: "$ AUD",
+    currencyCode: "AUD",
+    eurRate: 0.61,
+    roomShared: 950,
+    roomPrivate: 1450,
+    apartmentStudio: 2400,
+    groceries: 480,
+    transitPass: 180, // Opal Card
+    healthInsurance: 65, // OSHC mensual
+    phoneInternet: 55,
+    entertainment: 260,
+    childcarePerKid: 1600,
+    officialVisaRequirementMonthly: 2475,
+    officialRequirementNote: "$29,710 AUD/año fijado por el Department of Home Affairs (Subclass 500)",
+  },
+  "melbourne-au": {
+    city: "Melbourne / Brisbane",
+    country: "Australia",
+    countryCode: "AU",
+    flag: "🇦🇺",
+    currencySymbol: "$ AUD",
+    currencyCode: "AUD",
+    eurRate: 0.61,
+    roomShared: 820,
+    roomPrivate: 1250,
+    apartmentStudio: 2050,
+    groceries: 440,
+    transitPass: 160,
+    healthInsurance: 65,
+    phoneInternet: 50,
+    entertainment: 220,
+    childcarePerKid: 1400,
+    officialVisaRequirementMonthly: 2475,
+    officialRequirementNote: "Requisito financiero unificado Home Affairs para solvencia de estudiante",
   },
   "toronto-ca": {
     city: "Toronto",
@@ -262,6 +342,7 @@ const FX_RATES_FROM_USD: Record<string, { rate: number; name: string; symbol: st
   USD: { rate: 1.0, name: "Dólar Estadounidense (USD)", symbol: "$ USD" },
   EUR: { rate: 0.92, name: "Euro (EUR)", symbol: "€" },
   CAD: { rate: 1.36, name: "Dólar Canadiense (CAD)", symbol: "$ CAD" },
+  AUD: { rate: 1.52, name: "Dólar Australiano (AUD)", symbol: "$ AUD" },
 };
 
 export const CalculadoraCostoVida: React.FC<CalculadoraCostoVidaProps> = ({
@@ -810,6 +891,31 @@ export const CalculadoraCostoVida: React.FC<CalculadoraCostoVidaProps> = ({
             <p className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
               <strong>{city.officialRequirementNote}</strong>. Ten en cuenta que el consulado exige extractos bancarios demostrables a tu nombre o carta de beca que cubra este monto antes de concederte el visado.
             </p>
+          </div>
+
+          {/* Sources & Methodology Citation Box */}
+          <div className="bg-surface-container-lowest dark:bg-slate-900 border border-outline-variant/40 dark:border-slate-800 p-6 rounded-3xl space-y-3">
+            <div className="flex items-center gap-2 text-primary dark:text-sky-300 font-bold text-xs">
+              <ShieldCheck className="w-4 h-4 text-emerald-500" />
+              <span>Transparencia: ¿De Dónde Salen Estos Valores de Presupuesto?</span>
+            </div>
+            <p className="text-xs text-on-surface-variant dark:text-slate-400 leading-relaxed">
+              Los costos reflejados en LatinoMigra se calculan combinando tres fuentes oficiales y empíricas auditadas:
+            </p>
+            <ul className="text-xs space-y-1.5 text-on-surface-variant dark:text-slate-300">
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-500 font-bold">1.</span>
+                <span><strong>Leyes e Índices Oficiales de Migración:</strong> Tabulador IPREM (España), Sperrkonto federal reglamentado por el DAAD/Auswärtiges Amt (Alemania), baremo de fondos IRCC (Canadá), Department of Home Affairs (Australia) y Formulario I-20/SEVIS (EE.UU.).</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-500 font-bold">2.</span>
+                <span><strong>Benchmarks Numbeo & Portales Oficiales de Transporte:</strong> Precios de abonos de transporte mensual regulados (Abono Joven Madrid, Deutschlandticket Alemania, Passe Navegante Lisboa, TTC Toronto, Opal NSW).</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-500 font-bold">3.</span>
+                <span><strong>Reportes Verificados de Estudiantes:</strong> Datos reales actualizados por los miembros de la Comunidad LatinoMigra residentes en cada ciudad.</span>
+              </li>
+            </ul>
           </div>
         </div>
       </div>

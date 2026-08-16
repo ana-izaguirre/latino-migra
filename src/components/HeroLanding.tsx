@@ -77,7 +77,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ setActiveTab, currentU
                 onClick={() => setActiveTab("becas")}
                 id="hero-btn-becas"
                 aria-label="Buscar Becas"
-                className="inline-flex items-center gap-2 bg-primary dark:bg-sky-600 hover:bg-primary-container text-on-primary dark:text-white px-5 py-3 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all"
+                className="inline-flex items-center gap-2 bg-primary dark:bg-sky-600 hover:bg-primary-container text-on-primary dark:text-white px-5 py-3 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer"
               >
                 <Search className="w-4 h-4" />
                 <span>Buscar Becas</span>
@@ -87,7 +87,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ setActiveTab, currentU
                 onClick={() => setActiveTab("guia")}
                 id="hero-btn-guias"
                 aria-label="Ver Guías Migratorias"
-                className="inline-flex items-center gap-2 bg-secondary dark:bg-teal-600 hover:bg-secondary/90 text-white px-5 py-3 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all"
+                className="inline-flex items-center gap-2 bg-secondary dark:bg-teal-600 hover:bg-secondary/90 text-white px-5 py-3 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer"
               >
                 <Compass className="w-4 h-4" />
                 <span>Ver Guías Migratorias</span>
@@ -97,7 +97,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ setActiveTab, currentU
                 onClick={() => setActiveTab("planificador")}
                 id="hero-btn-planificador"
                 aria-label="Armar Mi Plan de Migración"
-                className="inline-flex items-center gap-2 bg-surface-container dark:bg-slate-800 hover:bg-surface-container-high text-primary dark:text-sky-300 px-4 py-3 rounded-xl font-semibold text-sm border border-outline-variant/60 dark:border-slate-700 transition-all"
+                className="inline-flex items-center gap-2 bg-surface-container dark:bg-slate-800 hover:bg-surface-container-high text-primary dark:text-sky-300 px-4 py-3 rounded-xl font-semibold text-sm border border-outline-variant/60 dark:border-slate-700 transition-all active:scale-95 cursor-pointer"
               >
                 <Calculator className="w-4 h-4 text-emerald-500" />
                 <span>Planificador 360°</span>

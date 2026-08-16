@@ -13,28 +13,61 @@ export const TRANSLATIONS: TranslationDictionary = {
   // Navigation
   "nav.planificador": { es: "Planificador 360°", en: "360° Planner" },
   "nav.calculadora": { es: "Calculadora Costo de Vida", en: "Cost of Living Calculator" },
-  "nav.becas": { es: "Becas", en: "Scholarships" },
+  "nav.becas": { es: "Becas & Estudios", en: "Scholarships & Studies" },
+  "nav.voluntariados": { es: "Voluntariados & Intercambios", en: "Volunteering & Exchanges" },
   "nav.guia": { es: "Guía de Migración", en: "Migration Guide" },
   "nav.mapa": { es: "Mapa Consular", en: "Consular Map" },
   "nav.comunidad": { es: "Comunidad", en: "Community" },
   "nav.feedback": { es: "Sugerencias", en: "Feedback" },
   "nav.chat": { es: "Chat IA", en: "AI Chat" },
-  "nav.login": { es: "Acceder", en: "Sign In" },
+  "nav.admin": { es: "Panel de Control", en: "Admin Dashboard" },
+  "nav.login": { es: "Acceder con Google", en: "Sign In with Google" },
   "nav.logout": { es: "Cerrar Sesión", en: "Sign Out" },
-  "nav.tagline": { es: "Plataforma de Migración & Becas para Latinoamérica", en: "Migration & Scholarship Platform for Latin America" },
+  "nav.tagline": { es: "Plataforma de Migración, Becas & Intercambios para Latinoamérica", en: "Migration, Scholarships & Exchange Platform for Latin America" },
+  "nav.menu": { es: "Menú", en: "Menu" },
+  "nav.close": { es: "Cerrar", en: "Close" },
+  "nav.search": { es: "Buscar becas, voluntariados o visas...", en: "Search scholarships, volunteering, or visas..." },
+  "nav.alerts": { es: "Alertas y Avisos", en: "Alerts & Notices" },
 
   // Hero & General
   "hero.badge": { es: "Plataforma Gratuita para Migrantes y Becarios", en: "Free Platform for Migrants and Scholars" },
   "hero.title": { es: "Tu futuro en el extranjero comienza con claridad", en: "Your future abroad begins with clarity" },
-  "hero.subtitle": { es: "Descubre becas vigentes, requisitos oficiales de visados, costo de vida real en tu moneda y conecta con una comunidad de apoyo mutuo.", en: "Discover active scholarships, official visa requirements, real cost of living in your currency, and connect with a mutual support community." },
+  "hero.subtitle": { es: "Descubre becas vigentes, voluntariados internacionales, requisitos oficiales de visados, costo de vida real en tu moneda y conecta con una comunidad de apoyo mutuo.", en: "Discover active scholarships, international volunteering, official visa requirements, real cost of living in your currency, and connect with a mutual support community." },
   "hero.ctaPlan": { es: "Crear mi Plan Migratorio", en: "Build My Migration Plan" },
   "hero.ctaScholarships": { es: "Explorar Becas Activas", en: "Explore Scholarships" },
+  "hero.ctaVolunteering": { es: "Voluntariados & Intercambios", en: "Volunteering & Exchanges" },
   "hero.ctaAI": { es: "Evaluar Perfil con IA", en: "Evaluate Profile with AI" },
 
   // Profile Evaluator Banner
   "evaluator.title": { es: "Diagnóstico de Perfil Migratorio con IA", en: "AI Migration Profile Diagnosis" },
-  "evaluator.desc": { es: "Descubre cuál es tu mejor país, tipo de visa o beca según tu carrera, edad, situación familiar y ahorros.", en: "Find out your best country, visa type, or scholarship based on your career, age, family status, and savings." },
+  "evaluator.desc": { es: "Descubre cuál es tu mejor país, tipo de visa o beca según tu carrera, nivel educativo, situación familiar y ahorros.", en: "Find out your best country, visa type, or scholarship based on your career, education level, family status, and savings." },
   "evaluator.btn": { es: "Iniciar Evaluación Gratuita", en: "Start Free Assessment" },
+
+  // Education Level Selector
+  "edu.title": { es: "Filtra por tu Nivel Educativo Actual o de Interés", en: "Filter by Your Education Level of Interest" },
+  "edu.subtitle": { es: "Te recomendamos las mejores vías y becas según tu grado académico, siempre pudiendo explorar todos los niveles.", en: "We recommend top pathways and scholarships matching your degree, while letting you explore all options." },
+  "edu.pregrado": { es: "Pregrado / Licenciatura", en: "Undergraduate / Bachelor" },
+  "edu.postgrado": { es: "Postgrado / Máster", en: "Postgraduate / Master's" },
+  "edu.doctorado": { es: "Doctorado (PhD)", en: "Doctorate (PhD)" },
+  "edu.postdoc": { es: "Post Doctorado", en: "Post Doctorate" },
+  "edu.intercambio": { es: "Intercambio / Voluntariado", en: "Exchange / Volunteering" },
+  "edu.todos": { es: "Ver Todos los Niveles", en: "View All Levels" },
+
+  // Planner
+  "planner.title": { es: "Simulador & Planificador de Migración Integral", en: "Comprehensive Migration Simulator & Planner" },
+  "planner.origin": { es: "Tu País de Origen", en: "Your Country of Origin" },
+  "planner.destination": { es: "País de Destino", en: "Destination Country" },
+  "planner.save": { es: "Guardar mi Plan", en: "Save My Plan" },
+  "planner.saved": { es: "¡Plan Guardado en tu Perfil!", en: "Plan Saved to Your Profile!" },
+  "planner.askAI": { es: "Consultar Detalles a la IA", en: "Ask AI for Roadmap" },
+
+  // Volunteering
+  "vol.disclaimerTitle": { es: "Aviso Importante: Voluntariados e Intercambios NO son Vías Migratorias", en: "Important Notice: Volunteering & Cultural Exchanges are NOT Direct Migration Routes" },
+  "vol.disclaimerText": { es: "Estas experiencias son ideales para enriquecimiento cultural, mejorar idiomas, hacer contactos y conocer un país por periodos cortos/medianos. No otorgan residencia permanente ni permiso de trabajo formal ordinario.", en: "These programs are designed for cultural immersion, language learning, networking, and experiencing a country for short-to-medium stays. They do NOT grant permanent residency or standard local open work permits." },
+
+  // Budget source
+  "budget.sourceTitle": { es: "Fuentes Oficiales y Metodología de Presupuestos", en: "Official Sources & Budget Methodology" },
+  "budget.sourceText": { es: "Los costos reflejados provienen de los requisitos financieros de inmigración oficiales (IPREM en España, Sperrkonto en Alemania, Formulario I-20/SEVIS en EE.UU., requisito IRCC en Canadá, Índice de Precios Numbeo y reportes de estudiantes de la comunidad).", en: "Reflected estimates are sourced from official government visa subsistence thresholds (IPREM Spain, Sperrkonto Germany, Form I-20/SEVIS USA, IRCC guidelines Canada, Numbeo living benchmarks, and verified community student submissions)." },
 
   // Community
   "community.title": { es: "Foros y Experiencias de Migrantes", en: "Forums & Migrant Experiences" },
@@ -51,9 +84,16 @@ export const TRANSLATIONS: TranslationDictionary = {
   "chat.inputPlaceholder": { es: "Pregunta sobre visas, becas, ciudades o tu situación profesional...", en: "Ask about visas, scholarships, cities, or your career profile..." },
   "chat.disclaimer": { es: "LatinoMigra IA es una guía orientativa. Verifica siempre la información oficial en los consulados correspondientes.", en: "LatinoMigra AI is an informative guide. Always verify official details at the respective embassies or consulates." },
 
+  // Admin Dashboard
+  "admin.title": { es: "Panel de Administración & Métricas de la Plataforma", en: "Admin Dashboard & Platform Metrics" },
+  "admin.sync": { es: "Sincronizar y Actualizar Datos", en: "Sync & Update Database" },
+  "admin.totalScholarships": { es: "Becas Activas en Sistema", en: "Active Scholarships in DB" },
+  "admin.users": { es: "Usuarios y Registros", en: "Users & Profiles" },
+  "admin.cron": { es: "Estado de Tareas en Segundo Plano (Cron Job)", en: "Background Tasks Status (Cron Job)" },
+
   // Footer
   "footer.tools": { es: "Herramientas", en: "Tools" },
-  "footer.community": { es: "Comunidad", en: "Community" },
+  "footer.community": { es: "Comunidad & Recursos", en: "Community & Resources" },
   "footer.legal": { es: "Garantía y Legal", en: "Guarantee & Legal" },
   "footer.verified": { es: "Fuentes 100% Verificadas", en: "100% Verified Sources" },
   "footer.terms": { es: "Términos y Condiciones", en: "Terms & Conditions" },
@@ -61,7 +101,7 @@ export const TRANSLATIONS: TranslationDictionary = {
   "footer.guidelines": { es: "Normas de Convivencia", en: "Community Guidelines" },
   "footer.contact": { es: "Contacto y Soporte", en: "Contact & Support" },
   "footer.rights": { es: "Todos los derechos reservados.", en: "All rights reserved." },
-  "footer.madeWith": { es: "Hecho con amor para Latinoamérica", en: "Made with love for Latin America" },
+  "footer.madeWith": { es: "Hecho con amor para toda Latinoamérica", en: "Made with love for all of Latin America" },
 };
 
 interface LanguageContextType {

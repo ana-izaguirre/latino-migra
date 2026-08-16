@@ -42,6 +42,66 @@
       },
       "required": ["userId", "title", "content"]
     },
+    "migrationPlans": {
+      "title": "Migration Plans",
+      "description": "Personalized migration simulation plans for users",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "originCountry": { "type": "string" },
+        "destinationCountry": { "type": "string" },
+        "migrationPathway": { "type": "string" },
+        "familyStatus": { "type": "string" },
+        "numberOfChildren": { "type": "number" },
+        "climatePreference": { "type": "string" },
+        "lifestylePreference": { "type": "string" },
+        "estimatedMonthlyBudgetEur": { "type": "number" },
+        "initialSavingsBudgetEur": { "type": "number" },
+        "hasTraveledBefore": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "originCountry", "destinationCountry"]
+    },
+    "userPreferences": {
+      "title": "User Preferences",
+      "description": "Alert and notification preferences for users",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "email": { "type": "string" },
+        "notifyScholarshipDeadlines": { "type": "boolean" },
+        "notifyVisaPolicyChanges": { "type": "boolean" },
+        "notifyForumReplies": { "type": "boolean" },
+        "notifyWeeklyDigest": { "type": "boolean" },
+        "destinationCountry": { "type": "string" },
+        "preferredArea": { "type": "string" },
+        "pushEnabled": { "type": "boolean" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["userId"]
+    },
+    "feedbackSuggestions": {
+      "title": "Feedback Suggestions",
+      "description": "Community feedback and feature proposals",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string", "maxLength": 300 },
+        "description": { "type": "string", "maxLength": 3000 },
+        "category": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorCountry": { "type": "string" },
+        "upvotes": { "type": "number" },
+        "status": { "type": "string" },
+        "officialResponse": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "userId": { "type": "string" }
+      },
+      "required": ["title", "description", "category"]
+    },
     "forumPosts": {
       "title": "Forum Posts",
       "description": "Community questions and migration experiences",
@@ -75,9 +135,42 @@
         "userId": { "type": "string" }
       },
       "required": ["postId", "text", "author"]
+    },
+    "scholarships": {
+      "title": "Scholarships",
+      "description": "Dynamic catalog of international scholarships updated automatically",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "institution": { "type": "string" },
+        "institutionType": { "type": "string" },
+        "officialPortalName": { "type": "string" },
+        "country": { "type": "string" },
+        "countryCode": { "type": "string" },
+        "area": { "type": "string" },
+        "supportType": { "type": "string" },
+        "deadline": { "type": "string" },
+        "deadlineDate": { "type": "string" },
+        "daysLeft": { "type": "number" },
+        "isUrgent": { "type": "boolean" },
+        "description": { "type": "string" },
+        "requirements": { "type": "array", "items": { "type": "string" } },
+        "benefits": { "type": "array", "items": { "type": "string" } },
+        "link": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "academicYear": { "type": "string" },
+        "lastVerifiedAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["title", "country", "link"]
     }
   },
   "firestore": {
+    "/scholarships/{scholarshipId}": {
+      "schema": { "$ref": "#/entities/scholarships" },
+      "description": "Public catalog of scholarships"
+    },
     "/forumPosts/{postId}": {
       "schema": { "$ref": "#/entities/forumPosts" },
       "description": "Public community forum posts"
@@ -97,6 +190,18 @@
     "/userNotes/{noteId}": {
       "schema": { "$ref": "#/entities/userNotes" },
       "description": "Personal notes created by users"
+    },
+    "/migrationPlans/{planId}": {
+      "schema": { "$ref": "#/entities/migrationPlans" },
+      "description": "User personalized migration plans"
+    },
+    "/userPreferences/{prefId}": {
+      "schema": { "$ref": "#/entities/userPreferences" },
+      "description": "User alert and notification settings"
+    },
+    "/feedbackSuggestions/{suggestionId}": {
+      "schema": { "$ref": "#/entities/feedbackSuggestions" },
+      "description": "Community feature proposals and upvoting feedback"
     }
   }
 }

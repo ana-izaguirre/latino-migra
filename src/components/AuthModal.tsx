@@ -29,7 +29,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setIsLoading(true);
     setAuthError(null);
     try {
-      const fbUser = await signInWithGoogle();
+      const { user: fbUser, countryOfOrigin } = await signInWithGoogle(selectedCountry);
       const userToSignIn: GoogleUser = {
         id: fbUser.uid,
         name: fbUser.displayName || "Usuario LatinoMigra",
@@ -37,7 +37,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         avatar:
           fbUser.photoURL ||
           "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-        countryOfOrigin: selectedCountry,
+        countryOfOrigin: countryOfOrigin || selectedCountry,
         signedInAt: new Date().toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" }),
       };
       onSignIn(userToSignIn);
@@ -67,7 +67,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <button
           onClick={onClose}
           aria-label="Cerrar modal"
-          className="absolute top-4 right-4 p-2 text-on-surface-variant hover:text-on-surface dark:text-slate-400 hover:bg-surface-container dark:hover:bg-slate-800 rounded-full transition-colors"
+          className="btn-tactile absolute top-4 right-4 p-2 text-on-surface-variant hover:text-on-surface dark:text-slate-400 hover:bg-surface-container dark:hover:bg-slate-800 rounded-full transition-all"
         >
           <X className="w-5 h-5" />
         </button>
@@ -134,7 +134,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 onSignOut();
                 onClose();
               }}
-              className="w-full flex items-center justify-center gap-2 py-3 border border-red-500/30 text-red-600 dark:text-red-400 font-semibold text-xs rounded-xl hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+              className="btn-tactile w-full flex items-center justify-center gap-2 py-3 border border-red-500/30 text-red-600 dark:text-red-400 font-bold text-xs rounded-xl hover:bg-red-50 dark:hover:bg-red-950/30 transition-all shadow-xs"
             >
               <LogOut className="w-4 h-4" />
               <span>Cerrar Sesión</span>
@@ -149,7 +149,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               disabled={isLoading}
               id="google-signin-btn"
               aria-label="Continuar con Google"
-              className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm py-3 px-4 rounded-xl border border-slate-300 shadow-sm transition-all hover:shadow-md disabled:opacity-50 cursor-pointer"
+              className="btn-tactile w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-800 font-bold text-sm py-3 px-4 rounded-xl border border-slate-300 shadow-sm transition-all hover:shadow-md disabled:opacity-50"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path

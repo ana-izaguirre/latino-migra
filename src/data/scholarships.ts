@@ -10,6 +10,7 @@ export const SCHOLARSHIPS_DATA: Scholarship[] = [
     officialPortalName: "Fundación Carolina (Oficial)",
     country: "España",
     countryCode: "ES",
+    educationLevel: "postgrado",
     area: "STEM",
     supportType: "Beca Completa",
     deadline: "Cierra en 15 días (15 Oct)",
@@ -42,6 +43,7 @@ export const SCHOLARSHIPS_DATA: Scholarship[] = [
     officialPortalName: "Portal Oficial USAL (usal.es)",
     country: "España",
     countryCode: "ES",
+    educationLevel: "postgrado",
     area: "Artes y Humanidades",
     supportType: "Beca Completa",
     deadline: "Cierra el 28 Feb",
@@ -74,6 +76,7 @@ export const SCHOLARSHIPS_DATA: Scholarship[] = [
     officialPortalName: "Sede Electrónica AUIP (auip.org)",
     country: "España",
     countryCode: "ES",
+    educationLevel: "postgrado",
     area: "STEM",
     supportType: "Beca Parcial",
     deadline: "Cierra el 30 Abr",
@@ -106,6 +109,7 @@ export const SCHOLARSHIPS_DATA: Scholarship[] = [
     officialPortalName: "DAAD Germany (daad.de)",
     country: "Alemania",
     countryCode: "DE",
+    educationLevel: "postgrado",
     area: "Negocios",
     supportType: "Beca Completa",
     deadline: "Cierra el 30 Nov",
@@ -138,6 +142,7 @@ export const SCHOLARSHIPS_DATA: Scholarship[] = [
     officialPortalName: "ETH Zurich Official (ethz.ch)",
     country: "Suiza",
     countryCode: "CH",
+    educationLevel: "postgrado",
     area: "STEM",
     supportType: "Beca Completa",
     deadline: "Cierra el 15 Dic",
@@ -170,6 +175,7 @@ export const SCHOLARSHIPS_DATA: Scholarship[] = [
     officialPortalName: "Comisión Europea (erasmus-plus.ec.europa.eu)",
     country: "España",
     countryCode: "EU",
+    educationLevel: "postgrado",
     area: "STEM",
     supportType: "Beca Completa",
     deadline: "Cierra el 15 Ene",
@@ -202,6 +208,7 @@ export const SCHOLARSHIPS_DATA: Scholarship[] = [
     officialPortalName: "Ministero degli Affari Esteri (postgradinitaly.esteri.it)",
     country: "Italia",
     countryCode: "IT",
+    educationLevel: "postgrado",
     area: "STEM",
     supportType: "Beca Completa",
     deadline: "Cierra el 01 Mar",
@@ -234,6 +241,7 @@ export const SCHOLARSHIPS_DATA: Scholarship[] = [
     officialPortalName: "Campus France (campusfrance.org)",
     country: "Francia",
     countryCode: "FR",
+    educationLevel: "postgrado",
     area: "STEM",
     supportType: "Beca Completa",
     deadline: "Cierra el 10 Ene",
@@ -266,6 +274,7 @@ export const SCHOLARSHIPS_DATA: Scholarship[] = [
     officialPortalName: "Study in NL (studyinnl.org)",
     country: "Países Bajos",
     countryCode: "NL",
+    educationLevel: "postgrado",
     area: "STEM",
     supportType: "Beca Parcial",
     deadline: "Cierra el 01 Feb",
@@ -298,6 +307,7 @@ export const SCHOLARSHIPS_DATA: Scholarship[] = [
     officialPortalName: "Karolinska Institutet (ki.se)",
     country: "Suecia",
     countryCode: "SE",
+    educationLevel: "postgrado",
     area: "Salud",
     supportType: "Beca Parcial",
     deadline: "Cierra el 15 Ene",
@@ -330,6 +340,7 @@ export const SCHOLARSHIPS_DATA: Scholarship[] = [
     officialPortalName: "Gates Cambridge Trust (gatescambridge.org)",
     country: "Reino Unido",
     countryCode: "GB",
+    educationLevel: "doctorado",
     area: "Todas las áreas",
     supportType: "Beca Completa",
     deadline: "Cierra el 07 Dic",
@@ -362,6 +373,7 @@ export const SCHOLARSHIPS_DATA: Scholarship[] = [
     officialPortalName: "Chevening UK (chevening.org)",
     country: "Reino Unido",
     countryCode: "GB",
+    educationLevel: "postgrado",
     area: "Negocios",
     supportType: "Beca Completa",
     deadline: "Cierra el 05 Nov",
@@ -394,6 +406,7 @@ export const SCHOLARSHIPS_DATA: Scholarship[] = [
     officialPortalName: "Fulbright Program (foreign.fulbrightonline.org)",
     country: "Estados Unidos",
     countryCode: "US",
+    educationLevel: "postgrado",
     area: "Todas las áreas",
     supportType: "Beca Completa",
     deadline: "Cierra el 01 Dic",
@@ -426,6 +439,7 @@ export const SCHOLARSHIPS_DATA: Scholarship[] = [
     officialPortalName: "University of Toronto (future.utoronto.ca)",
     country: "Canadá",
     countryCode: "CA",
+    educationLevel: "pregrado",
     area: "Todas las áreas",
     supportType: "Beca Completa",
     deadline: "Cierra el 15 Ene",
@@ -458,6 +472,7 @@ export const SCHOLARSHIPS_DATA: Scholarship[] = [
     officialPortalName: "Vanier Canada (vanier.gc.ca)",
     country: "Canadá",
     countryCode: "CA",
+    educationLevel: "doctorado",
     area: "Salud",
     supportType: "Beca Completa",
     deadline: "Cierra el 20 Oct",
@@ -489,6 +504,7 @@ export const SCHOLARSHIPS_DATA: Scholarship[] = [
     officialPortalName: "Organización de los Estados Americanos (oas.org)",
     country: "España",
     countryCode: "ES",
+    educationLevel: "postgrado",
     area: "Artes y Humanidades",
     supportType: "Beca Parcial",
     deadline: "Cierra el 15 Nov",
@@ -519,6 +535,7 @@ export const SCHOLARSHIPS_DATA: Scholarship[] = [
     officialPortalName: "Santander Open Academy (santanderopenacademy.com)",
     country: "España",
     countryCode: "ES",
+    educationLevel: "pregrado",
     area: "Negocios",
     supportType: "Beca Parcial",
     deadline: "Cierra el 31 Mar",
@@ -539,5 +556,165 @@ export const SCHOLARSHIPS_DATA: Scholarship[] = [
     ],
     link: "https://www.santanderopenacademy.com",
     imageUrl: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=800&q=80"
+  },
+
+  // 18. PORTUGAL - FCT DOCTORAL
+  {
+    id: "fct-portugal-doctorado",
+    title: "Becas de Doctorado FCT Portugal",
+    institution: "Fundação para a Ciência e a Tecnologia (FCT) / Universidades de Lisboa, Porto y Coímbra",
+    institutionType: "Gubernamental",
+    officialPortalName: "FCT Portugal (fct.pt)",
+    country: "Portugal",
+    countryCode: "PT",
+    educationLevel: "doctorado",
+    area: "STEM",
+    supportType: "Beca Completa",
+    deadline: "Cierra el 30 Abr",
+    deadlineDate: "2027-04-30",
+    daysLeft: 260,
+    isUrgent: false,
+    description: "La Fundación para la Ciencia y Tecnología de Portugal ofrece becas anuales de doctorado completas en todas las áreas del conocimiento para investigadores internacionales con dedicación exclusiva.",
+    requirements: [
+      "Título de máster o grado universitario con expediente sobresaliente.",
+      "Plan de trabajo de investigación y aceptación de centro anfitrión en Portugal.",
+      "Currículum en plataforma CiênciaVitae.",
+      "Propuesta de tesis con asesor acreditado en universidad portuguesa."
+    ],
+    benefits: [
+      "Subsidio mensual de manutención de 1.259€ libres de impuestos durante hasta 4 años.",
+      "Pago íntegro de propinas (matrícula universitaria doctoral).",
+      "Seguro social voluntario y seguro de salud cubierto.",
+      "Subsidios para conferencias y estancias de investigación internacionales."
+    ],
+    link: "https://www.fct.pt/bolsas-de-doutoramento/",
+    imageUrl: "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?auto=format&fit=crop&w=800&q=80"
+  },
+
+  // 19. PORTUGAL - CAMÕES LÍNGUA E CULTURA
+  {
+    id: "instituto-camoes-portugal",
+    title: "Becas de Posgrado e Idioma Instituto Camões",
+    institution: "Instituto Camões / Ministerio de Negocios Extranjeros de Portugal",
+    institutionType: "Gubernamental",
+    officialPortalName: "Instituto Camões (instituto-camoes.pt)",
+    country: "Portugal",
+    countryCode: "PT",
+    educationLevel: "postgrado",
+    area: "Artes y Humanidades",
+    supportType: "Beca Completa",
+    deadline: "Cierra el 15 Mayo",
+    deadlineDate: "2027-05-15",
+    daysLeft: 275,
+    isUrgent: false,
+    description: "Financia estudios de especialización, posgrado y formación avanzada en lengua portuguesa, cultura lusófona, traducción y cooperación internacional.",
+    requirements: [
+      "Graduados extranjeros o profesores de lengua portuguesa.",
+      "Carta de motivación académica y proyecto de estudio.",
+      "Aceptación en universidad portuguesa participante."
+    ],
+    benefits: [
+      "Mensualidad de manutención garantizada (aprox. 650€ - 850€/mes).",
+      "Exención total de tasas académicas del programa.",
+      "Acceso preferente a residencias universitarias."
+    ],
+    link: "https://www.instituto-camoes.pt",
+    imageUrl: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=800&q=80"
+  },
+
+  // 20. AUSTRALIA - RESEARCH TRAINING PROGRAM (RTP)
+  {
+    id: "australia-rtp-scholarship",
+    title: "Australian Government Research Training Program (RTP)",
+    institution: "Universidades del Group of Eight (Univ of Melbourne, Sydney, ANU, UNSW, UQ)",
+    institutionType: "Gubernamental",
+    officialPortalName: "Department of Education Australia (education.gov.au)",
+    country: "Australia",
+    countryCode: "AU",
+    educationLevel: "doctorado",
+    area: "STEM",
+    supportType: "Beca Completa",
+    deadline: "Cierra el 31 Oct",
+    deadlineDate: "2026-10-31",
+    daysLeft: 79,
+    isUrgent: true,
+    description: "El programa RTP del gobierno australiano otorga becas completas de maestría por investigación (2 años) y doctorado PhD (hasta 4 años) a talentos internacionales de excelencia.",
+    requirements: [
+      "Título universitario de honor o maestría equivalente a First Class Honours.",
+      "Propuesta de investigación y pre-acuerdo con supervisor de facultad.",
+      "Certificado de inglés IELTS 6.5 - 7.0 o TOEFL iBT equivalente."
+    ],
+    benefits: [
+      "Estipendio de manutención de aprox. $35,000 - $40,000 AUD al año libre de impuestos.",
+      "100% de la matrícula universitaria (Tuition Fee Offset) cubierta.",
+      "Seguro médico para estudiantes extranjeros (OSHC) incluido.",
+      "Subsidio de reubicación y pasajes aéreos a Australia."
+    ],
+    link: "https://www.education.gov.au/research-block-grants/research-training-program",
+    imageUrl: "https://images.unsplash.com/photo-1523482580672-f109ba8cb9be?auto=format&fit=crop&w=800&q=80"
+  },
+
+  // 21. AUSTRALIA - DESTINATION AUSTRALIA REGIONAL
+  {
+    id: "destination-australia-regional",
+    title: "Destination Australia Scholarships (Regiones & Grado)",
+    institution: "Instituciones de Educación Terciaria Regionales de Australia",
+    institutionType: "Gubernamental",
+    officialPortalName: "Destination Australia (education.gov.au)",
+    country: "Australia",
+    countryCode: "AU",
+    educationLevel: "pregrado",
+    area: "Todas las áreas",
+    supportType: "Beca Parcial",
+    deadline: "Cierra el 15 Ene",
+    deadlineDate: "2027-01-15",
+    daysLeft: 155,
+    isUrgent: false,
+    description: "Incentiva a estudiantes nacionales e internacionales a cursar programas de Pregrado (Bachelor) y Diplomas en campus regionales de Australia, sumando puntos prioritarios para residencia permanente.",
+    requirements: [
+      "Inscribirse en una universidad o instituto regional en Australia.",
+      "Mantener residencia en el área regional durante la duración del curso.",
+      "Expediente académico de educación secundaria/bachillerato destacado."
+    ],
+    benefits: [
+      "Hasta $15,000 AUD por año durante toda la duración de la carrera universitaria.",
+      "Puntos extra para la visa de migración calificada regional (Subclass 491/190).",
+      "Permiso de trabajo temporal post-estudios (485) extendido."
+    ],
+    link: "https://www.education.gov.au/destination-australia",
+    imageUrl: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=800&q=80"
+  },
+
+  // 22. MARIE SKŁODOWSKA-CURIE (POSTDOCTORADO - EUROPA)
+  {
+    id: "msca-postdoctoral-fellowships",
+    title: "MSCA Postdoctoral Fellowships (Unión Europea)",
+    institution: "Comisión Europea / Centros de Investigación y Universidades Europeas",
+    institutionType: "Organismo Internacional",
+    officialPortalName: "Horizon Europe MSCA (marie-sklodowska-curie-actions.ec.europa.eu)",
+    country: "España",
+    countryCode: "EU",
+    educationLevel: "postdoctorado",
+    area: "Todas las áreas",
+    supportType: "Beca Completa",
+    deadline: "Cierra el 11 Sep",
+    deadlineDate: "2026-09-11",
+    daysLeft: 29,
+    isUrgent: true,
+    description: "El programa estrella de la Unión Europea para investigadores con doctorado que desean desarrollar estancias postdoctorales avanzadas en universidades de España, Portugal, Alemania o cualquier país de la UE.",
+    requirements: [
+      "Tener el título de doctor/PhD a la fecha de cierre de la convocatoria.",
+      "Máximo 8 años de experiencia investigadora postdoctoral.",
+      "Regla de movilidad: no haber residido más de 12 meses en el país anfitrión en los últimos 36 meses.",
+      "Propuesta de investigación conjunta con el investigador supervisor anfitrión."
+    ],
+    benefits: [
+      "Sueldo de investigador de aproximadamente 5,080€ brutos al mes.",
+      "Asignación de movilidad de 600€/mes y subsidio familiar de 660€/mes.",
+      "Presupuesto de investigación, formación y networking de 1,000€/mes.",
+      "Contrato laboral formal con plenos derechos de seguridad social europea."
+    ],
+    link: "https://marie-sklodowska-curie-actions.ec.europa.eu/actions/postdoctoral-fellowships",
+    imageUrl: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=800&q=80"
   }
 ];

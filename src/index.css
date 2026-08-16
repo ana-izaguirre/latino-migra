@@ -25,6 +25,81 @@
 html, body {
   overflow-x: hidden;
   max-width: 100vw;
+  scroll-behavior: smooth;
+}
+
+/* Tactile interactive feedback for buttons, chips, and links */
+button, a, [role="button"], input[type="button"], input[type="submit"] {
+  touch-action: manipulation;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), 
+              filter 0.12s ease, 
+              background-color 0.15s ease, 
+              box-shadow 0.15s ease,
+              border-color 0.15s ease;
+}
+
+/* Distinct, responsive click/press feedback */
+button:active:not(:disabled), 
+a:active:not([aria-disabled="true"]), 
+[role="button"]:active,
+input[type="button"]:active,
+input[type="submit"]:active {
+  transform: scale(0.95) translateY(1px) !important;
+  filter: brightness(0.92) !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Footer Link with clear click & hover underline */
+.footer-link {
+  position: relative;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 2px;
+}
+
+.footer-link:active {
+  transform: scale(0.96) translateY(1px);
+  text-decoration: underline !important;
+  text-underline-offset: 4px !important;
+  text-decoration-thickness: 2.5px !important;
+  text-decoration-color: var(--color-primary, #0284c7) !important;
+}
+
+/* Ripple / Tactile button utility */
+.btn-tactile {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.btn-tactile:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.12);
+}
+
+.btn-tactile:active {
+  transform: scale(0.95) translateY(1px) !important;
+  filter: brightness(0.9) !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Custom scrollbar for horizontal chips */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 html.dark {

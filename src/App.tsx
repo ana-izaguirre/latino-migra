@@ -10,11 +10,14 @@ import { Comunidad } from "./components/Comunidad";
 import { PlanificadorMigracion } from "./components/PlanificadorMigracion";
 import { FeedbackHub } from "./components/FeedbackHub";
 import { CalculadoraCostoVida } from "./components/CalculadoraCostoVida";
+import { VoluntariadosExplorer } from "./components/VoluntariadosExplorer";
+import { AdminDashboard } from "./components/AdminDashboard";
 import { FloatingChatWidget } from "./components/FloatingChatWidget";
 import { ScrollTopBottomButton } from "./components/ScrollTopBottomButton";
 import { Footer } from "./components/Footer";
 import { AuthModal } from "./components/AuthModal";
 import { NotificationSettingsModal } from "./components/NotificationSettingsModal";
+import { subscribeToAuthState, getUserProfile, signOutUser } from "./lib/firebase";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavigationTab>("home");
@@ -32,18 +35,41 @@ export default function App() {
   const [selectedScholarshipForChat, setSelectedScholarshipForChat] = useState<Scholarship | null>(null);
   const [alertsModalOpen, setAlertsModalOpen] = useState<boolean>(false);
 
-  // Google User Auth State
-  const [currentUser, setCurrentUser] = useState<GoogleUser | null>(() => {
-    try {
-      const saved = localStorage.getItem("latinomigra_user");
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+  // Google User Auth State from Firebase Auth & Firestore
+  const [currentUser, setCurrentUser] = useState<GoogleUser | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
 
-  // Apply dark mode class to HTML element and persist
+  // Listen to Firebase Auth state changes safely and sync profile from Firestore
+  useEffect(() => {
+    const unsubscribe = subscribeToAuthState(async (fbUser) => {
+      if (fbUser) {
+        try {
+          const profile = await getUserProfile(fbUser.uid);
+          const userData: GoogleUser = {
+            id: fbUser.uid,
+            name: fbUser.displayName || profile?.displayName || "Usuario LatinoMigra",
+            email: fbUser.email || profile?.email || "",
+            avatar:
+              fbUser.photoURL ||
+              profile?.photoURL ||
+              "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+            countryOfOrigin: profile?.countryOfOrigin || "Colombia",
+            signedInAt: new Date().toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" }),
+          };
+          setCurrentUser(userData);
+        } catch (e) {
+          console.error("Error fetching user profile from Firestore:", e);
+        }
+      } else {
+        // Only clear if not in temporary preview state
+        setCurrentUser((prev) => (prev?.id.startsWith("google-user-") ? prev : null));
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Apply dark mode class to HTML element
   useEffect(() => {
     const root = document.documentElement;
     if (theme === "dark") {
@@ -64,17 +90,16 @@ export default function App() {
 
   const handleSignIn = (user: GoogleUser) => {
     setCurrentUser(user);
-    try {
-      localStorage.setItem("latinomigra_user", JSON.stringify(user));
-    } catch {}
     setAuthModalOpen(false);
   };
 
-  const handleSignOut = () => {
-    setCurrentUser(null);
+  const handleSignOut = async () => {
     try {
-      localStorage.removeItem("latinomigra_user");
-    } catch {}
+      await signOutUser();
+    } catch (e) {
+      console.log("Signout error:", e);
+    }
+    setCurrentUser(null);
   };
 
   const handleAskAIAboutScholarship = (scholarship: Scholarship) => {
@@ -123,6 +148,8 @@ export default function App() {
               setSearchQuery={setSearchQuery}
               setActiveTab={setActiveTab}
               onAskAIAboutScholarship={handleAskAIAboutScholarship}
+              currentUser={currentUser}
+              onOpenAuthModal={() => setAuthModalOpen(true)}
             />
           </main>
         )}
@@ -153,6 +180,8 @@ export default function App() {
               setSearchQuery={setSearchQuery}
               setActiveTab={setActiveTab}
               onAskAIAboutScholarship={handleAskAIAboutScholarship}
+              currentUser={currentUser}
+              onOpenAuthModal={() => setAuthModalOpen(true)}
             />
           </main>
         )}
