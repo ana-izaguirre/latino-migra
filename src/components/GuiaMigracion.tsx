@@ -32,6 +32,7 @@ import { COUNTRY_ANTI_SCAM_DATA } from "../data/antiScamData";
 import { CalendarAgendaButton } from "./CalendarAgendaButton";
 import { fetchVisaGuideVotes, voteVisaHelpful, VisaVotesData } from "../lib/firebase";
 import { useLanguage } from "../lib/i18n";
+import { usePreferences } from "../lib/PreferencesContext";
 
 interface GuiaMigracionProps {
   setActiveTab: (tab: NavigationTab) => void;
@@ -43,7 +44,11 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
   onAskAIAboutGuide,
 }) => {
   const { language } = useLanguage();
-  const [selectedCountryCode, setSelectedCountryCode] = useState<string>("ES");
+  // Country selection is shared app-wide, so opening a guide for Alemania also
+  // moves the planner, calculator, consular map and alerts to Alemania.
+  const { destinationCountryCode, setDestinationCountryByCode } = usePreferences();
+  const selectedCountryCode = destinationCountryCode || "ES";
+  const setSelectedCountryCode = setDestinationCountryByCode;
   const [selectedCategory, setSelectedCategory] = useState<string>("todos");
   const [activeRoadmapStep, setActiveRoadmapStep] = useState<number>(2);
   const [visaVotes, setVisaVotes] = useState<Record<string, VisaVotesData>>({});

@@ -44,6 +44,7 @@ import {
   getUserAlertPreferences,
   getUserMigrationPlan,
 } from "../lib/firebase";
+import { usePreferences } from "../lib/PreferencesContext";
 
 interface BecasExplorerProps {
   searchQuery: string;
@@ -68,21 +69,32 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
   const [isSyncingAI, setIsSyncingAI] = useState<boolean>(false);
   const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
 
-  const [selectedCountry, setSelectedCountry] = useState<string>("Todos");
+  // The country filter starts on the destination chosen elsewhere in the app
+  // (planner, guides, consular map). Narrowing to a specific country updates
+  // that shared choice; widening back to "Todos" only relaxes this filter and
+  // deliberately leaves the app-wide destination alone.
+  const { destinationCountry, setDestinationCountry } = usePreferences();
+  const [selectedCountry, setSelectedCountryState] = useState<string>(
+    () => destinationCountry || "Todos"
+  );
+  const setSelectedCountry = (country: string) => {
+    setSelectedCountryState(country);
+    if (country && country !== "Todos") setDestinationCountry(country);
+  };
+
+  // Follow the shared destination when another screen changes it.
+  useEffect(() => {
+    if (destinationCountry) setSelectedCountryState(destinationCountry);
+  }, [destinationCountry]);
   const [selectedEducationLevel, setSelectedEducationLevel] = useState<string>("todos");
   const [selectedArea, setSelectedArea] = useState<string>("Todas");
   const [selectedSupportType, setSelectedSupportType] = useState<string>("Todos");
   const [selectedInstitutionType, setSelectedInstitutionType] = useState<string>("Todas");
   const [selectedDateRange, setSelectedDateRange] = useState<string>("Todas");
   const [sortBy, setSortBy] = useState<"deadline-asc" | "deadline-desc" | "title-asc" | "support-first">("deadline-asc");
-  // Favorites persisted in Firestore (and local backup for guests)
-  const [favorites, setFavorites] = useState<string[]>(() => {
-    try {
-      const cached = localStorage.getItem("latinomigra_favorite_scholarships");
-      if (cached) return JSON.parse(cached);
-    } catch {}
-    return ["beca-carolina-2026", "beca-usal-internacional"];
-  });
+  // Favorites live in Firestore for signed-in users and in component state for
+  // guests. Nothing is written to browser storage.
+  const [favorites, setFavorites] = useState<string[]>([]);
 
   // Load scholarships from Firestore on mount
   useEffect(() => {
@@ -223,13 +235,9 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
     const title = scholarship?.title || id;
     const country = scholarship?.country || "Europa";
 
-    setFavorites((prev) => {
-      const next = prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id];
-      try {
-        localStorage.setItem("latinomigra_favorite_scholarships", JSON.stringify(next));
-      } catch {}
-      return next;
-    });
+    setFavorites((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
 
     if (currentUser?.id) {
       try {
@@ -453,7 +461,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
               type="button"
               onClick={() => setViewModeTab("all")}
               id="tab-all-scholarships"
-              className={`inline-flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${
+              className={`inline-flex items-center gap-2 min-h-[44px] px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${
                 viewModeTab === "all"
                   ? "bg-primary text-white dark:bg-sky-600 shadow-sm"
                   : "bg-surface-container-lowest dark:bg-slate-800 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700 border border-outline-variant/40 dark:border-slate-700"
@@ -470,7 +478,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
               type="button"
               onClick={() => setViewModeTab("favorites")}
               id="tab-favorite-scholarships"
-              className={`inline-flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${
+              className={`inline-flex items-center gap-2 min-h-[44px] px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${
                 viewModeTab === "favorites"
                   ? "bg-red-500 text-white shadow-sm"
                   : "bg-surface-container-lowest dark:bg-slate-800 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700 border border-outline-variant/40 dark:border-slate-700"
@@ -501,7 +509,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                   }
                 }}
                 id="tab-profile-scholarships"
-                className={`inline-flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${
+                className={`inline-flex items-center gap-2 min-h-[44px] px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${
                   viewModeTab === "profile"
                     ? "bg-secondary text-white dark:bg-teal-600 shadow-sm"
                     : "bg-surface-container-lowest dark:bg-slate-800 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700 border border-outline-variant/40 dark:border-slate-700"
@@ -521,12 +529,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
           {viewModeTab === "favorites" && favorites.length > 0 && (
             <button
               type="button"
-              onClick={() => {
-                setFavorites([]);
-                try {
-                  localStorage.removeItem("latinomigra_favorite_scholarships");
-                } catch {}
-              }}
+              onClick={() => setFavorites([])}
               id="clear-all-favorites-btn"
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 dark:text-red-400 hover:underline self-start sm:self-auto"
             >
@@ -626,7 +629,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                   type="button"
                   onClick={() => setSelectedEducationLevel(lvl.id)}
                   id={`edu-level-chip-${lvl.id}`}
-                  className={`shrink-0 sm:shrink flex items-center justify-between gap-2 px-3 py-2 sm:py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer select-none active:scale-95 ${
+                  className={`shrink-0 sm:shrink flex items-center justify-between gap-2 min-h-[44px] px-3 py-2 sm:py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer select-none active:scale-95 ${
                     isSelected
                       ? "bg-primary text-white dark:bg-sky-600 shadow-sm ring-2 ring-primary/30"
                       : "bg-surface dark:bg-slate-900 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700/60 border border-outline-variant/30 dark:border-slate-700"
@@ -671,7 +674,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                 type="button"
                 onClick={() => setMobileFiltersOpen(true)}
                 id="btn-open-mobile-filters"
-                className="inline-flex items-center gap-1.5 bg-primary dark:bg-sky-600 text-white text-xs font-bold py-1.5 px-3 rounded-xl shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="inline-flex items-center gap-1.5 min-h-[44px] bg-primary dark:bg-sky-600 text-white text-xs font-bold py-2 px-3.5 rounded-xl shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 <Filter className="w-3.5 h-3.5" />
                 <span>Más Filtros</span>
@@ -1093,7 +1096,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                   type="button"
                   onClick={() => setDisplayMode("paginated")}
                   id="mode-paginated-btn"
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-semibold transition-all ${
+                  className={`inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-1 rounded-lg font-semibold transition-all ${
                     displayMode === "paginated"
                       ? "bg-primary text-white dark:bg-sky-600 shadow-xs"
                       : "text-on-surface-variant dark:text-slate-400 hover:text-primary dark:hover:text-sky-300"
@@ -1107,7 +1110,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                   type="button"
                   onClick={() => setDisplayMode("continuous")}
                   id="mode-lazy-btn"
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-semibold transition-all ${
+                  className={`inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-1 rounded-lg font-semibold transition-all ${
                     displayMode === "continuous"
                       ? "bg-secondary text-white dark:bg-teal-600 shadow-xs"
                       : "text-on-surface-variant dark:text-slate-400 hover:text-secondary dark:hover:text-teal-300"
@@ -1129,7 +1132,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                       type="button"
                       onClick={() => setItemsPerPage(size)}
                       id={`items-per-page-${size === 0 ? "all" : size}`}
-                      className={`px-2 py-1 rounded-lg transition-colors ${
+                      className={`min-w-[40px] min-h-[40px] sm:min-w-0 sm:min-h-0 px-2 py-1 inline-flex items-center justify-center rounded-lg transition-colors ${
                         itemsPerPage === size
                           ? "bg-primary/15 dark:bg-sky-900/60 text-primary dark:text-sky-300 font-bold"
                           : "text-on-surface-variant dark:text-slate-400 hover:bg-surface-container dark:hover:bg-slate-800"

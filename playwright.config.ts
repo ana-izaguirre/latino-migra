@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+/** Specs written against the touch layout. */
+const MOBILE_SPECS = /mobile\.spec\.ts/;
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
@@ -23,21 +26,39 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    /* Allows running against a browser already present on the machine (e.g. a
+     * container image that ships Chromium) instead of Playwright's pinned
+     * download. Unset locally and in CI, where `npx playwright install` runs. */
+    launchOptions: process.env.PLAYWRIGHT_CHROMIUM_PATH
+      ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH }
+      : {},
   },
 
   /* Run chromium by default for ultra-fast CI; run all matrix only when FULL_E2E=true */
+  /* mobile.spec.ts asserts touch-layout behaviour and must run on a phone
+   * device; every other spec drives the desktop navigation, which is hidden
+   * below the lg breakpoint. Keeping them in separate projects stops each
+   * suite from running against a layout it was not written for. */
   projects: process.env.FULL_E2E === 'true'
     ? [
-        { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-        { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-        { name: 'webkit', use: { ...devices['Desktop Safari'] } },
-        { name: 'Mobile Chrome', use: { ...devices['Pixel 5'] } },
-        { name: 'Mobile Safari', use: { ...devices['iPhone 12'] } },
+        { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: MOBILE_SPECS },
+        { name: 'firefox', use: { ...devices['Desktop Firefox'] }, testIgnore: MOBILE_SPECS },
+        { name: 'webkit', use: { ...devices['Desktop Safari'] }, testIgnore: MOBILE_SPECS },
+        { name: 'Mobile Chrome', use: { ...devices['Pixel 5'] }, testMatch: MOBILE_SPECS },
+        { name: 'Mobile Safari', use: { ...devices['iPhone 12'] }, testMatch: MOBILE_SPECS },
       ]
     : [
         {
           name: 'chromium',
           use: { ...devices['Desktop Chrome'] },
+          testIgnore: MOBILE_SPECS,
+        },
+        // Mobile is where the layout regressions live, so it runs by default
+        // rather than only under FULL_E2E.
+        {
+          name: 'Mobile Chrome',
+          use: { ...devices['Pixel 5'] },
+          testMatch: MOBILE_SPECS,
         },
       ],
 

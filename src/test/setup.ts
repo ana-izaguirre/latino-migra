@@ -1,29 +1,37 @@
-import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
-import { afterEach, vi } from 'vitest';
+import { vi } from 'vitest';
 
-// Automatically clean up DOM after each test
-afterEach(() => {
-  cleanup();
-});
+// Server-side suites opt into the node environment, where none of the DOM
+// setup below applies (and would throw). Everything DOM-specific is guarded.
+const hasDom = typeof window !== 'undefined';
 
-// Mock window.matchMedia
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: vi.fn().mockImplementation((query: string) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(), // deprecated
-    removeListener: vi.fn(), // deprecated
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
-});
+if (hasDom) {
+  await import('@testing-library/jest-dom/vitest');
+  const { cleanup } = await import('@testing-library/react');
+  const { afterEach } = await import('vitest');
 
-// Mock scrollIntoView
-window.HTMLElement.prototype.scrollIntoView = vi.fn();
+  // Automatically clean up DOM after each test
+  afterEach(() => {
+    cleanup();
+  });
+
+  // Mock window.matchMedia
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(), // deprecated
+      removeListener: vi.fn(), // deprecated
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+
+  // Mock scrollIntoView
+  window.HTMLElement.prototype.scrollIntoView = vi.fn();
+}
 
 // Mock Firebase SDK
 vi.mock('firebase/app', () => ({

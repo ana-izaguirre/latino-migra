@@ -5,13 +5,16 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 import App from './App.tsx';
 import { LanguageProvider } from './lib/i18n.tsx';
 import { CurrencyProvider } from './lib/CurrencyContext.tsx';
+import { PreferencesProvider } from './lib/PreferencesContext.tsx';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <LanguageProvider>
       <CurrencyProvider>
-        <App />
+        <PreferencesProvider>
+          <App />
+        </PreferencesProvider>
       </CurrencyProvider>
     </LanguageProvider>
     <Analytics />

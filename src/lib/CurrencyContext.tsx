@@ -20,22 +20,12 @@ const CurrencyContext = createContext<CurrencyContextType>({
 });
 
 export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currency, setCurrencyState] = useState<string>(() => {
-    try {
-      const saved = localStorage.getItem("latinomigra_currency");
-      if (saved && SUPPORTED_CURRENCIES[saved]) return saved;
-      return "EUR";
-    } catch {
-      return "EUR";
-    }
-  });
+  // In-memory only: the app deliberately persists no preferences to storage.
+  const [currency, setCurrencyState] = useState<string>("EUR");
 
   const setCurrency = (code: string) => {
     if (SUPPORTED_CURRENCIES[code]) {
       setCurrencyState(code);
-      try {
-        localStorage.setItem("latinomigra_currency", code);
-      } catch {}
     }
   };
 

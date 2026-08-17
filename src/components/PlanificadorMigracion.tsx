@@ -43,6 +43,7 @@ import { Breadcrumbs } from "./Breadcrumbs";
 import { saveUserMigrationPlan, getUserMigrationPlan } from "../lib/firebase";
 import { LATIN_AMERICAN_COUNTRIES, DESTINATION_COUNTRIES } from "../data/countriesData";
 import { useCurrency } from "../lib/CurrencyContext";
+import { usePreferences } from "../lib/PreferencesContext";
 import { formatCurrency } from "../lib/currency";
 
 interface PlanificadorMigracionProps {
@@ -157,8 +158,16 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
   const { currency } = useCurrency();
 
   // Wizard State
-  const [originCountry, setOriginCountry] = useState<string>(currentUser?.countryOfOrigin || "Colombia");
-  const [destinationCountry, setDestinationCountry] = useState<string>("España");
+  // Shared with the consular map, calculator, scholarship filter and alerts so
+  // a country picked anywhere is reflected everywhere.
+  const {
+    originCountry: sharedOrigin,
+    setOriginCountry,
+    destinationCountry: sharedDestination,
+    setDestinationCountry,
+  } = usePreferences();
+  const originCountry = sharedOrigin || currentUser?.countryOfOrigin || "Colombia";
+  const destinationCountry = sharedDestination || "España";
   const [pathway, setPathway] = useState<"estudios" | "trabajo" | "nomada" | "busqueda" | "ahorros">("estudios");
   const [familyStatus, setFamilyStatus] = useState<"solo" | "pareja" | "familia_ninos">("solo");
   const [numChildren, setNumChildren] = useState<number>(1);
@@ -168,15 +177,9 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
   const [hasTraveledBefore, setHasTraveledBefore] = useState<boolean>(false);
   const [planSaved, setPlanSaved] = useState<boolean>(false);
 
-  // Migration Steps Completed Tracking State
-  const [completedSteps, setCompletedSteps] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem("latinomigra_completed_steps");
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  // Migration Steps Completed Tracking State. Persisted to Firestore for
+  // signed-in users only; never written to browser storage.
+  const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const [stepsFilter, setStepsFilter] = useState<"todos" | "pendientes" | "completados">("todos");
 
   // Sync originCountry when currentUser changes or logs in
@@ -329,11 +332,6 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
     setCompletedSteps((prev) => {
       const isCompleted = prev.includes(stepId);
       const updated = isCompleted ? prev.filter((id) => id !== stepId) : [...prev, stepId];
-      try {
-        localStorage.setItem("latinomigra_completed_steps", JSON.stringify(updated));
-      } catch (e) {
-        console.warn("Could not save completed steps in localStorage:", e);
-      }
 
       // Sync with Firestore if logged in
       if (currentUser?.id) {
@@ -354,9 +352,6 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
   const handleMarkAllSteps = () => {
     const allIds = migrationSteps.map((s) => s.id);
     setCompletedSteps(allIds);
-    try {
-      localStorage.setItem("latinomigra_completed_steps", JSON.stringify(allIds));
-    } catch {}
     if (currentUser?.id) {
       saveUserMigrationPlan(currentUser.id, {
         originCountry,
@@ -369,9 +364,6 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
 
   const handleResetSteps = () => {
     setCompletedSteps([]);
-    try {
-      localStorage.setItem("latinomigra_completed_steps", JSON.stringify([]));
-    } catch {}
     if (currentUser?.id) {
       saveUserMigrationPlan(currentUser.id, {
         originCountry,
@@ -629,6 +621,7 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
                 <select
                   value={originCountry}
                   onChange={(e) => setOriginCountry(e.target.value)}
+                  id="planner-origin-country"
                   className="w-full px-3.5 py-2.5 bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 rounded-xl text-sm font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
                 >
                   {LATIN_AMERICAN_COUNTRIES.map((c) => (
@@ -646,6 +639,7 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
                 <select
                   value={destinationCountry}
                   onChange={(e) => setDestinationCountry(e.target.value)}
+                  id="planner-destination-country"
                   className="w-full px-3.5 py-2.5 bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 rounded-xl text-sm font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
                 >
                   {DESTINATION_COUNTRIES.map((c) => (
@@ -796,7 +790,7 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
                     <button
                       type="button"
                       onClick={() => setNumChildren(Math.max(1, numChildren - 1))}
-                      className="w-7 h-7 rounded-lg bg-surface dark:bg-slate-800 hover:bg-surface-container-high dark:hover:bg-slate-700 font-bold flex items-center justify-center text-on-surface dark:text-slate-100 transition-colors active:scale-90"
+                      className="w-11 h-11 sm:w-8 sm:h-8 rounded-lg bg-surface dark:bg-slate-800 hover:bg-surface-container-high dark:hover:bg-slate-700 font-bold flex items-center justify-center text-on-surface dark:text-slate-100 transition-colors active:scale-90"
                       aria-label="Disminuir hijos"
                     >
                       -
@@ -805,7 +799,7 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
                     <button
                       type="button"
                       onClick={() => setNumChildren(numChildren + 1)}
-                      className="w-7 h-7 rounded-lg bg-surface dark:bg-slate-800 hover:bg-surface-container-high dark:hover:bg-slate-700 font-bold flex items-center justify-center text-on-surface dark:text-slate-100 transition-colors active:scale-90"
+                      className="w-11 h-11 sm:w-8 sm:h-8 rounded-lg bg-surface dark:bg-slate-800 hover:bg-surface-container-high dark:hover:bg-slate-700 font-bold flex items-center justify-center text-on-surface dark:text-slate-100 transition-colors active:scale-90"
                       aria-label="Aumentar hijos"
                     >
                       +
@@ -1495,7 +1489,7 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
                     e.stopPropagation();
                     handleToggleStep(step.id);
                   }}
-                  className={`btn-tactile w-7 h-7 mt-0.5 rounded-lg flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-90 ${
+                  className={`btn-tactile w-11 h-11 sm:w-8 sm:h-8 mt-0.5 rounded-lg flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-90 ${
                     isCompleted
                       ? "bg-emerald-600 text-white shadow-xs"
                       : "border-2 border-outline dark:border-slate-600 hover:border-primary text-transparent bg-white dark:bg-slate-900"
@@ -1560,7 +1554,7 @@ Quiero asesoría detallada y paso a paso sobre el siguiente requisito:
 
 ¿Cuáles son los plazos recomendados, costos oficiales, posibles errores que debo evitar y enlaces/portales gubernamentales donde debo realizar este trámite?`);
                     }}
-                    className="btn-tactile p-2 rounded-xl text-primary dark:text-sky-300 hover:bg-primary/10 dark:hover:bg-sky-950/50 transition-all cursor-pointer flex items-center gap-1 text-xs font-bold active:scale-95"
+                    className="btn-tactile tap-target p-2 rounded-xl text-primary dark:text-sky-300 hover:bg-primary/10 dark:hover:bg-sky-950/50 transition-all cursor-pointer flex items-center gap-1 text-xs font-bold active:scale-95"
                     title="Preguntar a la IA sobre este paso específico"
                   >
                     <Sparkles className="w-4 h-4 text-amber-400" />

@@ -13,6 +13,7 @@ import { CalculadoraCostoVida } from "./components/CalculadoraCostoVida";
 import { VoluntariadosExplorer } from "./components/VoluntariadosExplorer";
 import { AdminDashboard } from "./components/AdminDashboard";
 import { FloatingChatWidget } from "./components/FloatingChatWidget";
+import { MobileBottomNav } from "./components/MobileBottomNav";
 import { ScrollTopBottomButton } from "./components/ScrollTopBottomButton";
 import { Footer } from "./components/Footer";
 import { AuthModal } from "./components/AuthModal";
@@ -22,10 +23,10 @@ import { isAdmin } from "./lib/authUtils";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavigationTab>("home");
+  // Seeded from the OS preference only. Nothing is persisted to storage, so a
+  // reload returns to whatever the device is set to.
   const [theme, setTheme] = useState<ThemeMode>(() => {
     try {
-      const saved = localStorage.getItem("latinomigra_theme");
-      if (saved === "light" || saved === "dark") return saved;
       return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     } catch {
       return "light";
@@ -35,6 +36,7 @@ export default function App() {
   const [chatInitialPrompt, setChatInitialPrompt] = useState<string>("");
   const [selectedScholarshipForChat, setSelectedScholarshipForChat] = useState<Scholarship | null>(null);
   const [alertsModalOpen, setAlertsModalOpen] = useState<boolean>(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
 
   // Google User Auth State from Firebase Auth & Firestore
   const [currentUser, setCurrentUser] = useState<GoogleUser | null>(null);
@@ -85,9 +87,6 @@ export default function App() {
       root.classList.remove("dark");
       root.style.colorScheme = "light";
     }
-    try {
-      localStorage.setItem("latinomigra_theme", theme);
-    } catch {}
   }, [theme]);
 
   const toggleTheme = () => {
@@ -130,7 +129,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-surface font-body-md text-on-surface dark:bg-slate-950 dark:text-slate-100 transition-colors flex flex-col justify-between relative">
+    <div className="min-h-screen bg-surface font-body-md text-on-surface dark:bg-slate-950 dark:text-slate-100 transition-colors flex flex-col justify-between relative pb-bottom-nav">
       {/* Top Navigation */}
       <TopNavBar
         activeTab={activeTab}
@@ -142,6 +141,8 @@ export default function App() {
         currentUser={currentUser}
         onOpenAuthModal={() => setAuthModalOpen(true)}
         onOpenAlertsModal={() => setAlertsModalOpen(true)}
+        mobileMenuOpen={mobileMenuOpen}
+        setMobileMenuOpen={setMobileMenuOpen}
       />
 
       {/* Dynamic Tab Views */}
@@ -288,6 +289,13 @@ export default function App() {
 
       {/* Shared Footer */}
       <Footer setActiveTab={setActiveTab} />
+
+      {/* Primary navigation for touch layouts (hidden from lg upwards) */}
+      <MobileBottomNav
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onOpenMenu={() => setMobileMenuOpen(true)}
+      />
     </div>
   );
 }

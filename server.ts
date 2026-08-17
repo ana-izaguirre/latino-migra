@@ -1,5 +1,6 @@
-import express, { Request, Response, NextFunction } from "express";
+import express from "express";
 import path from "path";
+import rateLimit from "express-rate-limit";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
@@ -9,43 +10,59 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
+// Cloud Run terminates TLS one hop in front of us, so the client address comes
+// from X-Forwarded-For. Trusting exactly one hop lets the rate limiter key on
+// the real client instead of the proxy, without letting callers spoof the
+// header by appending their own entries.
+app.set("trust proxy", 1);
+
 app.use(express.json({ limit: "10mb" }));
 
-// Lightweight in-memory rate limiter middleware
-function createRateLimiter(windowMs: number, maxRequests: number, message: string) {
-  const ipRequests = new Map<string, { count: number; resetTime: number }>();
+/**
+ * Rate limiting.
+ *
+ * This used to be a hand-rolled in-memory limiter. It worked, but it was also
+ * an unbounded Map (every distinct IP leaked an entry forever) and static
+ * analysis could not recognise it as a rate limiter, which is what raised the
+ * "Missing rate limiting" code scanning alert. `express-rate-limit` is the
+ * standard implementation and expires its own buckets.
+ */
+const buildLimiter = (windowMs: number, limit: number, message: string) =>
+  rateLimit({
+    windowMs,
+    limit,
+    standardHeaders: "draft-7",
+    legacyHeaders: false,
+    message: { error: message },
+  });
 
-  return (req: Request, res: Response, next: NextFunction) => {
-    const ip = req.ip || req.socket.remoteAddress || "global";
-    const now = Date.now();
-    const clientData = ipRequests.get(ip);
-
-    if (!clientData || now > clientData.resetTime) {
-      ipRequests.set(ip, { count: 1, resetTime: now + windowMs });
-      return next();
-    }
-
-    if (clientData.count >= maxRequests) {
-      return res.status(429).json({ error: message });
-    }
-
-    clientData.count += 1;
-    return next();
-  };
-}
-
-// Rate limiter for general API routes to mitigate DoS & brute force
-const apiLimiter = createRateLimiter(
+// General API traffic: mitigates brute force and casual scraping.
+const apiLimiter = buildLimiter(
   15 * 60 * 1000,
   120,
   "Demasiadas solicitudes desde esta IP. Por favor, inténtalo de nuevo en unos minutos."
 );
 
-// Stricter rate limiter for AI generation endpoint
-const chatLimiter = createRateLimiter(
+// Stricter budget for the AI generation endpoint, which is the expensive one.
+const chatLimiter = buildLimiter(
   15 * 60 * 1000,
   40,
   "Has alcanzado el límite de consultas de IA por periodo. Por favor espera unos minutos."
+);
+
+// The cron endpoint performs an authorization check, so it needs its own tight
+// budget to keep CRON_SECRET from being brute forced.
+const cronLimiter = buildLimiter(
+  15 * 60 * 1000,
+  10,
+  "Demasiados intentos de sincronización. Inténtalo de nuevo más tarde."
+);
+
+// Static asset and SPA fallback traffic hits the file system on every request.
+const staticLimiter = buildLimiter(
+  15 * 60 * 1000,
+  600,
+  "Demasiadas solicitudes desde esta IP. Por favor, inténtalo de nuevo en unos minutos."
 );
 
 app.use("/api/", apiLimiter);
@@ -131,7 +148,7 @@ Capacidades y Principios de Respuesta:
 });
 
 // CRON JOB AUTOMATION ENDPOINT: Annual / Periodic Scholarship Synchronizer using Gemini IA
-app.post("/api/cron/sync-scholarships", async (req, res) => {
+app.post("/api/cron/sync-scholarships", cronLimiter, async (req, res) => {
   try {
     const { academicYear = "2026-2027", secretKey } = req.body;
 
@@ -237,8 +254,8 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*", apiLimiter, (req, res) => {
+    app.use(staticLimiter, express.static(distPath));
+    app.get("*", staticLimiter, (req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
@@ -248,4 +265,10 @@ async function startServer() {
   });
 }
 
-startServer();
+// Exported so the rate limiting behaviour can be exercised from tests without
+// booting Vite or binding a port.
+export { app, apiLimiter, chatLimiter, cronLimiter, staticLimiter, buildLimiter };
+
+if (process.env.NODE_ENV !== "test") {
+  startServer();
+}

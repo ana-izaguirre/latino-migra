@@ -117,14 +117,11 @@ const LanguageContext = createContext<LanguageContextType>({
 });
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguageState] = useState<Language>(() => {
-    const saved = localStorage.getItem("latinomigra_lang");
-    return saved === "en" || saved === "es" ? saved : "es";
-  });
+  // In-memory only: the app deliberately persists no preferences to storage.
+  const [language, setLanguageState] = useState<Language>("es");
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem("latinomigra_lang", lang);
   };
 
   const t = (key: string, fallback?: string): string => {

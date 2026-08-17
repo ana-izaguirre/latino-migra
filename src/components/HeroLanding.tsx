@@ -174,7 +174,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ setActiveTab, currentU
             <button
               onClick={() => setActiveTab("planificador")}
               id="feature-btn-plan"
-              className="inline-flex items-center gap-2 text-secondary dark:text-teal-300 font-semibold text-xs hover:underline pt-2"
+              className="inline-flex items-center gap-2 min-h-[44px] text-secondary dark:text-teal-300 font-semibold text-xs hover:underline pt-2"
             >
               <span>Configurar Plan</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -197,7 +197,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ setActiveTab, currentU
             <button
               onClick={() => setActiveTab("chat")}
               id="feature-btn-chat"
-              className="inline-flex items-center gap-2 text-secondary dark:text-teal-300 font-semibold text-xs hover:underline pt-2"
+              className="inline-flex items-center gap-2 min-h-[44px] text-secondary dark:text-teal-300 font-semibold text-xs hover:underline pt-2"
             >
               <span>Probar Chat IA</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -220,7 +220,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ setActiveTab, currentU
             <button
               onClick={() => setActiveTab("guia")}
               id="feature-btn-guia-step"
-              className="inline-flex items-center gap-2 text-secondary dark:text-teal-300 font-semibold text-xs hover:underline pt-2"
+              className="inline-flex items-center gap-2 min-h-[44px] text-secondary dark:text-teal-300 font-semibold text-xs hover:underline pt-2"
             >
               <span>Explorar Guías</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -243,7 +243,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ setActiveTab, currentU
             <button
               onClick={() => setActiveTab("becas")}
               id="feature-btn-becas-verified"
-              className="inline-flex items-center gap-2 text-secondary dark:text-teal-300 font-semibold text-xs hover:underline pt-2"
+              className="inline-flex items-center gap-2 min-h-[44px] text-secondary dark:text-teal-300 font-semibold text-xs hover:underline pt-2"
             >
               <span>Ver Catálogo</span>
               <ArrowRight className="w-3.5 h-3.5" />

@@ -3,6 +3,10 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
+  /* Small-phone breakpoint. `xs:` was already used in BecasExplorer but was
+     never defined, so those labels stayed hidden at every width. */
+  --breakpoint-xs: 25rem;
+
   --color-primary: #0284c7;
   --color-primary-container: #0369a1;
   --color-on-primary: #ffffff;
@@ -20,12 +24,286 @@
 :root {
   color-scheme: light;
   -webkit-tap-highlight-color: transparent;
+
+  /* Height of the mobile bottom navigation bar (0 on desktop, see below) */
+  --bottom-nav-height: 0px;
+  /* Safe-area insets, normalised so they can be used in calc() everywhere */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
 }
 
 html, body {
   overflow-x: hidden;
-  max-width: 100vw;
+  max-width: 100%;
   scroll-behavior: smooth;
+}
+
+body {
+  /* Stop iOS rubber-banding from revealing the page behind fixed bars */
+  overscroll-behavior-y: none;
+  /* Never let a stray wide child stretch the layout viewport */
+  min-width: 0;
+}
+
+/* Any element that opts into scrolling gets momentum + contained overscroll,
+   so scrolling a drawer/sheet never chains to the page underneath. */
+.overflow-y-auto,
+.overflow-x-auto,
+.overflow-auto {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Media and embeds must never be the cause of horizontal overflow */
+img, svg, video, canvas, iframe {
+  max-width: 100%;
+}
+
+/* ==========================================================================
+   Mobile ergonomics
+   ========================================================================== */
+
+@media (max-width: 1023px) {
+  /* iOS Safari zooms the whole page when a focused control has a font-size
+     below 16px. Every form control in the app used 12-14px, which made each
+     input tap jerk the layout. Force the minimum only on touch layouts so the
+     desktop density is untouched. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* WCAG 2.5.5 / platform guidance: interactive controls need ~44px of
+     touchable area. Padding is used rather than min-height on the box itself
+     so existing visual sizing (pills, chips, icon buttons) is preserved. */
+  button,
+  a[role="button"],
+  [role="button"],
+  select,
+  input[type="button"],
+  input[type="submit"],
+  input[type="checkbox"],
+  input[type="radio"] {
+    touch-action: manipulation;
+  }
+
+  /* Icon-only and compact controls opt into a real 44px box. Sizing the
+     element itself (rather than overlaying a pseudo-element) keeps the hit
+     area from stealing taps from neighbouring controls in dense toolbars. */
+  .tap-target {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* ==========================================================================
+   Range sliders
+   The app styles ranges with `appearance-none`, which removes the native
+   thumb entirely unless one is drawn back in. On top of that an 8px track is
+   far too small to drag with a thumb, so touch layouts get a padded hit area
+   that keeps the thin track visual.
+   ========================================================================== */
+
+input[type="range"] {
+  touch-action: pan-y;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.35);
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.35);
+  cursor: pointer;
+}
+
+@media (max-width: 1023px) {
+  input[type="range"] {
+    /* content-box + vertical padding grows the draggable area to ~44px while
+       `background-clip` keeps the coloured track at its original height. */
+    box-sizing: content-box;
+    padding-block: 17px;
+    background-clip: content-box;
+  }
+}
+
+/* Bottom navigation is only mounted below the lg breakpoint. */
+@media (max-width: 1023px) {
+  :root {
+    --bottom-nav-height: 64px;
+  }
+}
+
+/* Reserve room so the mobile bottom bar never covers the last row of content. */
+.pb-bottom-nav {
+  padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom));
+}
+
+/* Floating widgets stack above the bottom navigation. */
+.above-bottom-nav {
+  bottom: calc(var(--bottom-nav-height) + var(--safe-bottom) + 1rem);
+}
+
+/* Full-height sheets: dvh follows the mobile URL bar, vh does not. */
+.h-screen-safe {
+  height: 100vh;
+  height: 100dvh;
+}
+
+.max-h-screen-safe {
+  max-height: 100vh;
+  max-height: 100dvh;
+}
+
+/* ==========================================================================
+   Animations
+   These utility names were already used across the app but never defined,
+   so drawers, modals and tab switches appeared instantly with no transition.
+   ========================================================================== */
+
+@keyframes lm-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes lm-fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes lm-slide-in-left {
+  from { transform: translateX(-100%); }
+  to { transform: none; }
+}
+
+@keyframes lm-slide-in-bottom {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
+
+.animate-fade-in {
+  animation: lm-fade-in-up 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-in {
+  animation: lm-fade-in 0.2s ease both;
+}
+
+.animate-in.slide-in-from-left {
+  animation: lm-slide-in-left 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-in.slide-in-from-bottom-3,
+.animate-in.slide-in-from-bottom {
+  animation: lm-fade-in-up 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-in.slide-in-from-top-2 {
+  animation: lm-fade-in 0.15s ease both;
+}
+
+.animate-slide-up-sheet {
+  animation: lm-slide-in-bottom 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html, body { scroll-behavior: auto; }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==========================================================================
+   Focus and readability
+   ========================================================================== */
+
+/* A single, always-visible keyboard focus ring. Several components cleared the
+   default with `outline-none` and replaced it with nothing, which left
+   keyboard and screen-reader users with no idea where they were. */
+:focus-visible {
+  outline: 3px solid var(--color-secondary);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+/* Screen-reader-only text that becomes visible when focused (skip links). */
+.sr-only-focusable {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sr-only-focusable:focus {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  width: auto;
+  height: auto;
+  padding: 0.75rem 1.25rem;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.4);
+}
+
+/* Body copy sizing: 12px was the default across most screens, which is below
+   what is comfortable to read. Nudge the floor up without disturbing the
+   deliberate small labels and badges. */
+p, li {
+  line-height: 1.65;
+}
+
+/* ==========================================================================
+   Depth
+   Surfaces were uniformly flat: 1px hairline borders on a near-white page with
+   no elevation, so cards, popovers and the page all read as one plane. These
+   soft, layered shadows give the hierarchy something to sit on.
+   ========================================================================== */
+
+@theme {
+  --shadow-xs: 0 1px 2px 0 rgb(15 23 42 / 0.06);
+  --shadow-sm: 0 1px 3px 0 rgb(15 23 42 / 0.09), 0 1px 2px -1px rgb(15 23 42 / 0.06);
+  --shadow-md: 0 4px 10px -2px rgb(15 23 42 / 0.10), 0 2px 4px -2px rgb(15 23 42 / 0.06);
+  --shadow-lg: 0 12px 24px -6px rgb(15 23 42 / 0.12), 0 4px 8px -4px rgb(15 23 42 / 0.08);
+  --shadow-xl: 0 20px 40px -10px rgb(15 23 42 / 0.16), 0 8px 16px -8px rgb(15 23 42 / 0.10);
+  --shadow-2xl: 0 32px 64px -16px rgb(15 23 42 / 0.24);
 }
 
 /* Tactile interactive feedback for buttons, chips, and links */

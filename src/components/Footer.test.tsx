@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
+import { renderWithProviders as render } from '../test/renderWithProviders';
 import { Footer } from './Footer';
 
 describe('Footer Component', () => {
@@ -9,11 +10,11 @@ describe('Footer Component', () => {
 
     expect(screen.getByText('LatinoMigra')).toBeInTheDocument();
     expect(screen.getByText(/Empoderando a la comunidad estudiantil/i)).toBeInTheDocument();
-    expect(screen.getByText(/Catálogo de Becas/i)).toBeInTheDocument();
-    expect(screen.getByText(/Guía Oficial de Migración/i)).toBeInTheDocument();
+    expect(screen.getByText(/Becas & Estudios/i)).toBeInTheDocument();
+    expect(screen.getByText(/Guía de Migración/i)).toBeInTheDocument();
 
     // Click on link
-    fireEvent.click(screen.getByText(/Catálogo de Becas/i));
+    fireEvent.click(screen.getByText(/Becas & Estudios/i));
     expect(setActiveTab).toHaveBeenCalledWith('becas');
   });
 });

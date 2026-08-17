@@ -16,6 +16,7 @@ import {
 import { GoogleUser, UserAlertPreferences } from "../types";
 import { useLanguage } from "../lib/i18n";
 import { saveUserAlertPreferences, getUserAlertPreferences } from "../lib/firebase";
+import { usePreferences } from "../lib/PreferencesContext";
 
 interface NotificationSettingsModalProps {
   isOpen: boolean;
@@ -29,13 +30,15 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
   currentUser,
 }) => {
   const { language } = useLanguage();
+  // Alerts default to the destination the user picked elsewhere in the app.
+  const { destinationCountry, setDestinationCountry } = usePreferences();
   const [preferences, setPreferences] = useState<UserAlertPreferences>({
     email: currentUser?.email || "",
     notifyScholarshipDeadlines: true,
     notifyVisaPolicyChanges: true,
     notifyForumReplies: true,
     notifyWeeklyDigest: false,
-    destinationCountry: "España",
+    destinationCountry: destinationCountry || "España",
     preferredArea: "Todas las áreas",
     pushEnabled: false,
   });
@@ -67,14 +70,9 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
       try {
         if ("Notification" in window) {
           setPermissionState(Notification.permission);
-        } else {
-          // Check local storage preference
-          const localPush = localStorage.getItem("latinomigra_push_active");
-          if (localPush === "true") setPermissionState("granted");
         }
       } catch {
-        const localPush = localStorage.getItem("latinomigra_push_active");
-        if (localPush === "true") setPermissionState("granted");
+        // Notification API unavailable (sandboxed iframe); leave the state as is.
       }
     }
   }, [isOpen]);
@@ -113,9 +111,6 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
 
     if (granted) {
       setPreferences((prev) => ({ ...prev, pushEnabled: true }));
-      try {
-        localStorage.setItem("latinomigra_push_active", "true");
-      } catch {}
       setPushToast(
         language === "en"
           ? "✓ Push alerts activated on this device! A test notice was registered."
@@ -224,7 +219,10 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
                 </label>
                 <select
                   value={preferences.destinationCountry}
-                  onChange={(e) => setPreferences({ ...preferences, destinationCountry: e.target.value })}
+                  onChange={(e) => {
+                    setPreferences({ ...preferences, destinationCountry: e.target.value });
+                    setDestinationCountry(e.target.value);
+                  }}
                   className="w-full px-3 py-2 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs font-semibold outline-none focus:ring-1 focus:ring-secondary dark:text-slate-200"
                 >
                   <option value="España">🇪🇸 España</option>
