@@ -44,9 +44,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [isSeeding, setIsSeeding] = useState<boolean>(false);
   const [syncMessage, setSyncMessage] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
   const [activeSubTab, setActiveSubTab] = useState<"metrics" | "database" | "cron" | "security">("metrics");
-  const [lastSyncTime, setLastSyncTime] = useState<string>(() => {
-    return localStorage.getItem("latinomigra_last_sync") || new Date().toLocaleString();
-  });
+  const [lastSyncTime, setLastSyncTime] = useState<string>(() => new Date().toLocaleString());
 
   const loadData = async () => {
     setIsLoading(true);
@@ -94,7 +92,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       const result = await triggerScholarshipSync();
       const now = new Date().toLocaleString();
       setLastSyncTime(now);
-      localStorage.setItem("latinomigra_last_sync", now);
       setSyncMessage({ type: "success", text: `¡Sincronización completada! ${result.message || "Colecciones actualizadas correctamente."}` });
       await loadData();
     } catch (e) {

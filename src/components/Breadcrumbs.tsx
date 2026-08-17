@@ -42,7 +42,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   return (
     <nav
       aria-label="Breadcrumbs"
-      className={`flex items-center gap-1.5 text-xs text-on-surface-variant/80 dark:text-slate-400 py-2 overflow-x-auto max-w-full whitespace-nowrap scrollbar-none ${className}`}
+      className={`flex items-center gap-1.5 text-xs text-on-surface-variant/80 dark:text-slate-400 overflow-x-auto no-scrollbar max-w-full whitespace-nowrap ${className}`}
     >
       {/* Home link */}
       <button
@@ -50,7 +50,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
           setActiveTab("home");
           window.scrollTo({ top: 0, behavior: "smooth" });
         }}
-        className="inline-flex items-center gap-1 hover:text-primary dark:hover:text-sky-300 font-medium transition-colors cursor-pointer shrink-0"
+        className="inline-flex items-center gap-1 min-h-[44px] py-2 hover:text-primary dark:hover:text-sky-300 font-medium transition-colors cursor-pointer shrink-0"
       >
         <Home className="w-3.5 h-3.5" />
         <span>{language === "en" ? "Home" : "Inicio"}</span>
@@ -66,7 +66,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
               setActiveTab(activeTab);
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className="hover:text-primary dark:hover:text-sky-300 font-medium transition-colors cursor-pointer shrink-0 truncate max-w-[150px] sm:max-w-none"
+            className="min-h-[44px] py-2 hover:text-primary dark:hover:text-sky-300 font-medium transition-colors cursor-pointer shrink-0 truncate max-w-[150px] sm:max-w-none"
           >
             {currentLabel}
           </button>

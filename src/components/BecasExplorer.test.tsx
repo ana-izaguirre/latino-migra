@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
+import { renderWithProviders as render } from '../test/renderWithProviders';
 import { BecasExplorer } from './BecasExplorer';
 
 describe('BecasExplorer Component', () => {
@@ -106,31 +107,39 @@ describe('BecasExplorer Component', () => {
     expect(screen.getByText(/Mostrando todas las/i)).toBeInTheDocument();
   });
 
-  it('toggles favorites, saves to localStorage and filters by My Favorites section', () => {
-    localStorage.clear();
+  it('toggles favorites in memory and filters by My Favorites section', () => {
     const { container } = render(<BecasExplorer {...defaultProps} />);
 
-    // Click on the "Mis Becas Favoritas" tab
+    // Favourites start empty — nothing is restored from browser storage.
     const favTab = screen.getByRole('button', { name: /Mis Becas Favoritas/i });
     expect(favTab).toBeInTheDocument();
     fireEvent.click(favTab);
-
-    // Check favorites banner is displayed
     expect(screen.getByText(/Sección: Mis Becas Guardadas/i)).toBeInTheDocument();
 
-    // Switch back to all
-    const allTab = screen.getByRole('button', { name: /Todas las Convocatorias/i });
-    fireEvent.click(allTab);
+    // Switch back to all. The empty-favourites state also renders a
+    // "Ver Todas las Convocatorias" call to action, so target the tab by id.
+    const allTab = container.querySelector('#tab-all-scholarships');
+    expect(allTab).toBeInTheDocument();
+    fireEvent.click(allTab!);
 
     // Find favorite button on a card and click it
     const favButtons = container.querySelectorAll('button[title*="favoritos"], button[title*="beca"]');
-    if (favButtons.length > 0) {
-      fireEvent.click(favButtons[0]);
-    }
+    expect(favButtons.length).toBeGreaterThan(0);
+    fireEvent.click(favButtons[0]);
 
-    // Verify localStorage has been updated
-    const saved = localStorage.getItem('latinomigra_favorite_scholarships');
-    expect(saved).not.toBeNull();
+    // The favourites tab counter reflects the new selection.
+    expect(screen.getByRole('button', { name: /Mis Becas Favoritas\s*1/i })).toBeInTheDocument();
+  });
+
+  it('persists nothing to browser storage', () => {
+    const { container } = render(<BecasExplorer {...defaultProps} />);
+
+    const favButtons = container.querySelectorAll('button[title*="favoritos"], button[title*="beca"]');
+    expect(favButtons.length).toBeGreaterThan(0);
+    fireEvent.click(favButtons[0]);
+
+    expect(localStorage.length).toBe(0);
+    expect(sessionStorage.length).toBe(0);
   });
 });
 

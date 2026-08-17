@@ -702,12 +702,16 @@ export interface VisaVotesData {
 /**
  * Fetch persistent community votes and rating stats for visas of a country from Firestore
  */
+/**
+ * In-memory fallback used when Firestore is unavailable. Nothing is written to
+ * localStorage, so the cache lives only for the current page session.
+ */
+const visaVotesMemoryCache = new Map<string, Record<string, VisaVotesData>>();
+
 export async function fetchVisaGuideVotes(countryCode: string): Promise<Record<string, VisaVotesData>> {
-  const path = `visa_guide_votes/${countryCode}/visas`;
   try {
     if (!db) {
-      const cached = localStorage.getItem(`latinomigra_visa_votes_${countryCode}`);
-      return cached ? JSON.parse(cached) : {};
+      return visaVotesMemoryCache.get(countryCode) || {};
     }
     const q = collection(db, "visa_guide_votes", countryCode, "visas");
     const snapshot = await getDocs(q);
@@ -720,12 +724,11 @@ export async function fetchVisaGuideVotes(countryCode: string): Promise<Record<s
         totalReviews: data.totalReviews || 1,
       };
     });
-    localStorage.setItem(`latinomigra_visa_votes_${countryCode}`, JSON.stringify(result));
+    visaVotesMemoryCache.set(countryCode, result);
     return result;
   } catch (err) {
-    console.warn("Could not fetch visa votes from Firestore, using local state fallback:", err);
-    const cached = localStorage.getItem(`latinomigra_visa_votes_${countryCode}`);
-    return cached ? JSON.parse(cached) : {};
+    console.warn("Could not fetch visa votes from Firestore, using in-memory fallback:", err);
+    return visaVotesMemoryCache.get(countryCode) || {};
   }
 }
 
@@ -733,7 +736,6 @@ export async function fetchVisaGuideVotes(countryCode: string): Promise<Record<s
  * Save / upvote a specific visa in Firestore with fallback
  */
 export async function voteVisaHelpful(countryCode: string, visaId: string): Promise<number> {
-  const path = `visa_guide_votes/${countryCode}/visas/${visaId}`;
   try {
     if (db) {
       const docRef = doc(db, "visa_guide_votes", countryCode, "visas", visaId);
@@ -752,13 +754,15 @@ export async function voteVisaHelpful(countryCode: string, visaId: string): Prom
     console.warn("Firestore vote failed, updating local store:", err);
   }
   
-  // Local fallback
-  const localKey = `latinomigra_visa_votes_${countryCode}`;
-  const existing = JSON.parse(localStorage.getItem(localKey) || "{}");
+  // In-memory fallback for the current session.
+  const existing = visaVotesMemoryCache.get(countryCode) || {};
   const current = existing[visaId]?.helpfulVotes || 12;
   const updated = current + 1;
-  existing[visaId] = { ...(existing[visaId] || { difficultyRating: 3, totalReviews: 5 }), helpfulVotes: updated };
-  localStorage.setItem(localKey, JSON.stringify(existing));
+  existing[visaId] = {
+    ...(existing[visaId] || { difficultyRating: 3, totalReviews: 5 }),
+    helpfulVotes: updated,
+  };
+  visaVotesMemoryCache.set(countryCode, existing);
   return updated;
 }
 

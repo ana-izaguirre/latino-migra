@@ -12,15 +12,16 @@ import {
   ShieldCheck,
   ChevronUp
 } from "lucide-react";
-import { NavigationTab, Scholarship, ChatMessage } from "../types";
+import { ChatMessage, GoogleUser } from "../types";
 
 interface FloatingChatWidgetProps {
-  setActiveTab: (tab: NavigationTab) => void;
-  onAskAIAboutScholarship?: (scholarship: Scholarship) => void;
+  currentUser?: GoogleUser | null;
+  /** Hands the current draft over to the full-screen Chat IA tab. */
+  onNavigateToFullChat: (prompt?: string) => void;
 }
 
 export const FloatingChatWidget: React.FC<FloatingChatWidgetProps> = ({
-  setActiveTab,
+  onNavigateToFullChat,
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [inputMessage, setInputMessage] = useState<string>("");
@@ -100,21 +101,31 @@ export const FloatingChatWidget: React.FC<FloatingChatWidgetProps> = ({
   };
 
   return (
-    <div className="fixed bottom-4 right-4 sm:bottom-5 sm:right-5 z-50">
+    <div
+      className={
+        isOpen
+          ? // Open: a near full-height sheet on phones, a docked panel from sm up.
+            "fixed z-50 inset-x-2 sm:inset-x-auto sm:right-5 bottom-[calc(var(--bottom-nav-height)+var(--safe-bottom)+0.5rem)] sm:bottom-5"
+          : // Closed: a compact pill that clears the mobile bottom navigation.
+            "fixed z-50 right-3 sm:right-5 above-bottom-nav max-w-[calc(100vw-1.5rem)]"
+      }
+    >
       {/* Floating Trigger Button */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
           id="floating-chat-trigger-btn"
           aria-label="Abrir asistente de chat bot"
-          className="flex items-center gap-2 bg-gradient-to-r from-primary to-secondary dark:from-sky-600 dark:to-teal-500 text-white px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-full shadow-2xl hover:scale-105 transition-all duration-200 group border border-white/20"
+          className="flex items-center justify-center gap-2 w-14 h-14 sm:w-auto sm:h-auto bg-gradient-to-r from-primary to-secondary dark:from-sky-600 dark:to-teal-500 text-white sm:px-4 sm:py-3 rounded-full shadow-2xl hover:scale-105 transition-all duration-200 group border border-white/20"
         >
           <div className="relative">
-            <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <Bot className="w-6 h-6 text-white" />
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full" />
           </div>
-          <span className="font-bold text-[11px] sm:text-xs tracking-wide">
+          {/* On phones the pill collapses to a circular FAB so it stops
+              covering the primary call-to-action underneath it. */}
+          <span className="hidden sm:inline font-bold text-xs tracking-wide">
             Chatbot LatinoMigra
           </span>
         </button>
@@ -124,7 +135,9 @@ export const FloatingChatWidget: React.FC<FloatingChatWidgetProps> = ({
       {isOpen && (
         <div
           id="floating-chat-popup"
-          className="w-[calc(100vw-2rem)] sm:w-[380px] md:w-[420px] h-[520px] max-h-[80vh] bg-surface dark:bg-slate-900 rounded-3xl shadow-2xl border border-outline-variant/60 dark:border-slate-800 flex flex-col overflow-hidden animate-fade-in"
+          role="dialog"
+          aria-label="Asistente LatinoMigra IA"
+          className="w-full sm:w-[380px] md:w-[420px] h-[75dvh] sm:h-[520px] max-h-[calc(100dvh-var(--bottom-nav-height)-var(--safe-bottom)-5rem)] sm:max-h-[80vh] bg-surface dark:bg-slate-900 rounded-3xl shadow-2xl border border-outline-variant/60 dark:border-slate-800 flex flex-col overflow-hidden animate-fade-in"
         >
           {/* Header */}
           <div className="bg-gradient-to-r from-primary to-secondary dark:from-sky-800 dark:to-slate-800 p-4 text-white flex items-center justify-between shadow-md">
@@ -145,19 +158,21 @@ export const FloatingChatWidget: React.FC<FloatingChatWidgetProps> = ({
               <button
                 onClick={() => {
                   setIsOpen(false);
-                  setActiveTab("chat");
+                  onNavigateToFullChat(inputMessage.trim() || undefined);
                 }}
                 title="Abrir en pantalla completa"
-                className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                aria-label="Abrir el chat en pantalla completa"
+                className="tap-target p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
               >
-                <Maximize2 className="w-4 h-4" />
+                <Maximize2 className="w-5 h-5" />
               </button>
               <button
                 onClick={() => setIsOpen(false)}
                 title="Cerrar chat"
-                className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                aria-label="Cerrar chat"
+                className="tap-target p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -212,7 +227,7 @@ export const FloatingChatWidget: React.FC<FloatingChatWidgetProps> = ({
               <button
                 key={idx}
                 onClick={() => handleSendMessage(p)}
-                className="text-[11px] px-2.5 py-1 bg-surface-container dark:bg-slate-800 hover:bg-secondary/10 dark:hover:bg-teal-950/40 text-on-surface-variant dark:text-slate-300 rounded-full border border-outline-variant/40 dark:border-slate-700 whitespace-nowrap shrink-0 transition-colors"
+                className="text-[11px] px-3 py-2 min-h-[36px] bg-surface-container dark:bg-slate-800 hover:bg-secondary/10 dark:hover:bg-teal-950/40 text-on-surface-variant dark:text-slate-300 rounded-full border border-outline-variant/40 dark:border-slate-700 whitespace-nowrap shrink-0 transition-colors"
               >
                 {p}
               </button>
@@ -225,21 +240,24 @@ export const FloatingChatWidget: React.FC<FloatingChatWidgetProps> = ({
               e.preventDefault();
               handleSendMessage();
             }}
-            className="p-3 bg-surface dark:bg-slate-900 border-t border-outline-variant/40 dark:border-slate-800 flex items-center gap-2"
+            className="p-3 pb-[calc(0.75rem+var(--safe-bottom))] sm:pb-3 bg-surface dark:bg-slate-900 border-t border-outline-variant/40 dark:border-slate-800 flex items-center gap-2"
           >
             <input
               type="text"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Escribe tu consulta sobre visas, viajes o presupuestos..."
-              className="flex-1 px-3.5 py-2 text-xs bg-surface-container dark:bg-slate-800 border border-outline-variant/50 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-secondary dark:text-slate-100"
+              placeholder="Escribe tu consulta..."
+              aria-label="Mensaje para el asistente"
+              enterKeyHint="send"
+              className="flex-1 min-w-0 px-3.5 py-2.5 text-xs bg-surface-container dark:bg-slate-800 border border-outline-variant/50 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-secondary dark:text-slate-100"
             />
             <button
               type="submit"
               disabled={!inputMessage.trim()}
-              className="p-2 bg-secondary dark:bg-teal-500 disabled:opacity-40 text-white dark:text-slate-950 rounded-xl hover:opacity-90 transition-opacity shrink-0"
+              aria-label="Enviar mensaje"
+              className="tap-target p-2 bg-secondary dark:bg-teal-500 disabled:opacity-40 text-white dark:text-slate-950 rounded-xl hover:opacity-90 transition-opacity shrink-0"
             >
-              <Send className="w-4 h-4" />
+              <Send className="w-5 h-5" />
             </button>
           </form>
         </div>

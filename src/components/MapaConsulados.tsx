@@ -20,6 +20,7 @@ import { APIProvider, Map, AdvancedMarker, Pin, InfoWindow } from "@vis.gl/react
 import { LocationMarker } from "../types";
 import { LOCATIONS_DATA } from "../data/locations";
 import { useLanguage } from "../lib/i18n";
+import { usePreferences, ANY_COUNTRY } from "../lib/PreferencesContext";
 
 const GOOGLE_MAPS_KEY =
   process.env.GOOGLE_MAPS_PLATFORM_KEY ||
@@ -102,11 +103,32 @@ interface MapaConsuladosProps {
 export const MapaConsulados: React.FC<MapaConsuladosProps> = ({ initialCountry }) => {
   const { language } = useLanguage();
   const [selectedType, setSelectedType] = useState<string>("todos");
-  const [userHomeCountry, setUserHomeCountry] = useState<string>(() => {
-    if (initialCountry && initialCountry !== "todos") return initialCountry;
-    return localStorage.getItem("latino_migra_home_country") || "todos";
-  });
-  const [destinationFilter, setDestinationFilter] = useState<string>("todos");
+  // Country choices come from the app-wide preferences context so a selection
+  // made here is the same one the planner, calculator and alerts see.
+  const {
+    originCountry,
+    setOriginCountry,
+    destinationCountry,
+    setDestinationCountry,
+  } = usePreferences();
+
+  useEffect(() => {
+    if (initialCountry && initialCountry !== "todos") {
+      setOriginCountry(initialCountry);
+    }
+    // Only seeds from the prop; later edits flow through the context.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialCountry]);
+
+  // This screen's selects use "todos" for the all-countries option, while the
+  // shared context uses an empty string. Translate at the boundary.
+  const userHomeCountry = originCountry || "todos";
+  const setUserHomeCountry = (country: string) =>
+    setOriginCountry(country === "todos" ? ANY_COUNTRY : country);
+
+  const destinationFilter = destinationCountry || "todos";
+  const setDestinationFilter = (country: string) =>
+    setDestinationCountry(country === "todos" ? ANY_COUNTRY : country);
   const [searchQuery, setSearchQuery] = useState<string>("");
   
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -156,7 +178,6 @@ export const MapaConsulados: React.FC<MapaConsuladosProps> = ({ initialCountry }
   // Handle Home Country selection change
   const handleHomeCountryChange = (country: string) => {
     setUserHomeCountry(country);
-    localStorage.setItem("latino_migra_home_country", country);
     if (country !== "todos") {
       const match = LOCATIONS_DATA.find((l) => l.hostCountry === country);
       if (match) {
@@ -200,9 +221,7 @@ export const MapaConsulados: React.FC<MapaConsuladosProps> = ({ initialCountry }
         if (nearest) {
           setActiveMarker(nearest);
           if ((nearest as LocationMarker).hostCountry) {
-            const countryName = (nearest as LocationMarker).hostCountry;
-            setUserHomeCountry(countryName);
-            localStorage.setItem("latino_migra_home_country", countryName);
+            setUserHomeCountry((nearest as LocationMarker).hostCountry);
           }
         }
 

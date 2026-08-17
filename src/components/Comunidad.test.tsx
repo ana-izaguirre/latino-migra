@@ -1,12 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { renderWithProviders as render } from '../test/renderWithProviders';
 import { Comunidad } from './Comunidad';
 
 describe('Comunidad Component', () => {
   it('renders community header, category pills and forum discussions', async () => {
     render(<Comunidad />);
     expect(screen.getByText(/Comunidad LatinoMigra/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Buscar tema o ciudad.../i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Buscar tema, ciudad o pregunta/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Crear Publicación/i })).toBeInTheDocument();
   });
 
@@ -15,7 +16,7 @@ describe('Comunidad Component', () => {
     const postItem = await screen.findByText(/proceso de empadronamiento en Madrid/i);
     expect(postItem).toBeInTheDocument();
 
-    const searchInput = screen.getByPlaceholderText(/Buscar tema o ciudad.../i);
+    const searchInput = screen.getByPlaceholderText(/Buscar tema, ciudad o pregunta/i);
     fireEvent.change(searchInput, { target: { value: 'empadronamiento' } });
 
     await waitFor(() => {
