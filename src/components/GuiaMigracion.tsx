@@ -26,6 +26,7 @@ import {
   Star
 } from "lucide-react";
 import { NavigationTab, VisaType } from "../types";
+import { Breadcrumbs } from "./Breadcrumbs";
 import { MIGRATION_GUIDES_DATA } from "../data/migrationGuides";
 import { COUNTRY_ANTI_SCAM_DATA } from "../data/antiScamData";
 import { CalendarAgendaButton } from "./CalendarAgendaButton";
@@ -143,7 +144,10 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-10">
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 space-y-6">
+      {/* Breadcrumbs */}
+      <Breadcrumbs activeTab="guia" setActiveTab={setActiveTab} subPageTitle={guide.country} />
+
       {/* Country Selector Header */}
       <div className="bg-surface-container-lowest dark:bg-slate-800 p-6 md:p-8 rounded-3xl border border-outline-variant/40 dark:border-slate-700 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -403,11 +407,11 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
                       </a>
                     )}
 
-                    {/* Community Upvotes from Firestore DB */}
+                    {/* Community Upvotes */}
                     <button
                       onClick={() => handleVoteVisa(visa.id)}
                       disabled={userVotedVisas[visa.id]}
-                      title="Votar información útil (Sincronizado con base de datos Firestore)"
+                      title="Votar información útil"
                       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
                         userVotedVisas[visa.id]
                           ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
@@ -416,7 +420,6 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
                     >
                       <ThumbsUp className={`w-3.5 h-3.5 ${userVotedVisas[visa.id] ? "fill-current" : ""}`} />
                       <span>{visaVotes[visa.id]?.helpfulVotes || 18} útiles</span>
-                      <span className="text-[10px] text-slate-400 font-normal hidden sm:inline">(Firestore DB)</span>
                     </button>
                   </div>
 

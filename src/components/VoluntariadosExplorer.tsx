@@ -18,6 +18,7 @@ import {
   Clock
 } from "lucide-react";
 import { NavigationTab, GoogleUser } from "../types";
+import { Breadcrumbs } from "./Breadcrumbs";
 import { VOLUNTEERING_PROGRAMS_DATA, VolunteeringProgram } from "../data/volunteeringData";
 import { useLanguage } from "../lib/i18n";
 import { CalendarAgendaButton } from "./CalendarAgendaButton";
@@ -69,7 +70,10 @@ Sé que este programa NO es para migrar de forma permanente, pero me gustaría s
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-8 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 space-y-6 animate-fade-in">
+      {/* Breadcrumbs */}
+      <Breadcrumbs activeTab="voluntariados" setActiveTab={setActiveTab} />
+
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-emerald-800 via-teal-700 to-sky-900 rounded-3xl p-6 md:p-10 text-white shadow-xl relative overflow-hidden">
         <div className="relative z-10 max-w-3xl space-y-4">

@@ -27,6 +27,7 @@ import { NavigationTab, ThemeMode, GoogleUser } from "../types";
 import { useLanguage } from "../lib/i18n";
 import { useCurrency } from "../lib/CurrencyContext";
 import { getSafeImageUrl } from "../lib/sanitize";
+import { isAdmin } from "../lib/authUtils";
 
 interface TopNavBarProps {
   activeTab: NavigationTab;
@@ -92,7 +93,8 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
     { id: "admin", label: t("nav.admin", "Panel Admin"), icon: <Database className="w-4 h-4 text-violet-500" />, adminOnly: true },
   ];
 
-  const navItems = allNavItems.filter((item) => !item.adminOnly || currentUser?.role === "admin");
+  const userIsAdmin = isAdmin(currentUser);
+  const navItems = allNavItems.filter((item) => !item.adminOnly || userIsAdmin);
 
   const toggleLanguage = () => {
     const newLang = language === "es" ? "en" : "es";
@@ -387,21 +389,6 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
                   <span>{language === "en" ? "Sign In with Google" : "Acceder con Google"}</span>
                 </button>
               )}
-
-              {/* Search Bar in Mobile Menu */}
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    if (activeTab !== "becas") setActiveTab("becas");
-                  }}
-                  placeholder={language === "en" ? "Search scholarships or visas..." : "Buscar becas o visas..."}
-                  className="w-full pl-9 pr-4 py-2 bg-surface dark:bg-slate-800 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs text-on-surface dark:text-slate-100 outline-none focus:border-secondary"
-                />
-              </div>
 
               {/* Alert Center Trigger */}
               {onOpenAlertsModal && (

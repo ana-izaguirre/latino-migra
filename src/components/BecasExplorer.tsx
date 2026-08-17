@@ -31,6 +31,8 @@ import {
   BookOpen
 } from "lucide-react";
 import { Scholarship, NavigationTab, GoogleUser } from "../types";
+import { Breadcrumbs } from "./Breadcrumbs";
+import { isAdmin } from "../lib/authUtils";
 import { SCHOLARSHIPS_DATA } from "../data/scholarships";
 import { generateGoogleCalendarUrl } from "../lib/googleCalendar";
 import {
@@ -353,7 +355,10 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 space-y-6">
+      {/* Breadcrumbs */}
+      <Breadcrumbs activeTab="becas" setActiveTab={setActiveTab} />
+
       {/* View Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-outline-variant/30 dark:border-slate-800 pb-6">
         <div>
@@ -371,18 +376,20 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
 
         {/* Suggest & Search Header Controls */}
         <div className="flex flex-wrap items-center gap-3">
-          {/* Firestore Database Dynamic Sync Button */}
-          <button
-            type="button"
-            onClick={handleSyncScholarships}
-            disabled={isSyncingAI}
-            id="sync-scholarships-btn"
-            title="Ejecutar sincronización con Gemini IA y actualizar catálogo en Firestore"
-            className="inline-flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 font-bold text-xs px-3.5 py-2.5 rounded-xl border border-emerald-300 dark:border-emerald-700 transition-colors disabled:opacity-50 cursor-pointer shadow-2xs"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isSyncingAI ? "animate-spin text-emerald-600" : "text-emerald-500"}`} />
-            <span>{isSyncingAI ? "Sincronizando IA..." : "Sincronizar DB Anual"}</span>
-          </button>
+          {/* Admin-only Database Dynamic Sync Button */}
+          {isAdmin(currentUser) && (
+            <button
+              type="button"
+              onClick={handleSyncScholarships}
+              disabled={isSyncingAI}
+              id="sync-scholarships-btn"
+              title="Sincronizar convocatorias oficiales con IA"
+              className="inline-flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 font-bold text-xs px-3.5 py-2.5 rounded-xl border border-emerald-300 dark:border-emerald-700 transition-colors disabled:opacity-50 cursor-pointer shadow-2xs"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncingAI ? "animate-spin text-emerald-600" : "text-emerald-500"}`} />
+              <span>{isSyncingAI ? "Sincronizando IA..." : "Sincronizar DB Anual"}</span>
+            </button>
+          )}
 
           <button
             onClick={() => setShowSuggestModal(true)}
@@ -393,7 +400,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
             <span>Sugerir Beca Oficial</span>
           </button>
 
-          <div className="relative flex-1 md:w-64">
+          <div className="relative flex-1 min-w-[200px] md:w-64">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400" />
             <input
               type="text"
@@ -439,14 +446,14 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
           </div>
         )}
 
-        {/* Navigation Tabs: Todas vs Mis Favoritas */}
+        {/* Navigation Tabs: Todas vs Mis Favoritas - Responsive and flex-wrap for mobile */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-outline-variant/40 dark:border-slate-800 pb-4">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 max-w-full">
             <button
               type="button"
               onClick={() => setViewModeTab("all")}
               id="tab-all-scholarships"
-              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all ${
+              className={`inline-flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${
                 viewModeTab === "all"
                   ? "bg-primary text-white dark:bg-sky-600 shadow-sm"
                   : "bg-surface-container-lowest dark:bg-slate-800 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700 border border-outline-variant/40 dark:border-slate-700"
@@ -463,7 +470,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
               type="button"
               onClick={() => setViewModeTab("favorites")}
               id="tab-favorite-scholarships"
-              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all ${
+              className={`inline-flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${
                 viewModeTab === "favorites"
                   ? "bg-red-500 text-white shadow-sm"
                   : "bg-surface-container-lowest dark:bg-slate-800 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700 border border-outline-variant/40 dark:border-slate-700"
@@ -494,7 +501,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                   }
                 }}
                 id="tab-profile-scholarships"
-                className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all ${
+                className={`inline-flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${
                   viewModeTab === "profile"
                     ? "bg-secondary text-white dark:bg-teal-600 shadow-sm"
                     : "bg-surface-container-lowest dark:bg-slate-800 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700 border border-outline-variant/40 dark:border-slate-700"

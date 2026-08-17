@@ -19,6 +19,7 @@ import {
   Bot
 } from "lucide-react";
 import { NavigationTab, GoogleUser } from "../types";
+import { Breadcrumbs } from "./Breadcrumbs";
 import { CalendarAgendaButton } from "./CalendarAgendaButton";
 
 interface CalculadoraCostoVidaProps {
@@ -464,7 +465,10 @@ export const CalculadoraCostoVida: React.FC<CalculadoraCostoVidaProps> = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-10">
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 space-y-6">
+      {/* Breadcrumbs */}
+      <Breadcrumbs activeTab="calculadora" setActiveTab={setActiveTab} />
+
       {/* Header Banner */}
       <div className="bg-surface-container-lowest dark:bg-slate-800 p-6 md:p-8 rounded-3xl border border-outline-variant/40 dark:border-slate-700 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">

@@ -18,6 +18,7 @@ import { Footer } from "./components/Footer";
 import { AuthModal } from "./components/AuthModal";
 import { NotificationSettingsModal } from "./components/NotificationSettingsModal";
 import { subscribeToAuthState, getUserProfile, signOutUser } from "./lib/firebase";
+import { isAdmin } from "./lib/authUtils";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavigationTab>("home");
@@ -54,8 +55,13 @@ export default function App() {
               profile?.photoURL ||
               "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
             countryOfOrigin: profile?.countryOfOrigin || "Colombia",
+            role: profile?.role || "user",
             signedInAt: new Date().toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" }),
           };
+          // Auto-verify admin role
+          if (isAdmin(userData)) {
+            userData.role = "admin";
+          }
           setCurrentUser(userData);
         } catch (e) {
           console.error("Error fetching user profile from Firestore:", e);
@@ -189,6 +195,28 @@ export default function App() {
               onAskAIAboutScholarship={handleAskAIAboutScholarship}
               currentUser={currentUser}
               onOpenAuthModal={() => setAuthModalOpen(true)}
+            />
+          </main>
+        )}
+
+        {activeTab === "voluntariados" && (
+          <main className="animate-fade-in">
+            <VoluntariadosExplorer
+              setActiveTab={setActiveTab}
+              onAskAIWithCustomPrompt={(prompt) => {
+                setChatInitialPrompt(prompt);
+                setActiveTab("chat");
+              }}
+              currentUser={currentUser}
+            />
+          </main>
+        )}
+
+        {activeTab === "admin" && (
+          <main className="animate-fade-in">
+            <AdminDashboard
+              currentUser={currentUser}
+              setActiveTab={setActiveTab}
             />
           </main>
         )}

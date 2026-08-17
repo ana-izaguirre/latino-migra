@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Globe, Heart, ShieldCheck, ExternalLink, HelpCircle, FileText, Lock, MessageSquare, Mail, X, Sparkles, Compass, Calculator, GraduationCap, MapPin, BookOpen, MessageSquarePlus } from "lucide-react";
+import { Globe, Heart, ShieldCheck, ExternalLink, HelpCircle, FileText, Lock, MessageSquare, Mail, X, Sparkles, Compass, Calculator, GraduationCap, MapPin, BookOpen, MessageSquarePlus, HeartHandshake, Bot } from "lucide-react";
 import { NavigationTab } from "../types";
 import { useLanguage } from "../lib/i18n";
 
@@ -17,15 +17,6 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
     setActiveTab(tab);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
-  const officialLinks = [
-    { name: "🇪🇸 España: Asuntos Exteriores & Extranjería", url: "https://www.exteriores.gob.es" },
-    { name: "🇩🇪 Alemania: Make it in Germany & DAAD", url: "https://www.make-it-in-germany.com" },
-    { name: "🇨🇦 Canadá: IRCC Inmigración Oficial", url: "https://www.canada.ca/en/immigration-refugees-citizenship.html" },
-    { name: "🇮🇪 Irlanda: ISD Immigration & Education", url: "https://www.irishimmigration.ie" },
-    { name: "🇫🇷 Francia: Campus France & Visas", url: "https://www.campusfrance.org" },
-    { name: "🇺🇸 EE.UU.: State Dept & EducationUSA", url: "https://travel.state.gov" },
-  ];
 
   return (
     <footer className="bg-surface-container-lowest dark:bg-slate-900 border-t border-outline-variant/30 dark:border-slate-800 transition-colors">
@@ -95,6 +86,15 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               </li>
               <li>
                 <button
+                  onClick={() => handleNavigate("voluntariados")}
+                  className="footer-link w-full flex items-center gap-2 py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
+                >
+                  <HeartHandshake className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                  <span>{language === "en" ? "Volunteering & Exchanges" : "Voluntariados e Intercambios"}</span>
+                </button>
+              </li>
+              <li>
+                <button
                   onClick={() => handleNavigate("mapa")}
                   className="footer-link w-full flex items-center gap-2 py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
                 >
@@ -114,10 +114,10 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
             </ul>
           </div>
 
-          {/* Col 3: Comunidad y Portales */}
+          {/* Col 3: Comunidad y Asistente */}
           <div className="space-y-3">
             <h4 className="font-bold text-xs uppercase tracking-wider text-primary dark:text-sky-300">
-              {t("footer.community", "Comunidad & Recursos")}
+              {t("footer.community", "Comunidad & Asistencia")}
             </h4>
             <ul className="space-y-2 text-xs text-on-surface-variant dark:text-slate-300">
               <li>
@@ -138,19 +138,15 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                   <span>{language === "en" ? "Suggest New Feature or Scholarship" : "Sugerir Nueva Beca o Función"}</span>
                 </button>
               </li>
-              {officialLinks.slice(0, 3).map((link, idx) => (
-                <li key={idx}>
-                  <a
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="footer-link flex items-center gap-1.5 py-1 px-2 -mx-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-sky-300 hover:bg-surface-container dark:hover:bg-slate-800 transition-all"
-                  >
-                    <span className="truncate">{link.name}</span>
-                    <ExternalLink className="w-3 h-3 shrink-0 opacity-70" />
-                  </a>
-                </li>
-              ))}
+              <li>
+                <button
+                  onClick={() => handleNavigate("chat")}
+                  className="footer-link w-full flex items-center gap-2 py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
+                >
+                  <Bot className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                  <span>{language === "en" ? "AI Migration Consultant" : "Consultor Migratorio con IA"}</span>
+                </button>
+              </li>
             </ul>
           </div>
 
@@ -299,7 +295,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                   </p>
                   <div className="p-3 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/50 space-y-1">
                     <p className="font-bold text-xs text-primary dark:text-sky-300">📧 Correo de soporte:</p>
-                    <p className="text-xs text-secondary font-mono">contacto@latinomigra.org</p>
+                    <a href="mailto:latinomigra@gmail.com" className="text-xs text-secondary font-mono hover:underline">latinomigra@gmail.com</a>
                     <p className="font-bold text-xs text-primary dark:text-sky-300 pt-1">💡 Sugerencias directas:</p>
                     <p className="text-xs">
                       Puedes publicar en la sección de <button onClick={() => { setActiveModal(null); handleNavigate("feedback"); }} className="underline font-bold text-secondary cursor-pointer">Sugerencias Comunitarias</button> para que el equipo priorice nuevas integraciones.

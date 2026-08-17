@@ -21,7 +21,9 @@ import {
   Loader2,
   RefreshCw,
 } from "lucide-react";
-import { ForumPost } from "../types";
+import { ForumPost, NavigationTab, GoogleUser } from "../types";
+import { Breadcrumbs } from "./Breadcrumbs";
+import { isAdmin } from "../lib/authUtils";
 import { useLanguage } from "../lib/i18n";
 import {
   fetchCommunityPosts,
@@ -99,7 +101,12 @@ const INITIAL_SEED_POSTS: Omit<CloudForumPost, "id">[] = [
   },
 ];
 
-export const Comunidad: React.FC = () => {
+interface ComunidadProps {
+  currentUser?: GoogleUser | null;
+  setActiveTab?: (tab: NavigationTab) => void;
+}
+
+export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab }) => {
   const { language, t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string>("Todas");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -398,17 +405,22 @@ export const Comunidad: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-8 animate-in fade-in duration-300">
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 space-y-6 animate-in fade-in duration-300">
+      {/* Breadcrumbs */}
+      {setActiveTab && <Breadcrumbs activeTab="comunidad" setActiveTab={setActiveTab} />}
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-outline-variant/30 dark:border-slate-800 pb-6">
         <div>
           <div className="flex items-center gap-2 text-secondary dark:text-teal-300 text-xs font-bold uppercase tracking-wider mb-1">
             <MessageSquare className="w-4 h-4" />
             <span>{language === "en" ? "LatinoMigra Community Forum" : "Comunidad LatinoMigra"}</span>
-            <span className="inline-flex items-center gap-1 ml-2 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border border-emerald-300 dark:border-emerald-800">
-              <Cloud className="w-3 h-3" />
-              <span>{language === "en" ? "Cloud Firestore (Permanent)" : "Nube Firestore (Permanente)"}</span>
-            </span>
+            {isAdmin(currentUser) && (
+              <span className="inline-flex items-center gap-1 ml-2 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border border-emerald-300 dark:border-emerald-800">
+                <Cloud className="w-3 h-3" />
+                <span>{language === "en" ? "Cloud Firestore (Permanent)" : "Nube Firestore (Permanente)"}</span>
+              </span>
+            )}
           </div>
           <h1 className="font-headline-lg text-3xl md:text-4xl font-extrabold text-primary dark:text-sky-300">
             {t("community.title", "Foros y Experiencias de Migrantes")}

@@ -39,6 +39,7 @@ import {
   Bike
 } from "lucide-react";
 import { GoogleUser, NavigationTab, MigrationPlan } from "../types";
+import { Breadcrumbs } from "./Breadcrumbs";
 import { saveUserMigrationPlan, getUserMigrationPlan } from "../lib/firebase";
 import { LATIN_AMERICAN_COUNTRIES, DESTINATION_COUNTRIES } from "../data/countriesData";
 import { useCurrency } from "../lib/CurrencyContext";
@@ -580,7 +581,10 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-8 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 space-y-6 animate-fade-in">
+      {/* Breadcrumbs */}
+      <Breadcrumbs activeTab="planificador" setActiveTab={setActiveTab} />
+
       {/* Top Banner / Hero */}
       <div className="bg-gradient-to-r from-primary to-primary-container dark:from-slate-900 dark:to-slate-800 rounded-3xl p-6 md:p-10 text-white shadow-xl relative overflow-hidden">
         <div className="relative z-10 max-w-3xl space-y-4">
