@@ -1,13 +1,24 @@
-export type NavigationTab = "home" | "planificador" | "calculadora" | "becas" | "voluntariados" | "guia" | "comunidad" | "chat" | "mapa" | "feedback" | "admin";
+export type NavigationTab =
+  | "home"
+  | "planificador"
+  | "calculadora"
+  | "becas"
+  | "voluntariados"
+  | "guia"
+  | "comunidad"
+  | "chat"
+  | "mapa"
+  | "feedback"
+  | "admin";
 
 export type ThemeMode = "light" | "dark";
 
-export type EducationLevel = 
-  | "todos" 
-  | "pregrado" 
-  | "postgrado" 
-  | "doctorado" 
-  | "postdoctorado" 
+export type EducationLevel =
+  | "todos"
+  | "pregrado"
+  | "postgrado"
+  | "doctorado"
+  | "postdoctorado"
   | "intercambio_voluntariado"
   | "Pregrado"
   | "Postgrado"
@@ -94,14 +105,21 @@ export interface Scholarship {
   benefits: string[];
   link: string;
   imageUrl: string;
-  institutionType?: "Universidad Directa" | "Gubernamental" | "Organismo Internacional" | "Fundación";
+  institutionType?:
+    "Universidad Directa" | "Gubernamental" | "Organismo Internacional" | "Fundación";
   officialPortalName?: string;
 }
 
 export interface VisaType {
   id: string;
   name: string;
-  category?: "Estudios" | "Trabajo / Express" | "Idiomas" | "Nómada Digital" | "Búsqueda Empleo / Oportunidad" | "Residencia";
+  category?:
+    | "Estudios"
+    | "Trabajo / Express"
+    | "Idiomas"
+    | "Nómada Digital"
+    | "Búsqueda Empleo / Oportunidad"
+    | "Residencia";
   tag?: string;
   description: string;
   duration: string;

@@ -58,10 +58,14 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                     : "text-on-surface-variant dark:text-slate-400"
                 }`}
               >
-                <span className={isActive ? "scale-110 transition-transform" : "transition-transform"}>
+                <span
+                  className={isActive ? "scale-110 transition-transform" : "transition-transform"}
+                >
                   {item.icon}
                 </span>
-                <span className={`text-[10px] leading-none ${isActive ? "font-bold" : "font-medium"}`}>
+                <span
+                  className={`text-[10px] leading-none ${isActive ? "font-bold" : "font-medium"}`}
+                >
                   {item.label}
                 </span>
                 {isActive && (

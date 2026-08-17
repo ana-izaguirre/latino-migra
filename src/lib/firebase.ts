@@ -28,7 +28,10 @@ import {
   DocumentData,
 } from "firebase/firestore";
 // Dynamically look for local configuration file if present without failing the build if missing
-const configModules = import.meta.glob(["/firebase-applet-config.json", "../../firebase-applet-config.json"], { eager: true });
+const configModules = import.meta.glob(
+  ["/firebase-applet-config.json", "../../firebase-applet-config.json"],
+  { eager: true }
+);
 let localConfig: Record<string, any> = {};
 for (const path in configModules) {
   if (configModules[path]) {
@@ -40,13 +43,22 @@ for (const path in configModules) {
 const env: Record<string, any> = (import.meta as any).env || {};
 
 const firebaseConfig = {
-  apiKey: env.VITE_FIREBASE_API_KEY || localConfig.apiKey || "AIzaSyDummyKeyForSafeInitialization0000",
-  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || localConfig.authDomain || "refined-coral-0zp2g.firebaseapp.com",
+  apiKey:
+    env.VITE_FIREBASE_API_KEY || localConfig.apiKey || "AIzaSyDummyKeyForSafeInitialization0000",
+  authDomain:
+    env.VITE_FIREBASE_AUTH_DOMAIN ||
+    localConfig.authDomain ||
+    "refined-coral-0zp2g.firebaseapp.com",
   projectId: env.VITE_FIREBASE_PROJECT_ID || localConfig.projectId || "refined-coral-0zp2g",
-  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || localConfig.storageBucket || "refined-coral-0zp2g.appspot.com",
-  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || localConfig.messagingSenderId || "123456789",
+  storageBucket:
+    env.VITE_FIREBASE_STORAGE_BUCKET ||
+    localConfig.storageBucket ||
+    "refined-coral-0zp2g.appspot.com",
+  messagingSenderId:
+    env.VITE_FIREBASE_MESSAGING_SENDER_ID || localConfig.messagingSenderId || "123456789",
   appId: env.VITE_FIREBASE_APP_ID || localConfig.appId || "1:123456789:web:abcdef",
-  firestoreDatabaseId: env.VITE_FIREBASE_DATABASE_ID || localConfig.firestoreDatabaseId || undefined,
+  firestoreDatabaseId:
+    env.VITE_FIREBASE_DATABASE_ID || localConfig.firestoreDatabaseId || undefined,
 };
 
 let appInstance: any = null;
@@ -56,9 +68,10 @@ let dbInstance: any = null;
 try {
   appInstance = initializeApp(firebaseConfig);
   authInstance = getAuth(appInstance);
-  dbInstance = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)"
-    ? getFirestore(appInstance, firebaseConfig.firestoreDatabaseId)
-    : getFirestore(appInstance);
+  dbInstance =
+    firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)"
+      ? getFirestore(appInstance, firebaseConfig.firestoreDatabaseId)
+      : getFirestore(appInstance);
 } catch (error) {
   console.warn("Firebase initialization warning (running in safe fallback mode):", error);
 }
@@ -96,7 +109,11 @@ export enum OperationType {
   WRITE = "write",
 }
 
-export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+export function handleFirestoreError(
+  error: unknown,
+  operationType: OperationType,
+  path: string | null
+) {
   const errInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
@@ -150,7 +167,10 @@ export async function signInWithGoogle(countryOfOrigin?: string) {
 }
 
 // Update User Profile (e.g. Country of Origin) in Firestore
-export async function updateUserProfile(userId: string, data: { countryOfOrigin?: string; displayName?: string }) {
+export async function updateUserProfile(
+  userId: string,
+  data: { countryOfOrigin?: string; displayName?: string }
+) {
   const path = `users/${userId}`;
   try {
     const userRef = doc(db, "users", userId);
@@ -197,7 +217,12 @@ export async function fetchUserBookmarks(userId: string): Promise<string[]> {
 }
 
 // Firestore Helper: Save Scholarship Bookmark
-export async function toggleBookmarkScholarship(userId: string, scholarshipId: string, title: string, country: string) {
+export async function toggleBookmarkScholarship(
+  userId: string,
+  scholarshipId: string,
+  title: string,
+  country: string
+) {
   const path = "savedScholarships";
   try {
     const q = query(
@@ -234,11 +259,15 @@ export async function saveUserMigrationPlan(userId: string, planData: any) {
   const path = `migrationPlans/${userId}`;
   try {
     const planRef = doc(db, "migrationPlans", userId);
-    await setDoc(planRef, {
-      ...planData,
-      userId,
-      updatedAt: new Date().toISOString()
-    }, { merge: true });
+    await setDoc(
+      planRef,
+      {
+        ...planData,
+        userId,
+        updatedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
     return true;
   } catch (err) {
     handleFirestoreError(err, OperationType.WRITE, path);
@@ -267,11 +296,15 @@ export async function saveUserAlertPreferences(userId: string, prefs: any) {
   const path = `userPreferences/${userId}`;
   try {
     const prefRef = doc(db, "userPreferences", userId);
-    await setDoc(prefRef, {
-      ...prefs,
-      userId,
-      updatedAt: new Date().toISOString()
-    }, { merge: true });
+    await setDoc(
+      prefRef,
+      {
+        ...prefs,
+        userId,
+        updatedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
     return true;
   } catch (err) {
     handleFirestoreError(err, OperationType.WRITE, path);
@@ -303,7 +336,7 @@ export async function fetchFeedbackSuggestions(): Promise<any[]> {
     const snap = await getDocs(q);
     return snap.docs.map((d) => ({
       id: d.id,
-      ...d.data()
+      ...d.data(),
     }));
   } catch (err) {
     handleFirestoreError(err, OperationType.LIST, path);
@@ -318,7 +351,7 @@ export async function createFeedbackSuggestion(suggestionData: any): Promise<str
     const docRef = await addDoc(collection(db, path), {
       ...suggestionData,
       createdAt: new Date().toISOString(),
-      upvotes: 1
+      upvotes: 1,
     });
     return docRef.id;
   } catch (err) {
@@ -328,12 +361,15 @@ export async function createFeedbackSuggestion(suggestionData: any): Promise<str
 }
 
 // Firestore Helper: Upvote Feedback Suggestion
-export async function upvoteFeedbackSuggestion(suggestionId: string, incrementAmount: number = 1): Promise<void> {
+export async function upvoteFeedbackSuggestion(
+  suggestionId: string,
+  incrementAmount: number = 1
+): Promise<void> {
   const path = `feedbackSuggestions/${suggestionId}`;
   try {
     const sugRef = doc(db, "feedbackSuggestions", suggestionId);
     await updateDoc(sugRef, {
-      upvotes: increment(incrementAmount)
+      upvotes: increment(incrementAmount),
     });
   } catch (err) {
     handleFirestoreError(err, OperationType.UPDATE, path);
@@ -342,7 +378,12 @@ export async function upvoteFeedbackSuggestion(suggestionId: string, incrementAm
 }
 
 // Firestore Helper: Add User Note
-export async function addUserNote(userId: string, title: string, content: string, category: string = "Notas") {
+export async function addUserNote(
+  userId: string,
+  title: string,
+  content: string,
+  category: string = "Notas"
+) {
   const path = "userNotes";
   try {
     const docRef = await addDoc(collection(db, path), {
@@ -428,11 +469,7 @@ export async function fetchCommunityPostsPaginated(
         limit(fetchLimit)
       );
     } else {
-      q = query(
-        collection(db, path),
-        orderBy("createdAt", "desc"),
-        limit(fetchLimit)
-      );
+      q = query(collection(db, path), orderBy("createdAt", "desc"), limit(fetchLimit));
     }
 
     const snapshot = await getDocs(q);
@@ -483,7 +520,7 @@ export async function fetchCommunityPosts(limitCount = 30): Promise<CloudForumPo
   try {
     const q = query(collection(db, path), orderBy("createdAt", "desc"), limit(limitCount));
     const snapshot = await getDocs(q);
-    
+
     if (snapshot.empty) {
       return [];
     }
@@ -663,7 +700,9 @@ export async function seedScholarshipsToDB(scholarships: any[]): Promise<number>
 /**
  * Trigger automated scholarship sync / AI crawler
  */
-export async function triggerScholarshipSync(academicYear: string = "2026-2027"): Promise<{ success: boolean; updatedCount: number; message: string; data?: any[] }> {
+export async function triggerScholarshipSync(
+  academicYear: string = "2026-2027"
+): Promise<{ success: boolean; updatedCount: number; message: string; data?: any[] }> {
   try {
     const response = await fetch("/api/cron/sync-scholarships", {
       method: "POST",
@@ -708,7 +747,9 @@ export interface VisaVotesData {
  */
 const visaVotesMemoryCache = new Map<string, Record<string, VisaVotesData>>();
 
-export async function fetchVisaGuideVotes(countryCode: string): Promise<Record<string, VisaVotesData>> {
+export async function fetchVisaGuideVotes(
+  countryCode: string
+): Promise<Record<string, VisaVotesData>> {
   try {
     if (!db) {
       return visaVotesMemoryCache.get(countryCode) || {};
@@ -753,7 +794,7 @@ export async function voteVisaHelpful(countryCode: string, visaId: string): Prom
   } catch (err) {
     console.warn("Firestore vote failed, updating local store:", err);
   }
-  
+
   // In-memory fallback for the current session.
   const existing = visaVotesMemoryCache.get(countryCode) || {};
   const current = existing[visaId]?.helpfulVotes || 12;
@@ -765,5 +806,3 @@ export async function voteVisaHelpful(countryCode: string, visaId: string): Prom
   visaVotesMemoryCache.set(countryCode, existing);
   return updated;
 }
-
-

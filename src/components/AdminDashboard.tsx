@@ -17,7 +17,7 @@ import {
   Sliders,
   Award,
   BookOpen,
-  Info
+  Info,
 } from "lucide-react";
 import { GoogleUser, NavigationTab, Scholarship } from "../types";
 import { SCHOLARSHIPS_DATA } from "../data/scholarships";
@@ -25,7 +25,7 @@ import {
   fetchScholarshipsFromDB,
   seedScholarshipsToDB,
   triggerScholarshipSync,
-  db
+  db,
 } from "../lib/firebase";
 
 interface AdminDashboardProps {
@@ -33,17 +33,19 @@ interface AdminDashboardProps {
   setActiveTab: (tab: NavigationTab) => void;
 }
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({
-  currentUser,
-  setActiveTab,
-}) => {
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, setActiveTab }) => {
   const [scholarshipsCount, setScholarshipsCount] = useState<number>(SCHOLARSHIPS_DATA.length);
   const [dbItems, setDbItems] = useState<Scholarship[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [isSeeding, setIsSeeding] = useState<boolean>(false);
-  const [syncMessage, setSyncMessage] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
-  const [activeSubTab, setActiveSubTab] = useState<"metrics" | "database" | "cron" | "security">("metrics");
+  const [syncMessage, setSyncMessage] = useState<{
+    type: "success" | "error" | "info";
+    text: string;
+  } | null>(null);
+  const [activeSubTab, setActiveSubTab] = useState<"metrics" | "database" | "cron" | "security">(
+    "metrics"
+  );
   const [lastSyncTime, setLastSyncTime] = useState<string>(() => new Date().toLocaleString());
 
   const loadData = async () => {
@@ -69,17 +71,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const handleSeedDatabase = async () => {
     setIsSeeding(true);
-    setSyncMessage({ type: "info", text: "Poblando la base de datos de Firestore con el catálogo maestro verificado..." });
+    setSyncMessage({
+      type: "info",
+      text: "Poblando la base de datos de Firestore con el catálogo maestro verificado...",
+    });
     try {
       const seededCount = await seedScholarshipsToDB(SCHOLARSHIPS_DATA);
       if (seededCount > 0) {
-        setSyncMessage({ type: "success", text: `¡Base de datos poblada con éxito! (${seededCount} becas registradas en Firestore).` });
+        setSyncMessage({
+          type: "success",
+          text: `¡Base de datos poblada con éxito! (${seededCount} becas registradas en Firestore).`,
+        });
         await loadData();
       } else {
         setSyncMessage({ type: "error", text: "Ocurrió un error al poblar la base de datos." });
       }
     } catch (e) {
-      setSyncMessage({ type: "error", text: `Error: ${e instanceof Error ? e.message : String(e)}` });
+      setSyncMessage({
+        type: "error",
+        text: `Error: ${e instanceof Error ? e.message : String(e)}`,
+      });
     } finally {
       setIsSeeding(false);
     }
@@ -87,15 +98,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const handleRunSyncAIJob = async () => {
     setIsSyncing(true);
-    setSyncMessage({ type: "info", text: "Ejecutando proceso de sincronización con IA y verificación de convocatorias..." });
+    setSyncMessage({
+      type: "info",
+      text: "Ejecutando proceso de sincronización con IA y verificación de convocatorias...",
+    });
     try {
       const result = await triggerScholarshipSync();
       const now = new Date().toLocaleString();
       setLastSyncTime(now);
-      setSyncMessage({ type: "success", text: `¡Sincronización completada! ${result.message || "Colecciones actualizadas correctamente."}` });
+      setSyncMessage({
+        type: "success",
+        text: `¡Sincronización completada! ${result.message || "Colecciones actualizadas correctamente."}`,
+      });
       await loadData();
     } catch (e) {
-      setSyncMessage({ type: "error", text: `Error en la sincronización: ${e instanceof Error ? e.message : String(e)}` });
+      setSyncMessage({
+        type: "error",
+        text: `Error en la sincronización: ${e instanceof Error ? e.message : String(e)}`,
+      });
     } finally {
       setIsSyncing(false);
     }
@@ -114,7 +134,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             Dashboard del Administrador
           </h1>
           <p className="text-white/80 text-xs md:text-sm max-w-2xl">
-            Monitoreo en tiempo real de la base de datos en Firebase Firestore, ejecutor de tareas programadas (Cron Jobs de Becas) y estado de los servicios.
+            Monitoreo en tiempo real de la base de datos en Firebase Firestore, ejecutor de tareas
+            programadas (Cron Jobs de Becas) y estado de los servicios.
           </p>
         </div>
 
@@ -146,8 +167,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             syncMessage.type === "success"
               ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-900 dark:text-emerald-300"
               : syncMessage.type === "error"
-              ? "bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-300"
-              : "bg-sky-500/10 border-sky-500/30 text-sky-900 dark:text-sky-300"
+                ? "bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-300"
+                : "bg-sky-500/10 border-sky-500/30 text-sky-900 dark:text-sky-300"
           }`}
         >
           <div className="flex items-center gap-2.5">
@@ -173,12 +194,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-surface-container-lowest dark:bg-slate-900 p-5 rounded-2xl border border-outline-variant/40 dark:border-slate-800 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-on-surface-variant dark:text-slate-400">Total Becas Activas</span>
+            <span className="text-xs font-bold text-on-surface-variant dark:text-slate-400">
+              Total Becas Activas
+            </span>
             <div className="p-2 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
               <GraduationCap className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-black text-primary dark:text-sky-300">{scholarshipsCount}</div>
+          <div className="text-2xl font-black text-primary dark:text-sky-300">
+            {scholarshipsCount}
+          </div>
           <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
             <TrendingUp className="w-3.5 h-3.5" />
             <span>100% Fuentes Oficiales Verificadas</span>
@@ -187,7 +212,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         <div className="bg-surface-container-lowest dark:bg-slate-900 p-5 rounded-2xl border border-outline-variant/40 dark:border-slate-800 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-on-surface-variant dark:text-slate-400">Países de Destino</span>
+            <span className="text-xs font-bold text-on-surface-variant dark:text-slate-400">
+              Países de Destino
+            </span>
             <div className="p-2 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400">
               <Layers className="w-4 h-4" />
             </div>
@@ -200,12 +227,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         <div className="bg-surface-container-lowest dark:bg-slate-900 p-5 rounded-2xl border border-outline-variant/40 dark:border-slate-800 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-on-surface-variant dark:text-slate-400">Estado de la Base de Datos</span>
+            <span className="text-xs font-bold text-on-surface-variant dark:text-slate-400">
+              Estado de la Base de Datos
+            </span>
             <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               <Server className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-base font-bold text-emerald-600 dark:text-emerald-400">Firestore Conectado</div>
+          <div className="text-base font-bold text-emerald-600 dark:text-emerald-400">
+            Firestore Conectado
+          </div>
           <div className="text-[11px] text-on-surface-variant dark:text-slate-400">
             Región multirregional segura
           </div>
@@ -213,12 +244,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         <div className="bg-surface-container-lowest dark:bg-slate-900 p-5 rounded-2xl border border-outline-variant/40 dark:border-slate-800 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-on-surface-variant dark:text-slate-400">Última Sincronización Cron</span>
+            <span className="text-xs font-bold text-on-surface-variant dark:text-slate-400">
+              Última Sincronización Cron
+            </span>
             <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
               <Calendar className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-xs font-bold text-primary dark:text-sky-300 truncate">{lastSyncTime}</div>
+          <div className="text-xs font-bold text-primary dark:text-sky-300 truncate">
+            {lastSyncTime}
+          </div>
           <div className="text-[11px] text-on-surface-variant dark:text-slate-400">
             Proceso automatizado diario
           </div>
@@ -284,7 +319,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
             <div className="divide-y divide-outline-variant/20 dark:divide-slate-800 max-h-96 overflow-y-auto pr-2 space-y-2">
               {(dbItems.length > 0 ? dbItems : SCHOLARSHIPS_DATA).map((scholarship) => (
-                <div key={scholarship.id} className="pt-3 pb-3 flex items-start justify-between gap-4">
+                <div
+                  key={scholarship.id}
+                  className="pt-3 pb-3 flex items-start justify-between gap-4"
+                >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-primary dark:text-sky-300">
@@ -295,7 +333,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </span>
                     </div>
                     <div className="text-[11px] text-on-surface-variant dark:text-slate-400">
-                      {scholarship.institution} • {scholarship.supportType} • Cierre: {scholarship.deadline}
+                      {scholarship.institution} • {scholarship.supportType} • Cierre:{" "}
+                      {scholarship.deadline}
                     </div>
                   </div>
 
@@ -329,8 +368,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       className="w-12 h-12 rounded-full border-2 border-secondary"
                     />
                     <div>
-                      <div className="font-bold text-sm text-primary dark:text-sky-200">{currentUser.name}</div>
-                      <div className="text-xs text-on-surface-variant dark:text-slate-400">{currentUser.email}</div>
+                      <div className="font-bold text-sm text-primary dark:text-sky-200">
+                        {currentUser.name}
+                      </div>
+                      <div className="text-xs text-on-surface-variant dark:text-slate-400">
+                        {currentUser.email}
+                      </div>
                       <div className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full inline-block mt-1">
                         Rol: Administrador de Plataforma
                       </div>
@@ -339,7 +382,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
               ) : (
                 <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-300">
-                  Sesión anónima o en modo desarrollador. Inicia sesión con tu cuenta de Google para sincronizar marcadores personales.
+                  Sesión anónima o en modo desarrollador. Inicia sesión con tu cuenta de Google para
+                  sincronizar marcadores personales.
                 </div>
               )}
             </div>
@@ -386,34 +430,52 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 Arquitectura del Cron Job & Sincronización Automática
               </h3>
               <p className="text-xs text-on-surface-variant dark:text-slate-400">
-                Detalle de las tareas en segundo plano que actualizan fechas de cierre, tasas de cambio y convocatorias.
+                Detalle de las tareas en segundo plano que actualizan fechas de cierre, tasas de
+                cambio y convocatorias.
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-4 rounded-2xl bg-surface dark:bg-slate-800 border border-outline-variant/30 dark:border-slate-700 space-y-2">
-              <div className="font-bold text-sm text-primary dark:text-sky-300">1. Job Diario: Fechas de Cierre</div>
+              <div className="font-bold text-sm text-primary dark:text-sky-300">
+                1. Job Diario: Fechas de Cierre
+              </div>
               <p className="text-xs text-on-surface-variant dark:text-slate-400 leading-relaxed">
-                Calcula automáticamente los días restantes (`daysLeft`), marca becas con estado urgente (`isUrgent: true` si quedan menos de 30 días) y archiva convocatorias finalizadas.
+                Calcula automáticamente los días restantes (`daysLeft`), marca becas con estado
+                urgente (`isUrgent: true` si quedan menos de 30 días) y archiva convocatorias
+                finalizadas.
               </p>
-              <div className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Frecuencia: Cada 24 horas (00:00 UTC)</div>
+              <div className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                Frecuencia: Cada 24 horas (00:00 UTC)
+              </div>
             </div>
 
             <div className="p-4 rounded-2xl bg-surface dark:bg-slate-800 border border-outline-variant/30 dark:border-slate-700 space-y-2">
-              <div className="font-bold text-sm text-primary dark:text-sky-300">2. Job de Tipos de Cambio</div>
+              <div className="font-bold text-sm text-primary dark:text-sky-300">
+                2. Job de Tipos de Cambio
+              </div>
               <p className="text-xs text-on-surface-variant dark:text-slate-400 leading-relaxed">
-                Actualiza los tipos de cambio para monedas latinoamericanas (COP, MXN, PEN, ARS, CLP, BRL) frente a EUR, USD, CAD y AUD para la calculadora de presupuesto.
+                Actualiza los tipos de cambio para monedas latinoamericanas (COP, MXN, PEN, ARS,
+                CLP, BRL) frente a EUR, USD, CAD y AUD para la calculadora de presupuesto.
               </p>
-              <div className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Frecuencia: Cada 12 horas</div>
+              <div className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                Frecuencia: Cada 12 horas
+              </div>
             </div>
 
             <div className="p-4 rounded-2xl bg-surface dark:bg-slate-800 border border-outline-variant/30 dark:border-slate-700 space-y-2">
-              <div className="font-bold text-sm text-primary dark:text-sky-300">3. Sincronizador Firestore DB</div>
+              <div className="font-bold text-sm text-primary dark:text-sky-300">
+                3. Sincronizador Firestore DB
+              </div>
               <p className="text-xs text-on-surface-variant dark:text-slate-400 leading-relaxed">
-                Garantiza que la colección <code>scholarships</code> y los bookmarks de usuarios en <code>users/[userId]/bookmarks</code> mantengan consistencia de datos y alta disponibilidad.
+                Garantiza que la colección <code>scholarships</code> y los bookmarks de usuarios en{" "}
+                <code>users/[userId]/bookmarks</code> mantengan consistencia de datos y alta
+                disponibilidad.
               </p>
-              <div className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Frecuencia: Tiempo real & On-demand</div>
+              <div className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                Frecuencia: Tiempo real & On-demand
+              </div>
             </div>
           </div>
         </div>
@@ -429,7 +491,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 Reglas de Seguridad y Permisos en Firestore
               </h3>
               <p className="text-xs text-on-surface-variant dark:text-slate-400">
-                Estructura de control de acceso basada en roles y propiedad de documentos (`firestore.rules`).
+                Estructura de control de acceso basada en roles y propiedad de documentos
+                (`firestore.rules`).
               </p>
             </div>
           </div>

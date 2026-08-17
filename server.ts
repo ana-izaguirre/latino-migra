@@ -152,7 +152,7 @@ Capacidades y Principios de Respuesta:
 `;
 
     // Construct conversation context if provided
-    let contents = [];
+    const contents = [];
     if (history && Array.isArray(history) && history.length > 0) {
       // Only the most recent turns are forwarded, and each is length-capped,
       // so a caller cannot inflate a request with unbounded history.
@@ -177,7 +177,8 @@ Capacidades y Principios de Respuesta:
       },
     });
 
-    const replyText = response.text || "No se pudo generar una respuesta. Por favor intenta de nuevo.";
+    const replyText =
+      response.text || "No se pudo generar una respuesta. Por favor intenta de nuevo.";
 
     res.json({ text: replyText });
   } catch (error: any) {
@@ -216,7 +217,7 @@ Genera o actualiza la lista de convocatorias de becas para el ciclo académico $
 Devuelve un arreglo JSON válido con las becas actualizadas. Cada objeto debe tener la siguiente estructura exacta:
 [
   {
-    "id": "beca-carolina-${academicYear.split('-')[0]}",
+    "id": "beca-carolina-${academicYear.split("-")[0]}",
     "title": "Beca Excelencia Fundación Carolina",
     "institution": "Universidad Complutense de Madrid / Universidades Españolas",
     "institutionType": "Fundación",
@@ -273,7 +274,9 @@ Genera al menos 15 convocatorias oficiales líderes. Asegúrate de que el format
       }
     } catch (parseErr) {
       console.error("JSON parse error from Gemini:", parseErr);
-      return res.status(500).json({ error: "No se pudo interpretar el formato generado por la IA." });
+      return res
+        .status(500)
+        .json({ error: "No se pudo interpretar el formato generado por la IA." });
     }
 
     // Return the generated & verified dataset ready to be stored in Firestore or frontend
@@ -293,7 +296,6 @@ Genera al menos 15 convocatorias oficiales líderes. Asegúrate de que el format
     });
   }
 });
-
 
 // Vite Development or Production Server
 async function startServer() {
@@ -315,7 +317,7 @@ async function startServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`[LatinoMigra] Servidor ejecutándose en http://0.0.0.0:${PORT}`);
+    console.info(`[LatinoMigra] Servidor ejecutándose en http://0.0.0.0:${PORT}`);
   });
 }
 

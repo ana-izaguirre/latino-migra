@@ -21,7 +21,7 @@ import {
   DollarSign,
   Languages,
   X,
-  Globe
+  Globe,
 } from "lucide-react";
 import { ChatMessage, ChatConversation, Scholarship } from "../types";
 import { useLanguage } from "../lib/i18n";
@@ -45,8 +45,9 @@ export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContex
         {
           id: "m-1",
           role: "user",
-          content: "¿Cuáles son los requisitos clave para la visa de estudiante de España desde Colombia?",
-          timestamp: "10:15 AM"
+          content:
+            "¿Cuáles son los requisitos clave para la visa de estudiante de España desde Colombia?",
+          timestamp: "10:15 AM",
         },
         {
           id: "m-2",
@@ -68,23 +69,26 @@ export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContex
           timestamp: "10:16 AM",
           sources: [
             { title: "Consulado General de España", url: "https://www.exteriores.gob.es" },
-            { title: "Ministerio de Inclusión, Seguridad Social y Migraciones", url: "https://www.inclusion.gob.es" }
-          ]
-        }
-      ]
+            {
+              title: "Ministerio de Inclusión, Seguridad Social y Migraciones",
+              url: "https://www.inclusion.gob.es",
+            },
+          ],
+        },
+      ],
     },
     {
       id: "conv-2",
       title: "Becas CONACYT para maestría",
       updatedAt: "Ayer",
-      messages: []
+      messages: [],
     },
     {
       id: "conv-3",
       title: "Costo de vida en Buenos Aires vs Madrid",
       updatedAt: "Hace 3 días",
-      messages: []
-    }
+      messages: [],
+    },
   ]);
 
   const [activeConvId, setActiveConvId] = useState<string>("conv-1");
@@ -98,7 +102,9 @@ export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContex
   const [diagAge, setDiagAge] = useState<number>(28);
   const [diagFamily, setDiagFamily] = useState<string>("Soltero/a sin hijos");
   // Multilingual state
-  const [userLanguages, setUserLanguages] = useState<Array<{ name: string; level: string; enabled: boolean }>>([
+  const [userLanguages, setUserLanguages] = useState<
+    Array<{ name: string; level: string; enabled: boolean }>
+  >([
     { name: "Español", level: "Nativo / C2", enabled: true },
     { name: "Inglés", level: "Intermedio (B2)", enabled: true },
     { name: "Alemán", level: "Básico (A2)", enabled: false },
@@ -106,7 +112,9 @@ export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContex
     { name: "Italiano", level: "Intermedio (B1)", enabled: false },
     { name: "Portugués", level: "Intermedio (B1/B2)", enabled: false },
   ]);
-  const [diagBudgetTier, setDiagBudgetTier] = useState<"low" | "medium" | "high" | "premium">("medium");
+  const [diagBudgetTier, setDiagBudgetTier] = useState<"low" | "medium" | "high" | "premium">(
+    "medium"
+  );
   const [diagGoal, setDiagGoal] = useState<string>("Beca de Maestría o Posgrado 100% financiada");
   const [diagOrigin, setDiagOrigin] = useState<string>("Colombia");
 
@@ -196,7 +204,8 @@ export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContex
       const errorMessage: ChatMessage = {
         id: `msg-err-${Date.now()}`,
         role: "assistant",
-        content: "Ocurrió un error al conectar con LatinoMigra IA. Por favor, verifica tu conexión o intenta nuevamente.",
+        content:
+          "Ocurrió un error al conectar con LatinoMigra IA. Por favor, verifica tu conexión o intenta nuevamente.",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
 
@@ -217,16 +226,17 @@ export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContex
   };
 
   const handleRunProfileDiagnosis = () => {
-    const activeLanguagesStr = userLanguages
-      .filter((l) => l.enabled)
-      .map((l) => `${l.name} (${l.level})`)
-      .join(", ") || "Solo Español Nativo";
+    const activeLanguagesStr =
+      userLanguages
+        .filter((l) => l.enabled)
+        .map((l) => `${l.name} (${l.level})`)
+        .join(", ") || "Solo Español Nativo";
 
     const budgetLabels = {
       low: `Menos de ${formatCurrency(2000, currency)} (Prioridad Becas 100% financiada)`,
       medium: `${formatCurrency(3000, currency)} - ${formatCurrency(8000, currency)}`,
       high: `${formatCurrency(8000, currency)} - ${formatCurrency(15000, currency)} (Sperrkonto / Cursos)`,
-      premium: `Más de ${formatCurrency(15000, currency)} (Estudios o mudanza familiar)`
+      premium: `Más de ${formatCurrency(15000, currency)} (Estudios o mudanza familiar)`,
     };
 
     const budgetSelectedStr = budgetLabels[diagBudgetTier];
@@ -272,23 +282,33 @@ Estructura tu diagnóstico con:
   const promptSuggestions = [
     {
       title: "🎯 Diagnóstico según Carrera, Edad y Familia",
-      subtitle: "Evaluación completa de mejores países, becas o visas de empleo acordes a tu situación",
+      subtitle:
+        "Evaluación completa de mejores países, becas o visas de empleo acordes a tu situación",
       action: () => setShowProfileDiagnosisModal(true),
     },
     {
       title: "🇪🇸 Nacionalidad Española en 2 años",
       subtitle: "Beneficio para ciudadanos latinoamericanos por 2 años de residencia legal",
-      action: () => handleSendMessage("¿Cómo funciona el beneficio de nacionalidad española en 2 años para ciudadanos de países latinoamericanos?"),
+      action: () =>
+        handleSendMessage(
+          "¿Cómo funciona el beneficio de nacionalidad española en 2 años para ciudadanos de países latinoamericanos?"
+        ),
     },
     {
       title: "🇩🇪 Chancenkarte Alemania (Visa de Oportunidad)",
       subtitle: "Sistema de puntos por título profesional, idiomas y edad para buscar trabajo",
-      action: () => handleSendMessage("Explícame la Chancenkarte de Alemania: sistema de puntos, homologación de título y cuenta bloqueada (Sperrkonto)."),
+      action: () =>
+        handleSendMessage(
+          "Explícame la Chancenkarte de Alemania: sistema de puntos, homologación de título y cuenta bloqueada (Sperrkonto)."
+        ),
     },
     {
       title: "🇮🇪 Irlanda Stamp 2: Estudiar y Trabajar 20h",
       subtitle: "Cursos de inglés con permiso legal de trabajo, IRP y trámites",
-      action: () => handleSendMessage("¿Cuáles son los requisitos actuales para la visa Stamp 2 en Irlanda para cursos de idiomas y trabajo de 20h/semana?"),
+      action: () =>
+        handleSendMessage(
+          "¿Cuáles son los requisitos actuales para la visa Stamp 2 en Irlanda para cursos de idiomas y trabajo de 20h/semana?"
+        ),
     },
   ];
 
@@ -373,7 +393,10 @@ Estructura tu diagnóstico con:
                   {t("chat.welcomeTitle", "¡Hola! ¿Cómo puedo ayudarte hoy?")}
                 </h2>
                 <p className="text-xs text-on-surface-variant dark:text-slate-300 leading-relaxed max-w-md mx-auto">
-                  {t("chat.welcomeSubtitle", "Soy tu asesor de IA para becas completas, visas de trabajo, búsqueda de empleo y migración con o sin familia.")}
+                  {t(
+                    "chat.welcomeSubtitle",
+                    "Soy tu asesor de IA para becas completas, visas de trabajo, búsqueda de empleo y migración con o sin familia."
+                  )}
                 </p>
               </div>
 
@@ -425,13 +448,17 @@ Estructura tu diagnóstico con:
                         : "bg-surface dark:bg-slate-900 text-on-surface dark:text-slate-100 border border-outline-variant/30 dark:border-slate-800 rounded-tl-xs"
                     }`}
                   >
-                    <div className="whitespace-pre-line font-body-md leading-relaxed">{msg.content}</div>
+                    <div className="whitespace-pre-line font-body-md leading-relaxed">
+                      {msg.content}
+                    </div>
 
                     {/* Sources Section if provided */}
                     {msg.sources && msg.sources.length > 0 && (
                       <div className="pt-3 border-t border-outline-variant/20 dark:border-slate-800 space-y-1.5">
                         <span className="text-[11px] font-bold text-secondary dark:text-teal-300 uppercase tracking-wider block">
-                          {language === "en" ? "Recommended Official Sources" : "Fuentes Oficiales Recomendadas"}
+                          {language === "en"
+                            ? "Recommended Official Sources"
+                            : "Fuentes Oficiales Recomendadas"}
                         </span>
                         <div className="flex flex-wrap items-center gap-2">
                           {msg.sources.map((src, idx) => (
@@ -484,7 +511,9 @@ Estructura tu diagnóstico con:
               <div className="bg-surface dark:bg-slate-900 px-4 py-3 rounded-2xl border border-outline-variant/30 dark:border-slate-800 flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-amber-500 animate-spin" />
                 <span className="font-semibold text-xs">
-                  {language === "en" ? "LatinoMigra AI is evaluating migration pathways..." : "LatinoMigra IA está analizando opciones para tu perfil..."}
+                  {language === "en"
+                    ? "LatinoMigra AI is evaluating migration pathways..."
+                    : "LatinoMigra IA está analizando opciones para tu perfil..."}
                 </span>
               </div>
             </div>
@@ -515,7 +544,10 @@ Estructura tu diagnóstico con:
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder={t("chat.inputPlaceholder", "Pregunta sobre visas, requisitos o becas específicas...")}
+              placeholder={t(
+                "chat.inputPlaceholder",
+                "Pregunta sobre visas, requisitos o becas específicas..."
+              )}
               id="chat-input-field"
               className="flex-1 bg-transparent border-none outline-none text-xs md:text-sm text-on-surface dark:text-slate-100 placeholder:text-on-surface-variant dark:placeholder:text-slate-500"
             />
@@ -531,7 +563,10 @@ Estructura tu diagnóstico con:
           </form>
 
           <p className="text-[11px] text-center text-on-surface-variant dark:text-slate-500">
-            {t("chat.disclaimer", "LatinoMigra IA es una guía orientativa. Verifica siempre la información oficial en los consulados correspondientes.")}
+            {t(
+              "chat.disclaimer",
+              "LatinoMigra IA es una guía orientativa. Verifica siempre la información oficial en los consulados correspondientes."
+            )}
           </p>
         </div>
       </main>
@@ -547,7 +582,9 @@ Estructura tu diagnóstico con:
                 </div>
                 <div>
                   <h3 className="font-headline-md text-lg font-bold text-primary dark:text-sky-300">
-                    {language === "en" ? "AI Migration Profile Diagnosis" : "Diagnóstico de Perfil Migratorio con IA"}
+                    {language === "en"
+                      ? "AI Migration Profile Diagnosis"
+                      : "Diagnóstico de Perfil Migratorio con IA"}
                   </h3>
                   <p className="text-xs text-on-surface-variant dark:text-slate-400">
                     {language === "en"
@@ -601,22 +638,40 @@ Estructura tu diagnóstico con:
                     onChange={(e) => setDiagCareer(e.target.value)}
                     className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
                   >
-                    <option value="Ingeniería de Software / IT">Ingeniería de Software / IT / Datos</option>
-                    <option value="Medicina / Enfermería / Salud">Medicina / Enfermería / Salud</option>
-                    <option value="Administración / Finanzas / Negocios">Administración / Negocios / Finanzas</option>
-                    <option value="Ingeniería Industrial / Civil / Mecánica">Ingeniería Industrial / Civil / Mecánica</option>
-                    <option value="Educación / Docencia / Idiomas">Educación / Docencia / Idiomas</option>
-                    <option value="Marketing / Diseño / Comunicación">Marketing / Diseño / Comunicación</option>
+                    <option value="Ingeniería de Software / IT">
+                      Ingeniería de Software / IT / Datos
+                    </option>
+                    <option value="Medicina / Enfermería / Salud">
+                      Medicina / Enfermería / Salud
+                    </option>
+                    <option value="Administración / Finanzas / Negocios">
+                      Administración / Negocios / Finanzas
+                    </option>
+                    <option value="Ingeniería Industrial / Civil / Mecánica">
+                      Ingeniería Industrial / Civil / Mecánica
+                    </option>
+                    <option value="Educación / Docencia / Idiomas">
+                      Educación / Docencia / Idiomas
+                    </option>
+                    <option value="Marketing / Diseño / Comunicación">
+                      Marketing / Diseño / Comunicación
+                    </option>
                     <option value="Derecho / Ciencias Sociales">Derecho / Ciencias Sociales</option>
-                    <option value="Gastronomía / Turismo / Hostelería">Gastronomía / Turismo / Hostelería</option>
-                    <option value="Oficios Técnicos / Electricidad / Construcción">Oficios Técnicos / Electricidad</option>
+                    <option value="Gastronomía / Turismo / Hostelería">
+                      Gastronomía / Turismo / Hostelería
+                    </option>
+                    <option value="Oficios Técnicos / Electricidad / Construcción">
+                      Oficios Técnicos / Electricidad
+                    </option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center justify-between">
                     <span>{language === "en" ? "Age" : "Edad"}</span>
-                    <span className="text-secondary dark:text-teal-300 font-bold">{diagAge} años</span>
+                    <span className="text-secondary dark:text-teal-300 font-bold">
+                      {diagAge} años
+                    </span>
                   </label>
                   <input
                     type="range"
@@ -657,9 +712,15 @@ Estructura tu diagnóstico con:
                 <label className="block font-bold text-primary dark:text-sky-300 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <Languages className="w-3.5 h-3.5 text-secondary" />
-                    <span>{language === "en" ? "Known Languages (Multilingual Profile)" : "Idiomas que dominas (Perfil Multilingüe)"}</span>
+                    <span>
+                      {language === "en"
+                        ? "Known Languages (Multilingual Profile)"
+                        : "Idiomas que dominas (Perfil Multilingüe)"}
+                    </span>
                   </span>
-                  <span className="text-[11px] font-normal text-slate-500">Selecciona todos los que apliquen</span>
+                  <span className="text-[11px] font-normal text-slate-500">
+                    Selecciona todos los que apliquen
+                  </span>
                 </label>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-surface dark:bg-slate-900/80 p-3 rounded-2xl border border-outline-variant/40 dark:border-slate-700/60 max-h-48 overflow-y-auto">
@@ -712,17 +773,30 @@ Estructura tu diagnóstico con:
                 <div>
                   <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center gap-1.5">
                     <DollarSign className="w-3.5 h-3.5 text-secondary" />
-                    <span>{language === "en" ? `Available Budget (${currency})` : `Presupuesto o Ahorro (${currency})`}</span>
+                    <span>
+                      {language === "en"
+                        ? `Available Budget (${currency})`
+                        : `Presupuesto o Ahorro (${currency})`}
+                    </span>
                   </label>
                   <select
                     value={diagBudgetTier}
                     onChange={(e) => setDiagBudgetTier(e.target.value as any)}
                     className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
                   >
-                    <option value="low">Menos de {formatCurrency(2000, currency)} (Prioridad Becas 100%)</option>
-                    <option value="medium">{formatCurrency(3000, currency)} - {formatCurrency(8000, currency)}</option>
-                    <option value="high">{formatCurrency(8000, currency)} - {formatCurrency(15000, currency)} (Sperrkonto / Cursos)</option>
-                    <option value="premium">Más de {formatCurrency(15000, currency)} (Estudios familiares)</option>
+                    <option value="low">
+                      Menos de {formatCurrency(2000, currency)} (Prioridad Becas 100%)
+                    </option>
+                    <option value="medium">
+                      {formatCurrency(3000, currency)} - {formatCurrency(8000, currency)}
+                    </option>
+                    <option value="high">
+                      {formatCurrency(8000, currency)} - {formatCurrency(15000, currency)}{" "}
+                      (Sperrkonto / Cursos)
+                    </option>
+                    <option value="premium">
+                      Más de {formatCurrency(15000, currency)} (Estudios familiares)
+                    </option>
                   </select>
                 </div>
 
@@ -736,11 +810,21 @@ Estructura tu diagnóstico con:
                     onChange={(e) => setDiagGoal(e.target.value)}
                     className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
                   >
-                    <option value="Beca de Maestría o Posgrado 100% financiada">🎓 Beca 100% (DAAD, Carolina, Erasmus)</option>
-                    <option value="Trabajo directo o Visa de Oportunidades">💼 Empleo directo / Visa Oportunidades</option>
-                    <option value="Curso de Idiomas con Trabajo (Stamp 2 / Co-op)">🗣️ Curso de Idiomas con permiso laboral</option>
-                    <option value="Nacionalidad en 2 años (España para latinos)">🇪🇸 Nacionalidad en 2 años (España)</option>
-                    <option value="Nómada Digital / Trabajo Remoto">💻 Nómada Digital / Trabajo remoto</option>
+                    <option value="Beca de Maestría o Posgrado 100% financiada">
+                      🎓 Beca 100% (DAAD, Carolina, Erasmus)
+                    </option>
+                    <option value="Trabajo directo o Visa de Oportunidades">
+                      💼 Empleo directo / Visa Oportunidades
+                    </option>
+                    <option value="Curso de Idiomas con Trabajo (Stamp 2 / Co-op)">
+                      🗣️ Curso de Idiomas con permiso laboral
+                    </option>
+                    <option value="Nacionalidad en 2 años (España para latinos)">
+                      🇪🇸 Nacionalidad en 2 años (España)
+                    </option>
+                    <option value="Nómada Digital / Trabajo Remoto">
+                      💻 Nómada Digital / Trabajo remoto
+                    </option>
                   </select>
                 </div>
               </div>
@@ -760,7 +844,9 @@ Estructura tu diagnóstico con:
                 className="bg-primary dark:bg-sky-600 text-white px-6 py-2.5 rounded-xl text-xs font-bold hover:bg-primary-container dark:hover:bg-sky-500 shadow-md transition-all flex items-center gap-2 cursor-pointer"
               >
                 <Sparkles className="w-4 h-4 text-amber-300" />
-                <span>{language === "en" ? "Generate AI Diagnosis" : "Generar Diagnóstico con IA"}</span>
+                <span>
+                  {language === "en" ? "Generate AI Diagnosis" : "Generar Diagnóstico con IA"}
+                </span>
               </button>
             </div>
           </div>

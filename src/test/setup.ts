@@ -1,13 +1,13 @@
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 // Server-side suites opt into the node environment, where none of the DOM
 // setup below applies (and would throw). Everything DOM-specific is guarded.
-const hasDom = typeof window !== 'undefined';
+const hasDom = typeof window !== "undefined";
 
 if (hasDom) {
-  await import('@testing-library/jest-dom/vitest');
-  const { cleanup } = await import('@testing-library/react');
-  const { afterEach } = await import('vitest');
+  await import("@testing-library/jest-dom/vitest");
+  const { cleanup } = await import("@testing-library/react");
+  const { afterEach } = await import("vitest");
 
   // Automatically clean up DOM after each test
   afterEach(() => {
@@ -15,7 +15,7 @@ if (hasDom) {
   });
 
   // Mock window.matchMedia
-  Object.defineProperty(window, 'matchMedia', {
+  Object.defineProperty(window, "matchMedia", {
     writable: true,
     value: vi.fn().mockImplementation((query: string) => ({
       matches: false,
@@ -34,11 +34,11 @@ if (hasDom) {
 }
 
 // Mock Firebase SDK
-vi.mock('firebase/app', () => ({
+vi.mock("firebase/app", () => ({
   initializeApp: vi.fn(() => ({})),
 }));
 
-vi.mock('firebase/auth', () => ({
+vi.mock("firebase/auth", () => ({
   getAuth: vi.fn(() => ({
     currentUser: null,
   })),
@@ -51,7 +51,7 @@ vi.mock('firebase/auth', () => ({
   }),
 }));
 
-vi.mock('firebase/firestore', () => ({
+vi.mock("firebase/firestore", () => ({
   getFirestore: vi.fn(() => ({})),
   collection: vi.fn(),
   doc: vi.fn(),
@@ -63,7 +63,7 @@ vi.mock('firebase/firestore', () => ({
   orderBy: vi.fn(),
   limit: vi.fn(),
   startAfter: vi.fn(),
-  addDoc: vi.fn(() => Promise.resolve({ id: 'mock-doc-id' })),
+  addDoc: vi.fn(() => Promise.resolve({ id: "mock-doc-id" })),
   updateDoc: vi.fn(() => Promise.resolve()),
   deleteDoc: vi.fn(() => Promise.resolve()),
   increment: vi.fn(),
@@ -72,4 +72,3 @@ vi.mock('firebase/firestore', () => ({
     return () => {};
   }),
 }));
-

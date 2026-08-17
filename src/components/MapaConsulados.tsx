@@ -14,7 +14,7 @@ import {
   ShieldCheck,
   LocateFixed,
   Loader2,
-  AlertCircle
+  AlertCircle,
 } from "lucide-react";
 import { APIProvider, Map, AdvancedMarker, Pin, InfoWindow } from "@vis.gl/react-google-maps";
 import { LocationMarker } from "../types";
@@ -34,7 +34,7 @@ const hasValidApiKey = Boolean(GOOGLE_MAPS_KEY) && GOOGLE_MAPS_KEY !== "YOUR_API
 const COUNTRY_CENTERS: Record<string, { lat: number; lng: number; zoom: number; name: string }> = {
   todos: { lat: 10.0, lng: -55.0, zoom: 3, name: "Toda Latinoamérica y Europa" },
   Argentina: { lat: -34.6037, lng: -58.3816, zoom: 6, name: "Argentina" },
-  Bolivia: { lat: -16.5000, lng: -68.1500, zoom: 6, name: "Bolivia" },
+  Bolivia: { lat: -16.5, lng: -68.15, zoom: 6, name: "Bolivia" },
   Brasil: { lat: -15.7975, lng: -47.8919, zoom: 5, name: "Brasil" },
   Chile: { lat: -33.4489, lng: -70.6693, zoom: 6, name: "Chile" },
   Colombia: { lat: 4.711, lng: -74.0721, zoom: 6, name: "Colombia" },
@@ -105,12 +105,8 @@ export const MapaConsulados: React.FC<MapaConsuladosProps> = ({ initialCountry }
   const [selectedType, setSelectedType] = useState<string>("todos");
   // Country choices come from the app-wide preferences context so a selection
   // made here is the same one the planner, calculator and alerts see.
-  const {
-    originCountry,
-    setOriginCountry,
-    destinationCountry,
-    setDestinationCountry,
-  } = usePreferences();
+  const { originCountry, setOriginCountry, destinationCountry, setDestinationCountry } =
+    usePreferences();
 
   useEffect(() => {
     if (initialCountry && initialCountry !== "todos") {
@@ -130,7 +126,7 @@ export const MapaConsulados: React.FC<MapaConsuladosProps> = ({ initialCountry }
   const setDestinationFilter = (country: string) =>
     setDestinationCountry(country === "todos" ? ANY_COUNTRY : country);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  
+
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isDetectingLocation, setIsDetectingLocation] = useState<boolean>(false);
   const [locationStatus, setLocationStatus] = useState<string | null>(null);
@@ -150,7 +146,7 @@ export const MapaConsulados: React.FC<MapaConsuladosProps> = ({ initialCountry }
       userHomeCountry === "todos" ||
       loc.hostCountry === userHomeCountry ||
       (selectedType === "universidad" && loc.type === "universidad");
-      
+
     const matchesSearch =
       loc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       loc.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -230,7 +226,9 @@ export const MapaConsulados: React.FC<MapaConsuladosProps> = ({ initialCountry }
       (error) => {
         setIsDetectingLocation(false);
         if (error.code === error.PERMISSION_DENIED) {
-          setLocationStatus("Permiso de ubicación denegado. Puedes seleccionar tu país manualmente.");
+          setLocationStatus(
+            "Permiso de ubicación denegado. Puedes seleccionar tu país manualmente."
+          );
         } else {
           setLocationStatus("No se pudo obtener la ubicación. Selecciona tu país en la lista.");
         }
@@ -248,10 +246,10 @@ export const MapaConsulados: React.FC<MapaConsuladosProps> = ({ initialCountry }
   const centerCoords = userLocation
     ? userLocation
     : userHomeCountry !== "todos" && COUNTRY_CENTERS[userHomeCountry]
-    ? { lat: COUNTRY_CENTERS[userHomeCountry].lat, lng: COUNTRY_CENTERS[userHomeCountry].lng }
-    : activeMarker
-    ? { lat: activeMarker.lat, lng: activeMarker.lng }
-    : { lat: 10.0, lng: -55.0 };
+      ? { lat: COUNTRY_CENTERS[userHomeCountry].lat, lng: COUNTRY_CENTERS[userHomeCountry].lng }
+      : activeMarker
+        ? { lat: activeMarker.lat, lng: activeMarker.lng }
+        : { lat: 10.0, lng: -55.0 };
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-8 animate-fade-in">
@@ -260,10 +258,16 @@ export const MapaConsulados: React.FC<MapaConsuladosProps> = ({ initialCountry }
         <div>
           <div className="flex items-center gap-2 text-secondary dark:text-teal-300 text-xs font-bold uppercase tracking-wider mb-1">
             <Compass className="w-4 h-4" />
-            <span>{language === "en" ? "Interactive Consular Map & Directory" : "Mapa y Directorio Consular Interactivo"}</span>
+            <span>
+              {language === "en"
+                ? "Interactive Consular Map & Directory"
+                : "Mapa y Directorio Consular Interactivo"}
+            </span>
           </div>
           <h1 className="font-headline-lg text-3xl md:text-4xl font-extrabold text-primary dark:text-sky-300">
-            {language === "en" ? "Consulates, Embassies & Target Campuses" : "Consulados, Embajadas y Campus Destino"}
+            {language === "en"
+              ? "Consulates, Embassies & Target Campuses"
+              : "Consulados, Embajadas y Campus Destino"}
           </h1>
           <p className="text-on-surface-variant dark:text-slate-300 text-sm mt-1">
             {language === "en"
@@ -285,12 +289,22 @@ export const MapaConsulados: React.FC<MapaConsuladosProps> = ({ initialCountry }
             ) : (
               <LocateFixed className="w-4 h-4 text-teal-500" />
             )}
-            <span>{userLocation ? (language === "en" ? "Update GPS Location" : "Actualizar mi GPS") : (language === "en" ? "Detect My Location" : "Detectar mi ubicación actual")}</span>
+            <span>
+              {userLocation
+                ? language === "en"
+                  ? "Update GPS Location"
+                  : "Actualizar mi GPS"
+                : language === "en"
+                  ? "Detect My Location"
+                  : "Detectar mi ubicación actual"}
+            </span>
           </button>
 
           <div className="flex items-center gap-2 bg-primary/10 dark:bg-sky-500/20 text-primary dark:text-sky-300 px-4 py-2.5 rounded-xl text-xs font-bold shrink-0">
             <ShieldCheck className="w-4.5 h-4.5 text-emerald-500" />
-            <span>{language === "en" ? "Verified Official Venues" : "Sedes Oficiales Verificadas"}</span>
+            <span>
+              {language === "en" ? "Verified Official Venues" : "Sedes Oficiales Verificadas"}
+            </span>
           </div>
         </div>
       </div>
@@ -317,7 +331,9 @@ export const MapaConsulados: React.FC<MapaConsuladosProps> = ({ initialCountry }
             id="select-user-country"
             className="p-2 bg-surface dark:bg-slate-800 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs font-bold text-primary dark:text-sky-300 focus:outline-none focus:ring-1 focus:ring-sky-500"
           >
-            <option value="todos">🌎 {language === "en" ? "All countries" : "Todos los países"}</option>
+            <option value="todos">
+              🌎 {language === "en" ? "All countries" : "Todos los países"}
+            </option>
             {LATIN_AMERICAN_COUNTRIES_LIST.map((c) => (
               <option key={c.name} value={c.name}>
                 {c.flag} {c.name}
@@ -371,7 +387,9 @@ export const MapaConsulados: React.FC<MapaConsuladosProps> = ({ initialCountry }
             id="map-destination-filter"
             className="p-2 bg-surface dark:bg-slate-800 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs font-semibold text-on-surface dark:text-slate-200"
           >
-            <option value="todos">{language === "en" ? "Destination: All" : "País Destino: Todos"}</option>
+            <option value="todos">
+              {language === "en" ? "Destination: All" : "País Destino: Todos"}
+            </option>
             <option value="España">España 🇪🇸</option>
             <option value="Alemania">Alemania 🇩🇪</option>
             <option value="EE.UU.">Estados Unidos 🇺🇸</option>
@@ -494,7 +512,8 @@ export const MapaConsulados: React.FC<MapaConsuladosProps> = ({ initialCountry }
                         {activeMarker.name}
                       </h4>
                       <p className="text-xs text-on-surface-variant dark:text-slate-400">
-                        {activeMarker.city}, {activeMarker.hostCountry} (Destino: {activeMarker.country})
+                        {activeMarker.city}, {activeMarker.hostCountry} (Destino:{" "}
+                        {activeMarker.country})
                       </p>
                     </div>
                   </div>
@@ -528,7 +547,9 @@ export const MapaConsulados: React.FC<MapaConsuladosProps> = ({ initialCountry }
                       : "bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300"
                   }`}
                 >
-                  {activeMarker.type === "universidad" ? "🎓 Universidad / Campus" : "🏛️ Consulado / Embajada"}
+                  {activeMarker.type === "universidad"
+                    ? "🎓 Universidad / Campus"
+                    : "🏛️ Consulado / Embajada"}
                 </span>
 
                 <span className="text-xs font-bold text-on-surface-variant dark:text-slate-400">
@@ -541,7 +562,8 @@ export const MapaConsulados: React.FC<MapaConsuladosProps> = ({ initialCountry }
                   {activeMarker.name}
                 </h3>
                 <p className="text-xs text-secondary dark:text-teal-400 font-medium">
-                  {activeMarker.type === "universidad" ? "País del Campus:" : "Representa a:"} <strong>{activeMarker.country}</strong>
+                  {activeMarker.type === "universidad" ? "País del Campus:" : "Representa a:"}{" "}
+                  <strong>{activeMarker.country}</strong>
                 </p>
               </div>
 
@@ -554,7 +576,13 @@ export const MapaConsulados: React.FC<MapaConsuladosProps> = ({ initialCountry }
                 <div className="flex items-center gap-2 text-xs font-bold text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 px-3 py-1.5 rounded-xl">
                   <LocateFixed className="w-3.5 h-3.5" />
                   <span>
-                    Aprox. {calculateDistanceKm(userLocation.lat, userLocation.lng, activeMarker.lat, activeMarker.lng).toLocaleString()}{" "}
+                    Aprox.{" "}
+                    {calculateDistanceKm(
+                      userLocation.lat,
+                      userLocation.lng,
+                      activeMarker.lat,
+                      activeMarker.lng
+                    ).toLocaleString()}{" "}
                     km de tu ubicación
                   </span>
                 </div>
@@ -643,8 +671,8 @@ export const MapaConsulados: React.FC<MapaConsuladosProps> = ({ initialCountry }
               {selectedType === "universidad"
                 ? `Campus Universitarios (${filteredLocations.length})`
                 : selectedType === "consulado"
-                ? `Consulados y Embajadas (${filteredLocations.length})`
-                : `Directorio de Sedes (${filteredLocations.length})`}
+                  ? `Consulados y Embajadas (${filteredLocations.length})`
+                  : `Directorio de Sedes (${filteredLocations.length})`}
             </h4>
             {filteredLocations.map((loc) => (
               <button

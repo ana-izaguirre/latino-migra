@@ -34,7 +34,8 @@
   --safe-right: env(safe-area-inset-right, 0px);
 }
 
-html, body {
+html,
+body {
   overflow-x: hidden;
   max-width: 100%;
   scroll-behavior: smooth;
@@ -57,7 +58,11 @@ body {
 }
 
 /* Media and embeds must never be the cause of horizontal overflow */
-img, svg, video, canvas, iframe {
+img,
+svg,
+video,
+canvas,
+iframe {
   max-width: 100%;
 }
 
@@ -182,23 +187,41 @@ input[type="range"]::-moz-range-thumb {
    ========================================================================== */
 
 @keyframes lm-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes lm-fade-in-up {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @keyframes lm-slide-in-left {
-  from { transform: translateX(-100%); }
-  to { transform: none; }
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: none;
+  }
 }
 
 @keyframes lm-slide-in-bottom {
-  from { transform: translateY(100%); }
-  to { transform: none; }
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
 }
 
 .animate-fade-in {
@@ -227,7 +250,10 @@ input[type="range"]::-moz-range-thumb {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html, body { scroll-behavior: auto; }
+  html,
+  body {
+    scroll-behavior: auto;
+  }
 
   *,
   *::before,
@@ -286,7 +312,8 @@ input[type="range"]::-moz-range-thumb {
 /* Body copy sizing: 12px was the default across most screens, which is below
    what is comfortable to read. Nudge the floor up without disturbing the
    deliberate small labels and badges. */
-p, li {
+p,
+li {
   line-height: 1.65;
 }
 
@@ -300,28 +327,33 @@ p, li {
 @theme {
   --shadow-xs: 0 1px 2px 0 rgb(15 23 42 / 0.06);
   --shadow-sm: 0 1px 3px 0 rgb(15 23 42 / 0.09), 0 1px 2px -1px rgb(15 23 42 / 0.06);
-  --shadow-md: 0 4px 10px -2px rgb(15 23 42 / 0.10), 0 2px 4px -2px rgb(15 23 42 / 0.06);
+  --shadow-md: 0 4px 10px -2px rgb(15 23 42 / 0.1), 0 2px 4px -2px rgb(15 23 42 / 0.06);
   --shadow-lg: 0 12px 24px -6px rgb(15 23 42 / 0.12), 0 4px 8px -4px rgb(15 23 42 / 0.08);
-  --shadow-xl: 0 20px 40px -10px rgb(15 23 42 / 0.16), 0 8px 16px -8px rgb(15 23 42 / 0.10);
+  --shadow-xl: 0 20px 40px -10px rgb(15 23 42 / 0.16), 0 8px 16px -8px rgb(15 23 42 / 0.1);
   --shadow-2xl: 0 32px 64px -16px rgb(15 23 42 / 0.24);
 }
 
 /* Tactile interactive feedback for buttons, chips, and links */
-button, a, [role="button"], input[type="button"], input[type="submit"] {
+button,
+a,
+[role="button"],
+input[type="button"],
+input[type="submit"] {
   touch-action: manipulation;
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
-  transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), 
-              filter 0.12s ease, 
-              background-color 0.15s ease, 
-              box-shadow 0.15s ease,
-              border-color 0.15s ease;
+  transition:
+    transform 0.12s cubic-bezier(0.4, 0, 0.2, 1),
+    filter 0.12s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
 }
 
 /* Distinct, responsive click/press feedback */
-button:active:not(:disabled), 
-a:active:not([aria-disabled="true"]), 
+button:active:not(:disabled),
+a:active:not([aria-disabled="true"]),
 [role="button"]:active,
 input[type="button"]:active,
 input[type="submit"]:active {

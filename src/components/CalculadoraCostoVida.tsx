@@ -16,7 +16,7 @@ import {
   ShieldCheck,
   AlertTriangle,
   Download,
-  Bot
+  Bot,
 } from "lucide-react";
 import { NavigationTab, GoogleUser } from "../types";
 import { Breadcrumbs } from "./Breadcrumbs";
@@ -68,7 +68,8 @@ const CITIES_DATA: Record<string, CityData> = {
     entertainment: 140,
     childcarePerKid: 350,
     officialVisaRequirementMonthly: 600,
-    officialRequirementNote: "100% IPREM mensual (aprox. 600€/mes exigidos para visado de estudiante)",
+    officialRequirementNote:
+      "100% IPREM mensual (aprox. 600€/mes exigidos para visado de estudiante)",
   },
   "barcelona-es": {
     city: "Barcelona",
@@ -168,7 +169,8 @@ const CITIES_DATA: Record<string, CityData> = {
     entertainment: 260,
     childcarePerKid: 1600,
     officialVisaRequirementMonthly: 2475,
-    officialRequirementNote: "$29,710 AUD/año fijado por el Department of Home Affairs (Subclass 500)",
+    officialRequirementNote:
+      "$29,710 AUD/año fijado por el Department of Home Affairs (Subclass 500)",
   },
   "melbourne-au": {
     city: "Melbourne / Brisbane",
@@ -188,7 +190,8 @@ const CITIES_DATA: Record<string, CityData> = {
     entertainment: 220,
     childcarePerKid: 1400,
     officialVisaRequirementMonthly: 2475,
-    officialRequirementNote: "Requisito financiero unificado Home Affairs para solvencia de estudiante",
+    officialRequirementNote:
+      "Requisito financiero unificado Home Affairs para solvencia de estudiante",
   },
   "toronto-ca": {
     city: "Toronto",
@@ -208,7 +211,8 @@ const CITIES_DATA: Record<string, CityData> = {
     entertainment: 220,
     childcarePerKid: 1100,
     officialVisaRequirementMonthly: 1720,
-    officialRequirementNote: "$20,635 CAD/año exigido por IRCC (aprox. $1,720 CAD/mes sin incluir matrícula)",
+    officialRequirementNote:
+      "$20,635 CAD/año exigido por IRCC (aprox. $1,720 CAD/mes sin incluir matrícula)",
   },
   "montreal-ca": {
     city: "Montreal",
@@ -248,7 +252,8 @@ const CITIES_DATA: Record<string, CityData> = {
     entertainment: 180,
     childcarePerKid: 850,
     officialVisaRequirementMonthly: 560,
-    officialRequirementNote: "Stamp 2 requiere demostrar €4,500 (o €10,000 según país) al registrarse en el IRP",
+    officialRequirementNote:
+      "Stamp 2 requiere demostrar €4,500 (o €10,000 según país) al registrarse en el IRP",
   },
   "cork-ie": {
     city: "Cork / Galway",
@@ -268,7 +273,8 @@ const CITIES_DATA: Record<string, CityData> = {
     entertainment: 140,
     childcarePerKid: 680,
     officialVisaRequirementMonthly: 560,
-    officialRequirementNote: "Mismo estándar ILEP / IRP de Irlanda pero con alquiler 25% más bajo que Dublín",
+    officialRequirementNote:
+      "Mismo estándar ILEP / IRP de Irlanda pero con alquiler 25% más bajo que Dublín",
   },
   "berlin-de": {
     city: "Berlín",
@@ -288,7 +294,8 @@ const CITIES_DATA: Record<string, CityData> = {
     entertainment: 150,
     childcarePerKid: 150, // Subvencionado Kita
     officialVisaRequirementMonthly: 992,
-    officialRequirementNote: "Sperrkonto obligatorio de 11,904€/año (992€/mes) o Chancenkarte 1,027€/mes",
+    officialRequirementNote:
+      "Sperrkonto obligatorio de 11,904€/año (992€/mes) o Chancenkarte 1,027€/mes",
   },
   "munich-de": {
     city: "Múnich / Frankfurt",
@@ -353,7 +360,9 @@ export const CalculadoraCostoVida: React.FC<CalculadoraCostoVidaProps> = ({
 }) => {
   const [selectedCityKey, setSelectedCityKey] = useState<string>("madrid-es");
   const [targetCurrency, setTargetCurrency] = useState<string>("COP");
-  const [lifestyle, setLifestyle] = useState<"estudiante" | "profesional" | "familia">("estudiante");
+  const [lifestyle, setLifestyle] = useState<"estudiante" | "profesional" | "familia">(
+    "estudiante"
+  );
   const [housingType, setHousingType] = useState<"shared" | "private" | "studio">("private");
   const [numberOfKids, setNumberOfKids] = useState<number>(1);
   const [includeEntertainment, setIncludeEntertainment] = useState<boolean>(true);
@@ -440,7 +449,9 @@ export const CalculadoraCostoVida: React.FC<CalculadoraCostoVidaProps> = ({
       `- Seguro médico obligatorio: ${formatLocal(monthlyCostBreakdown.health)} (${formatConverted(monthlyCostBreakdown.health)})`,
       `- Telefonía e Internet: ${formatLocal(monthlyCostBreakdown.phone)} (${formatConverted(monthlyCostBreakdown.phone)})`,
       `- Ocio y gastos personales: ${formatLocal(monthlyCostBreakdown.entertainment)} (${formatConverted(monthlyCostBreakdown.entertainment)})`,
-      lifestyle === "familia" ? `- Cuidado infantil/Escuela (${numberOfKids} hijos): ${formatLocal(monthlyCostBreakdown.childcare)}` : "",
+      lifestyle === "familia"
+        ? `- Cuidado infantil/Escuela (${numberOfKids} hijos): ${formatLocal(monthlyCostBreakdown.childcare)}`
+        : "",
       `------------------------------------------------`,
       `TOTAL MENSUAL ESTIMADO: ${formatLocal(monthlyCostBreakdown.totalLocal)} (${formatConverted(monthlyCostBreakdown.totalLocal)})`,
       ``,
@@ -452,7 +463,7 @@ export const CalculadoraCostoVida: React.FC<CalculadoraCostoVidaProps> = ({
       `Exigencia consular mensual: ${formatLocal(city.officialVisaRequirementMonthly)}`,
       `Nota oficial: ${city.officialRequirementNote}`,
       `================================================`,
-      `Visita LatinoMigra (https://latinomigra.org) para más simulaciones y guías.`
+      `Visita LatinoMigra (https://latinomigra.org) para más simulaciones y guías.`,
     ].filter(Boolean);
 
     const blob = new Blob([textLines.join("\n")], { type: "text/plain;charset=utf-8" });
@@ -481,7 +492,9 @@ export const CalculadoraCostoVida: React.FC<CalculadoraCostoVidaProps> = ({
               Calculadora de Costo de Vida Realista
             </h1>
             <p className="text-xs md:text-sm text-on-surface-variant dark:text-slate-300 max-w-2xl">
-              Calcula con precisión tus gastos mensuales en España, Canadá, Irlanda, Alemania o EE.UU. y conviértelos al instante a tu moneda local latinoamericana (COP, MXN, PEN, ARS, CLP, etc.).
+              Calcula con precisión tus gastos mensuales en España, Canadá, Irlanda, Alemania o
+              EE.UU. y conviértelos al instante a tu moneda local latinoamericana (COP, MXN, PEN,
+              ARS, CLP, etc.).
             </p>
           </div>
 
@@ -725,7 +738,10 @@ export const CalculadoraCostoVida: React.FC<CalculadoraCostoVidaProps> = ({
                 <div className="flex items-baseline gap-3">
                   <h2 className="text-3xl md:text-4xl font-extrabold text-primary dark:text-sky-300">
                     {formatLocal(monthlyCostBreakdown.totalLocal)}
-                    <span className="text-sm font-normal text-on-surface-variant dark:text-slate-400"> /mes</span>
+                    <span className="text-sm font-normal text-on-surface-variant dark:text-slate-400">
+                      {" "}
+                      /mes
+                    </span>
                   </h2>
                 </div>
                 <p className="text-base font-bold text-emerald-700 dark:text-emerald-300">
@@ -785,15 +801,25 @@ export const CalculadoraCostoVida: React.FC<CalculadoraCostoVidaProps> = ({
                     <Home className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-primary dark:text-sky-300">Alojamiento & Alquiler</h4>
+                    <h4 className="text-xs font-bold text-primary dark:text-sky-300">
+                      Alojamiento & Alquiler
+                    </h4>
                     <p className="text-[11px] text-on-surface-variant dark:text-slate-400">
-                      {housingType === "shared" ? "Habitación compartida" : housingType === "private" ? "Habitación privada en piso compartido" : "Estudio individual / Piso familiar"}
+                      {housingType === "shared"
+                        ? "Habitación compartida"
+                        : housingType === "private"
+                          ? "Habitación privada en piso compartido"
+                          : "Estudio individual / Piso familiar"}
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs font-extrabold text-primary dark:text-sky-300">{formatLocal(monthlyCostBreakdown.rent)}</p>
-                  <p className="text-[10px] text-on-surface-variant dark:text-slate-400">{formatConverted(monthlyCostBreakdown.rent)}</p>
+                  <p className="text-xs font-extrabold text-primary dark:text-sky-300">
+                    {formatLocal(monthlyCostBreakdown.rent)}
+                  </p>
+                  <p className="text-[10px] text-on-surface-variant dark:text-slate-400">
+                    {formatConverted(monthlyCostBreakdown.rent)}
+                  </p>
                 </div>
               </div>
 
@@ -804,13 +830,21 @@ export const CalculadoraCostoVida: React.FC<CalculadoraCostoVidaProps> = ({
                     <Utensils className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-primary dark:text-sky-300">Supermercado y Alimentación</h4>
-                    <p className="text-[11px] text-on-surface-variant dark:text-slate-400">Cocinar en casa (Lidl, Aldi, Mercadona, No Frills, Tesco)</p>
+                    <h4 className="text-xs font-bold text-primary dark:text-sky-300">
+                      Supermercado y Alimentación
+                    </h4>
+                    <p className="text-[11px] text-on-surface-variant dark:text-slate-400">
+                      Cocinar en casa (Lidl, Aldi, Mercadona, No Frills, Tesco)
+                    </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs font-extrabold text-primary dark:text-sky-300">{formatLocal(monthlyCostBreakdown.groceries)}</p>
-                  <p className="text-[10px] text-on-surface-variant dark:text-slate-400">{formatConverted(monthlyCostBreakdown.groceries)}</p>
+                  <p className="text-xs font-extrabold text-primary dark:text-sky-300">
+                    {formatLocal(monthlyCostBreakdown.groceries)}
+                  </p>
+                  <p className="text-[10px] text-on-surface-variant dark:text-slate-400">
+                    {formatConverted(monthlyCostBreakdown.groceries)}
+                  </p>
                 </div>
               </div>
 
@@ -821,13 +855,21 @@ export const CalculadoraCostoVida: React.FC<CalculadoraCostoVidaProps> = ({
                     <Train className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-primary dark:text-sky-300">Transporte Público</h4>
-                    <p className="text-[11px] text-on-surface-variant dark:text-slate-400">Pase mensual (Abono Joven / Leap Card / Deutschlandticket / TTC)</p>
+                    <h4 className="text-xs font-bold text-primary dark:text-sky-300">
+                      Transporte Público
+                    </h4>
+                    <p className="text-[11px] text-on-surface-variant dark:text-slate-400">
+                      Pase mensual (Abono Joven / Leap Card / Deutschlandticket / TTC)
+                    </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs font-extrabold text-primary dark:text-sky-300">{formatLocal(monthlyCostBreakdown.transit)}</p>
-                  <p className="text-[10px] text-on-surface-variant dark:text-slate-400">{formatConverted(monthlyCostBreakdown.transit)}</p>
+                  <p className="text-xs font-extrabold text-primary dark:text-sky-300">
+                    {formatLocal(monthlyCostBreakdown.transit)}
+                  </p>
+                  <p className="text-[10px] text-on-surface-variant dark:text-slate-400">
+                    {formatConverted(monthlyCostBreakdown.transit)}
+                  </p>
                 </div>
               </div>
 
@@ -838,13 +880,21 @@ export const CalculadoraCostoVida: React.FC<CalculadoraCostoVidaProps> = ({
                     <HeartPulse className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-primary dark:text-sky-300">Seguro Médico Obligatorio</h4>
-                    <p className="text-[11px] text-on-surface-variant dark:text-slate-400">Requisito consular indispensable sin copagos</p>
+                    <h4 className="text-xs font-bold text-primary dark:text-sky-300">
+                      Seguro Médico Obligatorio
+                    </h4>
+                    <p className="text-[11px] text-on-surface-variant dark:text-slate-400">
+                      Requisito consular indispensable sin copagos
+                    </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs font-extrabold text-primary dark:text-sky-300">{formatLocal(monthlyCostBreakdown.health)}</p>
-                  <p className="text-[10px] text-on-surface-variant dark:text-slate-400">{formatConverted(monthlyCostBreakdown.health)}</p>
+                  <p className="text-xs font-extrabold text-primary dark:text-sky-300">
+                    {formatLocal(monthlyCostBreakdown.health)}
+                  </p>
+                  <p className="text-[10px] text-on-surface-variant dark:text-slate-400">
+                    {formatConverted(monthlyCostBreakdown.health)}
+                  </p>
                 </div>
               </div>
 
@@ -855,13 +905,21 @@ export const CalculadoraCostoVida: React.FC<CalculadoraCostoVidaProps> = ({
                     <Smartphone className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-primary dark:text-sky-300">Telefonía Móvil & Datos</h4>
-                    <p className="text-[11px] text-on-surface-variant dark:text-slate-400">SIM local con 50-100GB y llamadas</p>
+                    <h4 className="text-xs font-bold text-primary dark:text-sky-300">
+                      Telefonía Móvil & Datos
+                    </h4>
+                    <p className="text-[11px] text-on-surface-variant dark:text-slate-400">
+                      SIM local con 50-100GB y llamadas
+                    </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs font-extrabold text-primary dark:text-sky-300">{formatLocal(monthlyCostBreakdown.phone)}</p>
-                  <p className="text-[10px] text-on-surface-variant dark:text-slate-400">{formatConverted(monthlyCostBreakdown.phone)}</p>
+                  <p className="text-xs font-extrabold text-primary dark:text-sky-300">
+                    {formatLocal(monthlyCostBreakdown.phone)}
+                  </p>
+                  <p className="text-[10px] text-on-surface-variant dark:text-slate-400">
+                    {formatConverted(monthlyCostBreakdown.phone)}
+                  </p>
                 </div>
               </div>
 
@@ -873,13 +931,21 @@ export const CalculadoraCostoVida: React.FC<CalculadoraCostoVidaProps> = ({
                       <Coffee className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-primary dark:text-sky-300">Ocio, Café y Salidas</h4>
-                      <p className="text-[11px] text-on-surface-variant dark:text-slate-400">Cine, restaurantes, vida social y viajes cortos</p>
+                      <h4 className="text-xs font-bold text-primary dark:text-sky-300">
+                        Ocio, Café y Salidas
+                      </h4>
+                      <p className="text-[11px] text-on-surface-variant dark:text-slate-400">
+                        Cine, restaurantes, vida social y viajes cortos
+                      </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs font-extrabold text-primary dark:text-sky-300">{formatLocal(monthlyCostBreakdown.entertainment)}</p>
-                    <p className="text-[10px] text-on-surface-variant dark:text-slate-400">{formatConverted(monthlyCostBreakdown.entertainment)}</p>
+                    <p className="text-xs font-extrabold text-primary dark:text-sky-300">
+                      {formatLocal(monthlyCostBreakdown.entertainment)}
+                    </p>
+                    <p className="text-[10px] text-on-surface-variant dark:text-slate-400">
+                      {formatConverted(monthlyCostBreakdown.entertainment)}
+                    </p>
                   </div>
                 </div>
               )}
@@ -893,7 +959,9 @@ export const CalculadoraCostoVida: React.FC<CalculadoraCostoVidaProps> = ({
               <span>Requisito Oficial de Fondos para el Visado ({city.country})</span>
             </div>
             <p className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
-              <strong>{city.officialRequirementNote}</strong>. Ten en cuenta que el consulado exige extractos bancarios demostrables a tu nombre o carta de beca que cubra este monto antes de concederte el visado.
+              <strong>{city.officialRequirementNote}</strong>. Ten en cuenta que el consulado exige
+              extractos bancarios demostrables a tu nombre o carta de beca que cubra este monto
+              antes de concederte el visado.
             </p>
           </div>
 
@@ -904,20 +972,33 @@ export const CalculadoraCostoVida: React.FC<CalculadoraCostoVidaProps> = ({
               <span>Transparencia: ¿De Dónde Salen Estos Valores de Presupuesto?</span>
             </div>
             <p className="text-xs text-on-surface-variant dark:text-slate-400 leading-relaxed">
-              Los costos reflejados en LatinoMigra se calculan combinando tres fuentes oficiales y empíricas auditadas:
+              Los costos reflejados en LatinoMigra se calculan combinando tres fuentes oficiales y
+              empíricas auditadas:
             </p>
             <ul className="text-xs space-y-1.5 text-on-surface-variant dark:text-slate-300">
               <li className="flex items-start gap-2">
                 <span className="text-emerald-500 font-bold">1.</span>
-                <span><strong>Leyes e Índices Oficiales de Migración:</strong> Tabulador IPREM (España), Sperrkonto federal reglamentado por el DAAD/Auswärtiges Amt (Alemania), baremo de fondos IRCC (Canadá), Department of Home Affairs (Australia) y Formulario I-20/SEVIS (EE.UU.).</span>
+                <span>
+                  <strong>Leyes e Índices Oficiales de Migración:</strong> Tabulador IPREM (España),
+                  Sperrkonto federal reglamentado por el DAAD/Auswärtiges Amt (Alemania), baremo de
+                  fondos IRCC (Canadá), Department of Home Affairs (Australia) y Formulario
+                  I-20/SEVIS (EE.UU.).
+                </span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-emerald-500 font-bold">2.</span>
-                <span><strong>Benchmarks Numbeo & Portales Oficiales de Transporte:</strong> Precios de abonos de transporte mensual regulados (Abono Joven Madrid, Deutschlandticket Alemania, Passe Navegante Lisboa, TTC Toronto, Opal NSW).</span>
+                <span>
+                  <strong>Benchmarks Numbeo & Portales Oficiales de Transporte:</strong> Precios de
+                  abonos de transporte mensual regulados (Abono Joven Madrid, Deutschlandticket
+                  Alemania, Passe Navegante Lisboa, TTC Toronto, Opal NSW).
+                </span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-emerald-500 font-bold">3.</span>
-                <span><strong>Reportes Verificados de Estudiantes:</strong> Datos reales actualizados por los miembros de la Comunidad LatinoMigra residentes en cada ciudad.</span>
+                <span>
+                  <strong>Reportes Verificados de Estudiantes:</strong> Datos reales actualizados
+                  por los miembros de la Comunidad LatinoMigra residentes en cada ciudad.
+                </span>
               </li>
             </ul>
           </div>

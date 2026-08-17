@@ -89,7 +89,9 @@ export const CalendarAgendaButton: React.FC<CalendarAgendaButtonProps> = ({
               <span className="text-base">📅</span>
               <div>
                 <p className="font-bold text-primary dark:text-sky-300">Google Calendar</p>
-                <p className="text-[10px] text-on-surface-variant dark:text-slate-400">Abrir en navegador o app</p>
+                <p className="text-[10px] text-on-surface-variant dark:text-slate-400">
+                  Abrir en navegador o app
+                </p>
               </div>
             </div>
             <ExternalLink className="w-3.5 h-3.5 text-on-surface-variant" />
@@ -103,7 +105,9 @@ export const CalendarAgendaButton: React.FC<CalendarAgendaButtonProps> = ({
               <span className="text-base">🍎</span>
               <div>
                 <p className="font-bold text-primary dark:text-sky-300">Apple Calendar / iCal</p>
-                <p className="text-[10px] text-on-surface-variant dark:text-slate-400">Descargar archivo .ics</p>
+                <p className="text-[10px] text-on-surface-variant dark:text-slate-400">
+                  Descargar archivo .ics
+                </p>
               </div>
             </div>
             <Download className="w-3.5 h-3.5 text-on-surface-variant" />
@@ -117,7 +121,9 @@ export const CalendarAgendaButton: React.FC<CalendarAgendaButtonProps> = ({
               <span className="text-base">✉️</span>
               <div>
                 <p className="font-bold text-primary dark:text-sky-300">Outlook / Office 365</p>
-                <p className="text-[10px] text-on-surface-variant dark:text-slate-400">Abrir en Outlook Web</p>
+                <p className="text-[10px] text-on-surface-variant dark:text-slate-400">
+                  Abrir en Outlook Web
+                </p>
               </div>
             </div>
             <ExternalLink className="w-3.5 h-3.5 text-on-surface-variant" />

@@ -1,17 +1,17 @@
-import { Page, expect } from '@playwright/test';
+import { Page, expect } from "@playwright/test";
 
 /** Every screen reachable from the navigation. */
 export const ALL_TABS = [
-  'home',
-  'planificador',
-  'calculadora',
-  'becas',
-  'voluntariados',
-  'guia',
-  'mapa',
-  'comunidad',
-  'feedback',
-  'chat',
+  "home",
+  "planificador",
+  "calculadora",
+  "becas",
+  "voluntariados",
+  "guia",
+  "mapa",
+  "comunidad",
+  "feedback",
+  "chat",
 ] as const;
 
 export type Tab = (typeof ALL_TABS)[number];
@@ -22,20 +22,20 @@ export type Tab = (typeof ALL_TABS)[number];
  */
 export async function gotoTabMobile(page: Page, tab: Tab) {
   const bottomNavIds: Partial<Record<Tab, string>> = {
-    home: '#bottom-nav-home',
-    becas: '#bottom-nav-becas',
-    guia: '#bottom-nav-guia',
-    chat: '#bottom-nav-chat',
+    home: "#bottom-nav-home",
+    becas: "#bottom-nav-becas",
+    guia: "#bottom-nav-guia",
+    chat: "#bottom-nav-chat",
   };
 
   const direct = bottomNavIds[tab];
   if (direct) {
     await page.locator(direct).click();
   } else {
-    await page.locator('#mobile-menu-toggle').click();
-    await expect(page.locator('#mobile-nav-drawer')).toBeVisible();
+    await page.locator("#mobile-menu-toggle").click();
+    await expect(page.locator("#mobile-nav-drawer")).toBeVisible();
     await page.locator(`#drawer-nav-item-${tab}`).click();
-    await expect(page.locator('#mobile-nav-drawer')).toBeHidden();
+    await expect(page.locator("#mobile-nav-drawer")).toBeHidden();
   }
   await page.waitForTimeout(400);
 }
@@ -60,7 +60,8 @@ export async function expectNoHorizontalOverflow(page: Page, context: string) {
 /** Returns controls painted smaller than the given minimum touch size. */
 export async function findSmallTapTargets(page: Page, minSize = 40) {
   return page.evaluate((min) => {
-    const selector = 'button, a[href], select, input[type="checkbox"], input[type="radio"], [role="button"]';
+    const selector =
+      'button, a[href], select, input[type="checkbox"], input[type="radio"], [role="button"]';
     const offenders: string[] = [];
 
     document.querySelectorAll<HTMLElement>(selector).forEach((el) => {
@@ -69,10 +70,10 @@ export async function findSmallTapTargets(page: Page, minSize = 40) {
       // Skip anything not currently painted.
       if (rect.width === 0 || rect.height === 0) return;
       const style = getComputedStyle(el);
-      if (style.visibility === 'hidden' || style.display === 'none') return;
+      if (style.visibility === "hidden" || style.display === "none") return;
 
       if (rect.height < min || rect.width < min) {
-        const label = el.id || (el.textContent || '').trim().slice(0, 30) || el.tagName;
+        const label = el.id || (el.textContent || "").trim().slice(0, 30) || el.tagName;
         offenders.push(`${label} (${Math.round(rect.width)}x${Math.round(rect.height)})`);
       }
     });

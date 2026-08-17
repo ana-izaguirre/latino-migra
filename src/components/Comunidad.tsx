@@ -48,7 +48,8 @@ const INITIAL_SEED_POSTS: Omit<CloudForumPost, "id">[] = [
     likes: 24,
     replies: 2,
     category: "Dudas de Visas",
-    content: "Les comparto mi experiencia tramitando el empadronamiento en la Junta Municipal de Moncloa. Alquilé una habitación con contrato subarrendado y el propietario tuvo que autorizarme con copia de su DNI. ¡Sin cita previa no te atienden!",
+    content:
+      "Les comparto mi experiencia tramitando el empadronamiento en la Junta Municipal de Moncloa. Alquilé una habitación con contrato subarrendado y el propietario tuvo que autorizarme con copia de su DNI. ¡Sin cita previa no te atienden!",
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
   },
   {
@@ -60,7 +61,8 @@ const INITIAL_SEED_POSTS: Omit<CloudForumPost, "id">[] = [
     likes: 56,
     replies: 0,
     category: "Experiencias Reales",
-    content: "El proceso tomó aprox 7 meses desde que envié mi solicitud hasta la carta de aprobación. La clave para la carta de motivación fue enfocarla en cómo aplicaré el conocimiento en mi país. ¡Ánimo a todos los que están postulando!",
+    content:
+      "El proceso tomó aprox 7 meses desde que envié mi solicitud hasta la carta de aprobación. La clave para la carta de motivación fue enfocarla en cómo aplicaré el conocimiento en mi país. ¡Ánimo a todos los que están postulando!",
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
   },
   {
@@ -72,7 +74,8 @@ const INITIAL_SEED_POSTS: Omit<CloudForumPost, "id">[] = [
     likes: 41,
     replies: 0,
     category: "Costo de Vida",
-    content: "Lidl y Aldi son las mejores opciones para compras semanales. Para productos latinoamericanos (harina pan, plátano verde, frijoles), la zona de Neukölln tiene tiendas especializadas a muy buen precio.",
+    content:
+      "Lidl y Aldi son las mejores opciones para compras semanales. Para productos latinoamericanos (harina pan, plátano verde, frijoles), la zona de Neukölln tiene tiendas especializadas a muy buen precio.",
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
   },
   {
@@ -84,7 +87,8 @@ const INITIAL_SEED_POSTS: Omit<CloudForumPost, "id">[] = [
     likes: 38,
     replies: 1,
     category: "Dudas de Visas",
-    content: "Llegué hace 3 semanas con el visado Stamp 2 de 8 meses. Tramité el IRP y el PPSN. En hostelería y cafeterías contratan rápido si tienes buen nivel conversacional (mínimo B1).",
+    content:
+      "Llegué hace 3 semanas con el visado Stamp 2 de 8 meses. Tramité el IRP y el PPSN. En hostelería y cafeterías contratan rápido si tienes buen nivel conversacional (mínimo B1).",
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(),
   },
   {
@@ -96,7 +100,8 @@ const INITIAL_SEED_POSTS: Omit<CloudForumPost, "id">[] = [
     likes: 29,
     replies: 0,
     category: "Alojamiento",
-    content: "Si vienen con permiso de estudios + permiso de trabajo abierto para la pareja, les recomendamos buscar por Kijiji o Marketplace con 1 mes de anticipación. En Montreal no suelen pedir fiador si pagan depósito inicial.",
+    content:
+      "Si vienen con permiso de estudios + permiso de trabajo abierto para la pareja, les recomendamos buscar por Kijiji o Marketplace con 1 mes de anticipación. En Montreal no suelen pedir fiador si pagan depósito inicial.",
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 96).toISOString(),
   },
 ];
@@ -118,7 +123,9 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
   const [isLoadingPosts, setIsLoadingPosts] = useState<boolean>(true);
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
   const [hasMorePosts, setHasMorePosts] = useState<boolean>(false);
-  const [lastVisibleDoc, setLastVisibleDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+  const [lastVisibleDoc, setLastVisibleDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(
+    null
+  );
   const [isSubmittingPost, setIsSubmittingPost] = useState<boolean>(false);
   const [loadingRepliesPostId, setLoadingRepliesPostId] = useState<string | null>(null);
   const [isSubmittingReply, setIsSubmittingReply] = useState<boolean>(false);
@@ -137,7 +144,9 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
   const [posts, setPosts] = useState<ForumPost[]>([]);
 
   // Cached replies loaded on demand from Firestore subcollections
-  const [postReplies, setPostReplies] = useState<Record<string, { id: string; author: string; text: string; time: string }[]>>({});
+  const [postReplies, setPostReplies] = useState<
+    Record<string, { id: string; author: string; text: string; time: string }[]>
+  >({});
 
   // Format relative timestamp
   const formatTime = (isoString?: string) => {
@@ -287,7 +296,10 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
   // Real-time duplicate detection: matches existing posts with similar keywords
   const potentialDuplicates = posts.filter((p) => {
     if (!postTitle.trim() || postTitle.trim().length < 4) return false;
-    const words = postTitle.toLowerCase().split(/\s+/).filter((w) => w.length > 3);
+    const words = postTitle
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((w) => w.length > 3);
     const postTitleLower = p.title.toLowerCase();
     const postContentLower = p.content.toLowerCase();
     return words.some((word) => postTitleLower.includes(word) || postContentLower.includes(word));
@@ -391,9 +403,7 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
         [postId]: [...(prev[postId] || []), newReply],
       }));
 
-      setPosts((prev) =>
-        prev.map((p) => (p.id === postId ? { ...p, replies: p.replies + 1 } : p))
-      );
+      setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, replies: p.replies + 1 } : p)));
 
       setReplyInput("");
     } catch (err) {
@@ -414,11 +424,17 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
         <div>
           <div className="flex items-center gap-2 text-secondary dark:text-teal-300 text-xs font-bold uppercase tracking-wider mb-1">
             <MessageSquare className="w-4 h-4" />
-            <span>{language === "en" ? "LatinoMigra Community Forum" : "Comunidad LatinoMigra"}</span>
+            <span>
+              {language === "en" ? "LatinoMigra Community Forum" : "Comunidad LatinoMigra"}
+            </span>
             {isAdmin(currentUser) && (
               <span className="inline-flex items-center gap-1 ml-2 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border border-emerald-300 dark:border-emerald-800">
                 <Cloud className="w-3 h-3" />
-                <span>{language === "en" ? "Cloud Firestore (Permanent)" : "Nube Firestore (Permanente)"}</span>
+                <span>
+                  {language === "en"
+                    ? "Cloud Firestore (Permanent)"
+                    : "Nube Firestore (Permanente)"}
+                </span>
               </span>
             )}
           </div>
@@ -440,7 +456,9 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
             title={language === "en" ? "Refresh community from cloud" : "Recargar desde la nube"}
             className="p-3 bg-surface-container-lowest dark:bg-slate-800 text-on-surface-variant dark:text-slate-200 border border-outline-variant/40 dark:border-slate-700 rounded-2xl hover:bg-surface-container transition-all cursor-pointer"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoadingPosts ? "animate-spin text-secondary" : ""}`} />
+            <RefreshCw
+              className={`w-4 h-4 ${isLoadingPosts ? "animate-spin text-secondary" : ""}`}
+            />
           </button>
 
           <button
@@ -468,7 +486,9 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
           <span className="text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 px-3 py-1 rounded-full flex items-center gap-1">
             <BookmarkCheck className="w-3.5 h-3.5" />
             <span>
-              {language === "en" ? "Duplicate Prevention & Cloud Storage" : "Prevención de Duplicados & Almacenamiento en la Nube"}
+              {language === "en"
+                ? "Duplicate Prevention & Cloud Storage"
+                : "Prevención de Duplicados & Almacenamiento en la Nube"}
             </span>
           </span>
         </div>
@@ -507,7 +527,9 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
               3
             </div>
             <h4 className="font-bold text-primary dark:text-sky-300">
-              {language === "en" ? "3. Permanent Cloud Storage" : "3. Guardado Permanente y Escalable"}
+              {language === "en"
+                ? "3. Permanent Cloud Storage"
+                : "3. Guardado Permanente y Escalable"}
             </h4>
             <p className="text-on-surface-variant dark:text-slate-400 leading-relaxed">
               {language === "en"
@@ -554,14 +576,18 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
           <div className="text-center py-16 bg-surface-container-lowest dark:bg-slate-800 rounded-3xl border border-outline-variant/30 space-y-3">
             <Loader2 className="w-8 h-8 text-primary dark:text-sky-300 animate-spin mx-auto" />
             <p className="text-xs font-semibold text-on-surface-variant">
-              {language === "en" ? "Connecting to Cloud Community..." : "Cargando temas de la comunidad desde la nube..."}
+              {language === "en"
+                ? "Connecting to Cloud Community..."
+                : "Cargando temas de la comunidad desde la nube..."}
             </p>
           </div>
         ) : filteredPosts.length === 0 ? (
           <div className="text-center py-12 bg-surface-container-lowest dark:bg-slate-800 rounded-3xl border border-outline-variant/30 space-y-3">
             <MessageSquare className="w-10 h-10 text-slate-400 mx-auto" />
             <h3 className="font-bold text-sm text-primary dark:text-sky-300">
-              {language === "en" ? "No topics found with that keyword" : "No se encontraron temas con esa búsqueda"}
+              {language === "en"
+                ? "No topics found with that keyword"
+                : "No se encontraron temas con esa búsqueda"}
             </h3>
             <p className="text-xs text-on-surface-variant max-w-sm mx-auto">
               {language === "en"
@@ -593,7 +619,9 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
                       <User className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-sm text-primary dark:text-sky-300">{post.author}</h4>
+                      <h4 className="font-bold text-sm text-primary dark:text-sky-300">
+                        {post.author}
+                      </h4>
                       <div className="flex items-center gap-2 text-xs text-on-surface-variant dark:text-slate-400">
                         <span className="flex items-center gap-1 font-semibold text-secondary dark:text-teal-300">
                           <MapPin className="w-3.5 h-3.5" />
@@ -645,7 +673,11 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(`${window.location.origin}/#comunidad`);
-                      alert(language === "en" ? "Link copied to clipboard!" : "¡Enlace del hilo copiado!");
+                      alert(
+                        language === "en"
+                          ? "Link copied to clipboard!"
+                          : "¡Enlace del hilo copiado!"
+                      );
                     }}
                     className="flex items-center gap-1.5 hover:text-primary dark:hover:text-sky-300 transition-colors ml-auto cursor-pointer"
                   >
@@ -670,7 +702,9 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
                       {isLoadingThisReplies ? (
                         <div className="flex items-center gap-2 text-xs text-slate-400 py-2">
                           <Loader2 className="w-3.5 h-3.5 animate-spin text-secondary" />
-                          <span>{language === "en" ? "Loading replies..." : "Cargando respuestas..."}</span>
+                          <span>
+                            {language === "en" ? "Loading replies..." : "Cargando respuestas..."}
+                          </span>
                         </div>
                       ) : repliesList.length === 0 ? (
                         <p className="text-xs text-slate-400 italic">
@@ -680,12 +714,17 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
                         </p>
                       ) : (
                         repliesList.map((rep) => (
-                          <div key={rep.id} className="p-3 bg-surface dark:bg-slate-900 rounded-xl text-xs space-y-1">
+                          <div
+                            key={rep.id}
+                            className="p-3 bg-surface dark:bg-slate-900 rounded-xl text-xs space-y-1"
+                          >
                             <div className="flex items-center justify-between text-[11px] font-bold text-primary dark:text-sky-300">
                               <span>{rep.author}</span>
                               <span className="text-slate-400 font-normal">{rep.time}</span>
                             </div>
-                            <p className="text-on-surface-variant dark:text-slate-300">{rep.text}</p>
+                            <p className="text-on-surface-variant dark:text-slate-300">
+                              {rep.text}
+                            </p>
                           </div>
                         ))
                       )}
@@ -739,12 +778,18 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
               {isLoadingMore ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-secondary" />
-                  <span>{language === "en" ? "Loading more topics..." : "Cargando más temas..."}</span>
+                  <span>
+                    {language === "en" ? "Loading more topics..." : "Cargando más temas..."}
+                  </span>
                 </>
               ) : (
                 <>
                   <RefreshCw className="w-4 h-4 text-secondary" />
-                  <span>{language === "en" ? "Load More Discussions (Paginated)" : "Cargar Más Temas (Paginación Firestore)"}</span>
+                  <span>
+                    {language === "en"
+                      ? "Load More Discussions (Paginated)"
+                      : "Cargar Más Temas (Paginación Firestore)"}
+                  </span>
                 </>
               )}
             </button>
@@ -761,7 +806,9 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
                 <h3 className="font-headline-md text-xl font-bold text-primary dark:text-sky-300 flex items-center gap-2">
                   <MessageSquare className="w-5 h-5 text-secondary" />
                   <span>
-                    {language === "en" ? "Create New Community Topic" : "Nueva Publicación en la Comunidad"}
+                    {language === "en"
+                      ? "Create New Community Topic"
+                      : "Nueva Publicación en la Comunidad"}
                   </span>
                 </h3>
                 <p className="text-xs text-on-surface-variant dark:text-slate-400">
@@ -782,7 +829,9 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
               {/* Title input */}
               <div className="space-y-1">
                 <label className="block text-xs font-bold text-primary dark:text-sky-300">
-                  {language === "en" ? "Title / Question *" : "Título de la Consulta o Experiencia *"}
+                  {language === "en"
+                    ? "Title / Question *"
+                    : "Título de la Consulta o Experiencia *"}
                 </label>
                 <input
                   type="text"
@@ -804,7 +853,10 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
                   <div className="flex items-center gap-2 text-xs font-bold text-amber-900 dark:text-amber-300">
                     <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                     <span>
-                      {t("community.duplicateAlert", "¡Prevención de Duplicados! Temas similares ya respondidos:")}
+                      {t(
+                        "community.duplicateAlert",
+                        "¡Prevención de Duplicados! Temas similares ya respondidos:"
+                      )}
                     </span>
                   </div>
                   <div className="space-y-1.5 pl-6">
@@ -968,5 +1020,3 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
     </div>
   );
 };
-
-

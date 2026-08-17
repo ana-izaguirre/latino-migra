@@ -17,7 +17,7 @@ export function isAdmin(user: GoogleUser | null | undefined): boolean {
   if (!user) return false;
   if (user.role === "admin") return true;
   if (!user.email) return false;
-  
+
   const normalizedEmail = user.email.trim().toLowerCase();
   return ADMIN_EMAILS.some((adminEmail) => adminEmail.toLowerCase() === normalizedEmail);
 }

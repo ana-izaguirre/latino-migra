@@ -2,15 +2,15 @@ name: CI / Unit & E2E Tests
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
   workflow_dispatch:
     inputs:
       full_e2e:
-        description: 'Run full multi-browser E2E matrix (Chrome, Firefox, Safari, Mobile)'
+        description: "Run full multi-browser E2E matrix (Chrome, Firefox, Safari, Mobile)"
         required: false
-        default: 'false'
+        default: "false"
         type: boolean
 
 permissions:
@@ -30,13 +30,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
+          cache: "npm"
         env:
           NODE_ENV: test
       - name: Install dependencies
         run: npm ci || npm install
-      - name: Run TypeScript Check
+      - name: Check formatting (Prettier)
+        run: npm run format:check
+      - name: Lint (ESLint) and typecheck
         run: npm run lint
+      # Fails the job when coverage drops below the thresholds in vitest.config.ts
       - name: Run Unit Tests with Coverage
         run: npm run test:coverage
       - name: Report coverage in the job summary
@@ -101,7 +104,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
+          cache: "npm"
       - name: Install dependencies
         run: npm ci || npm install
       - name: Install Playwright Chromium

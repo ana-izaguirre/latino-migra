@@ -1,5 +1,16 @@
 import React from "react";
-import { Search, Compass, Bot, Award, ArrowRight, Sparkles, CheckCircle2, MapPin, Calculator, ThumbsUp } from "lucide-react";
+import {
+  Search,
+  Compass,
+  Bot,
+  Award,
+  ArrowRight,
+  Sparkles,
+  CheckCircle2,
+  MapPin,
+  Calculator,
+  ThumbsUp,
+} from "lucide-react";
 import { NavigationTab, GoogleUser } from "../types";
 import { getSafeImageUrl } from "../lib/sanitize";
 
@@ -27,7 +38,11 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ setActiveTab, currentU
                   ¡Hola, {currentUser.name}! 👋
                 </h2>
                 <p className="text-xs md:text-sm text-on-surface-variant dark:text-slate-300">
-                  Perfil conectado desde <strong className="text-secondary dark:text-teal-400">{currentUser.countryOfOrigin || "América Latina"}</strong>. Tu ruta migratoria personalizada está lista.
+                  Perfil conectado desde{" "}
+                  <strong className="text-secondary dark:text-teal-400">
+                    {currentUser.countryOfOrigin || "América Latina"}
+                  </strong>
+                  . Tu ruta migratoria personalizada está lista.
                 </p>
               </div>
             </div>
@@ -68,7 +83,9 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ setActiveTab, currentU
 
             {/* Subtitle */}
             <p className="font-body-lg text-lg text-on-surface-variant dark:text-slate-300 max-w-2xl leading-relaxed">
-              Conectamos a estudiantes y profesionales latinoamericanos con oportunidades globales: becas con financiamiento completo, planes de mudanza con cálculo de presupuesto real, prevención de estafas y soporte consular.
+              Conectamos a estudiantes y profesionales latinoamericanos con oportunidades globales:
+              becas con financiamiento completo, planes de mudanza con cálculo de presupuesto real,
+              prevención de estafas y soporte consular.
             </p>
 
             {/* Action Buttons */}
@@ -168,7 +185,8 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ setActiveTab, currentU
                 Planificador de Migración
               </h3>
               <p className="text-xs text-on-surface-variant dark:text-slate-300 leading-relaxed">
-                Calcula presupuesto real, recomendaciones de ciudad por clima/coste, guía antiestafas y checklist con o sin hijos.
+                Calcula presupuesto real, recomendaciones de ciudad por clima/coste, guía
+                antiestafas y checklist con o sin hijos.
               </p>
             </div>
             <button
@@ -191,7 +209,8 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ setActiveTab, currentU
                 Asistente Migratorio IA
               </h3>
               <p className="text-xs text-on-surface-variant dark:text-slate-300 leading-relaxed">
-                Aclara dudas sobre visados, apostillas, cartas de motivación y requerimientos financieros al instante con LatinoMigra IA.
+                Aclara dudas sobre visados, apostillas, cartas de motivación y requerimientos
+                financieros al instante con LatinoMigra IA.
               </p>
             </div>
             <button
@@ -214,7 +233,8 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ setActiveTab, currentU
                 Guías Paso a Paso
               </h3>
               <p className="text-xs text-on-surface-variant dark:text-slate-300 leading-relaxed">
-                Rutas claras para España, Alemania, EE.UU., Canadá y más. Requisitos legales, costo de vida real y trámites como empadronamiento.
+                Rutas claras para España, Alemania, EE.UU., Canadá y más. Requisitos legales, costo
+                de vida real y trámites como empadronamiento.
               </p>
             </div>
             <button
@@ -237,7 +257,8 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ setActiveTab, currentU
                 Becas por Fechas
               </h3>
               <p className="text-xs text-on-surface-variant dark:text-slate-300 leading-relaxed">
-                Filtra por fecha límite de postulación, nivel de cobertura e institución oficial sin intermediarios.
+                Filtra por fecha límite de postulación, nivel de cobertura e institución oficial sin
+                intermediarios.
               </p>
             </div>
             <button

@@ -10,7 +10,7 @@ import {
   RefreshCw,
   HelpCircle,
   ShieldCheck,
-  ChevronUp
+  ChevronUp,
 } from "lucide-react";
 import { ChatMessage, GoogleUser } from "../types";
 
@@ -20,9 +20,7 @@ interface FloatingChatWidgetProps {
   onNavigateToFullChat: (prompt?: string) => void;
 }
 
-export const FloatingChatWidget: React.FC<FloatingChatWidgetProps> = ({
-  onNavigateToFullChat,
-}) => {
+export const FloatingChatWidget: React.FC<FloatingChatWidgetProps> = ({ onNavigateToFullChat }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [inputMessage, setInputMessage] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(false);
@@ -74,10 +72,18 @@ export const FloatingChatWidget: React.FC<FloatingChatWidgetProps> = ({
       if (lower.includes("estafa") || lower.includes("alquiler") || lower.includes("hotel")) {
         botReply =
           "🛡️ **Reglas de Oro Anti-Estafas en Alquiler:**\n1. **NUNCA transfieras dinero previo por Bizum/Western Union** sin haber visto la vivienda o sin una plataforma con retención legal (como Spotahome o Uniplaces).\n2. Si el anunciante dice estar fuera del país y promete enviar llaves por mensajero, es 100% una estafa.\n3. Reserva tus primeros 10-15 días en un hostal/Airbnb para visitar habitaciones en persona antes de firmar contrato.";
-      } else if (lower.includes("empadronamiento") || lower.includes("padron") || lower.includes("españa")) {
+      } else if (
+        lower.includes("empadronamiento") ||
+        lower.includes("padron") ||
+        lower.includes("españa")
+      ) {
         botReply =
           "📍 **El Empadronamiento en España:**\nEs el registro administrativo donde resides. Es imprescindible para sacar tu TIE (tarjeta física), tarjeta sanitaria y escolarizar a tus hijos.\n**Requisitos:** Contrato de alquiler de al menos 6 meses a tu nombre o autorización firmada del dueño de la casa con copia de su DNI. Se solicita con cita previa en el Ayuntamiento de tu ciudad.";
-      } else if (lower.includes("presupuesto") || lower.includes("dinero") || lower.includes("cuanto")) {
+      } else if (
+        lower.includes("presupuesto") ||
+        lower.includes("dinero") ||
+        lower.includes("cuanto")
+      ) {
         botReply =
           "💰 **Presupuesto Realista Inicial Sugerido:**\n- **Alojamiento (habitación):** 350€ - 650€/mes.\n- **Fianza/Depósito:** 1 a 2 meses de alquiler.\n- **Supermercado y comida:** 200€ - 250€/mes.\n- **Transporte y telefonía:** 40€ - 60€/mes.\n- **Colchón recomendado de llegada:** Entre 2.500€ y 4.000€ para cubrir imprevistos del primer mes.";
       } else if (lower.includes("trabajar") || lower.includes("estudiante")) {
@@ -182,9 +188,7 @@ export const FloatingChatWidget: React.FC<FloatingChatWidgetProps> = ({
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex gap-2 ${
-                  msg.role === "user" ? "justify-end" : "justify-start"
-                }`}
+                className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 {msg.role === "assistant" && (
                   <div className="w-6 h-6 rounded-full bg-primary/10 dark:bg-sky-950 flex items-center justify-center shrink-0 mt-1">
@@ -202,7 +206,9 @@ export const FloatingChatWidget: React.FC<FloatingChatWidgetProps> = ({
                   <p className="whitespace-pre-line">{msg.content}</p>
                   <div
                     className={`text-[9px] mt-1 text-right ${
-                      msg.role === "user" ? "text-white/70" : "text-on-surface-variant dark:text-slate-400"
+                      msg.role === "user"
+                        ? "text-white/70"
+                        : "text-on-surface-variant dark:text-slate-400"
                     }`}
                   >
                     {msg.timestamp}

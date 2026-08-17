@@ -9,13 +9,13 @@ import {
   Building,
   Utensils,
   Train,
-  Check
+  Check,
 } from "lucide-react";
 import {
   SUPPORTED_CURRENCIES,
   convertCurrency,
   formatCurrencyAmount,
-  CurrencyInfo
+  CurrencyInfo,
 } from "../lib/currency";
 import { GoogleUser } from "../types";
 
@@ -81,14 +81,32 @@ export const ConversorMonedas: React.FC<ConversorMonedasProps> = ({
   };
 
   const sampleBudgetItems = [
-    { label: "Habitación Universitaria (Mes)", amountEur: 450, icon: <Building className="w-4 h-4 text-primary" /> },
-    { label: "Supermercado Básico (Mes)", amountEur: 220, icon: <Utensils className="w-4 h-4 text-secondary" /> },
-    { label: "Abono Transporte Joven (Mes)", amountEur: 20, icon: <Train className="w-4 h-4 text-sky-500" /> },
-    { label: "Fondo Exigido Visado España (IPREM/Mes)", amountEur: 600, icon: <ShieldCheck className="w-4 h-4 text-emerald-500" /> },
+    {
+      label: "Habitación Universitaria (Mes)",
+      amountEur: 450,
+      icon: <Building className="w-4 h-4 text-primary" />,
+    },
+    {
+      label: "Supermercado Básico (Mes)",
+      amountEur: 220,
+      icon: <Utensils className="w-4 h-4 text-secondary" />,
+    },
+    {
+      label: "Abono Transporte Joven (Mes)",
+      amountEur: 20,
+      icon: <Train className="w-4 h-4 text-sky-500" />,
+    },
+    {
+      label: "Fondo Exigido Visado España (IPREM/Mes)",
+      amountEur: 600,
+      icon: <ShieldCheck className="w-4 h-4 text-emerald-500" />,
+    },
   ];
 
   return (
-    <div className={`bg-surface-container-lowest dark:bg-slate-900 rounded-3xl border border-outline-variant/40 dark:border-slate-800 shadow-sm ${compact ? "p-4 space-y-4" : "p-6 md:p-8 space-y-6"}`}>
+    <div
+      className={`bg-surface-container-lowest dark:bg-slate-900 rounded-3xl border border-outline-variant/40 dark:border-slate-800 shadow-sm ${compact ? "p-4 space-y-4" : "p-6 md:p-8 space-y-6"}`}
+    >
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-outline-variant/20 dark:border-slate-800 pb-4">
         <div>
@@ -100,7 +118,8 @@ export const ConversorMonedas: React.FC<ConversorMonedasProps> = ({
             Calcula tus Gastos en Moneda Local
           </h3>
           <p className="text-xs text-on-surface-variant dark:text-slate-400">
-            Tasas interbancarias actualizadas (BCE) para calcular con exactitud el costo de vida y ahorro requerido.
+            Tasas interbancarias actualizadas (BCE) para calcular con exactitud el costo de vida y
+            ahorro requerido.
           </p>
         </div>
         <div className="inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[11px] font-semibold px-3 py-1.5 rounded-full self-start sm:self-auto">

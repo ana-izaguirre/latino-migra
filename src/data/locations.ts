@@ -15,8 +15,9 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     phone: "+52 55 5280 4508",
     website: "https://www.exteriores.gob.es/Consulados/mexico",
     hours: "Lunes a Viernes: 8:30 - 13:30 (Con Cita)",
-    description: "Trámite oficial de visados de estancia por estudios, homologación de títulos y legalizaciones consulares para ciudadanos en México.",
-    tips: "Los certificados de estudios deben contar con apostilla de la Secretaría de Gobernación."
+    description:
+      "Trámite oficial de visados de estancia por estudios, homologación de títulos y legalizaciones consulares para ciudadanos en México.",
+    tips: "Los certificados de estudios deben contar con apostilla de la Secretaría de Gobernación.",
   },
   {
     id: "loc-mx-2",
@@ -31,8 +32,9 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     phone: "+52 55 5283 2200",
     website: "https://mexiko.diplo.de/",
     hours: "Lunes a Jueves: 8:00 - 12:00",
-    description: "Expedición de Visa Nacional de Estudio (Visum zur Ausbildung) y verificación de fondos en cuenta bloqueada Sperrkonto.",
-    tips: "Asegúrate de llevar la confirmación de la cuenta Sperrkonto con los fondos vigentes requeridos."
+    description:
+      "Expedición de Visa Nacional de Estudio (Visum zur Ausbildung) y verificación de fondos en cuenta bloqueada Sperrkonto.",
+    tips: "Asegúrate de llevar la confirmación de la cuenta Sperrkonto con los fondos vigentes requeridos.",
   },
   {
     id: "loc-mx-3",
@@ -48,7 +50,7 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     website: "https://mx.usembassy.gov/",
     hours: "Lunes a Viernes: 8:00 - 16:30",
     description: "Entrevistas para visas de estudiante F-1, M-1 y de intercambio J-1 (Fulbright).",
-    tips: "Presentar formulario I-20 original firmado y comprobante de tarifa SEVIS I-901."
+    tips: "Presentar formulario I-20 original firmado y comprobante de tarifa SEVIS I-901.",
   },
 
   // --- COLOMBIA ---
@@ -65,8 +67,9 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     phone: "+57 (601) 628 3900",
     website: "https://www.exteriores.gob.es/Consulados/bogota",
     hours: "Lunes a Viernes: 8:00 - 13:00 (Con Cita Previa)",
-    description: "Sede consular responsable del trámite de visados de estudios superiores a 90 días y homologaciones para colombianos.",
-    tips: "Se requiere agendar cita previa en BLS España Colombia con mínimo 2 meses de anticipación."
+    description:
+      "Sede consular responsable del trámite de visados de estudios superiores a 90 días y homologaciones para colombianos.",
+    tips: "Se requiere agendar cita previa en BLS España Colombia con mínimo 2 meses de anticipación.",
   },
   {
     id: "loc-co-2",
@@ -81,8 +84,9 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     phone: "+57 (601) 423 2600",
     website: "https://bogota.diplo.de/",
     hours: "Lunes a Jueves: 7:30 - 12:00",
-    description: "Sección de visados de larga duración para estudios de posgrado, doctorados y becas DAAD.",
-    tips: "Requisito de seguro médico internacional válido en territorio Schengen desde el primer día."
+    description:
+      "Sección de visados de larga duración para estudios de posgrado, doctorados y becas DAAD.",
+    tips: "Requisito de seguro médico internacional válido en territorio Schengen desde el primer día.",
   },
   {
     id: "loc-co-3",
@@ -97,8 +101,9 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     phone: "+57 (601) 275 2000",
     website: "https://co.usembassy.gov/",
     hours: "Lunes a Viernes: 7:30 - 16:30",
-    description: "Entrevistas para Visados F-1 (Estudiantes) y J-1 (Exchange Visitors / Beca Fulbright).",
-    tips: "Debes presentar el formulario I-20 impreso y la constancia del pago del SEVIS I-901."
+    description:
+      "Entrevistas para Visados F-1 (Estudiantes) y J-1 (Exchange Visitors / Beca Fulbright).",
+    tips: "Debes presentar el formulario I-20 impreso y la constancia del pago del SEVIS I-901.",
   },
 
   // --- PERÚ ---
@@ -115,8 +120,9 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     phone: "+51 1 513 0550",
     website: "https://www.exteriores.gob.es/Consulados/lima",
     hours: "Lunes a Viernes: 8:30 - 13:00",
-    description: "Visados de estancia por estudios para universidades españolas y becas Fundación Carolina en Perú.",
-    tips: "Se solicita certificación de antecedentes penales legalizados y apostillados por RREE Perú."
+    description:
+      "Visados de estancia por estudios para universidades españolas y becas Fundación Carolina en Perú.",
+    tips: "Se solicita certificación de antecedentes penales legalizados y apostillados por RREE Perú.",
   },
   {
     id: "loc-pe-2",
@@ -132,7 +138,7 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     website: "https://lima.diplo.de/",
     hours: "Lunes a Viernes: 8:00 - 11:30",
     description: "Atención de solicitudes de visa nacional para estudios superiores en Alemania.",
-    tips: "Presentar constancia de idioma según el programa de estudios (Goethe-Zertifikat o TOEFL)."
+    tips: "Presentar constancia de idioma según el programa de estudios (Goethe-Zertifikat o TOEFL).",
   },
 
   // --- ARGENTINA ---
@@ -149,8 +155,9 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     phone: "+54 11 4811 0070",
     website: "https://www.exteriores.gob.es/Consulados/buenosaires",
     hours: "Lunes a Viernes: 8:30 - 13:30",
-    description: "Visados de estudio, convenios de doble nacionalidad (Ley de Memoria Democrática) y legalizaciones.",
-    tips: "Verificar turnos vía web los primeros días hábiles de cada mes."
+    description:
+      "Visados de estudio, convenios de doble nacionalidad (Ley de Memoria Democrática) y legalizaciones.",
+    tips: "Verificar turnos vía web los primeros días hábiles de cada mes.",
   },
   {
     id: "loc-ar-2",
@@ -165,8 +172,9 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     phone: "+54 11 4808 1000",
     website: "https://www.canada.ca/",
     hours: "Lunes a Jueves: 8:30 - 12:30",
-    description: "Centro de Solicitud de Visados (VAC) para toma de datos biométricos y permisos de estudio (Study Permit).",
-    tips: "El trámite se inicia en línea a través del portal oficial IRCC de Canadá."
+    description:
+      "Centro de Solicitud de Visados (VAC) para toma de datos biométricos y permisos de estudio (Study Permit).",
+    tips: "El trámite se inicia en línea a través del portal oficial IRCC de Canadá.",
   },
 
   // --- CHILE ---
@@ -183,8 +191,9 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     phone: "+56 2 2663 3000",
     website: "https://www.exteriores.gob.es/Consulados/santiagodechile",
     hours: "Lunes a Viernes: 8:30 - 13:00",
-    description: "Tramitación de visados de estudiante, becas AUIP y convenios de movilidad académica.",
-    tips: "Títulos universitarios chilenos con apostilla electrónica del MINEDUC."
+    description:
+      "Tramitación de visados de estudiante, becas AUIP y convenios de movilidad académica.",
+    tips: "Títulos universitarios chilenos con apostilla electrónica del MINEDUC.",
   },
   {
     id: "loc-cl-2",
@@ -200,7 +209,7 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     website: "https://santiago.diplo.de/",
     hours: "Lunes a Jueves: 8:30 - 12:00",
     description: "Visas de estudio, Chancenkarte y visados Working Holiday para jóvenes chilenos.",
-    tips: "El cupo Working Holiday se abre en fechas específicas durante el año."
+    tips: "El cupo Working Holiday se abre en fechas específicas durante el año.",
   },
 
   // --- ECUADOR ---
@@ -218,7 +227,7 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     website: "https://www.exteriores.gob.es/Consulados/quito",
     hours: "Lunes a Viernes: 8:00 - 13:00",
     description: "Visados de estudio, becas Senescyt y validación de títulos universitarios.",
-    tips: "Presentar certificado de antecedentes penales ecuatoriano apostillado."
+    tips: "Presentar certificado de antecedentes penales ecuatoriano apostillado.",
   },
   {
     id: "loc-ec-2",
@@ -233,8 +242,9 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     phone: "+593 4 245 1555",
     website: "https://www.exteriores.gob.es/Consulados/guayaquil",
     hours: "Lunes a Viernes: 8:30 - 13:00",
-    description: "Atención consular para provincias del Litoral y Galápagos en trámites de visado de estudios y residencia.",
-    tips: "Solicitar cita para entrega de expediente con comprobante bancario de pago de tasas."
+    description:
+      "Atención consular para provincias del Litoral y Galápagos en trámites de visado de estudios y residencia.",
+    tips: "Solicitar cita para entrega de expediente con comprobante bancario de pago de tasas.",
   },
 
   // --- VENEZUELA ---
@@ -252,7 +262,7 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     website: "https://www.exteriores.gob.es/Consulados/caracas",
     hours: "Lunes a Viernes: 8:00 - 12:30",
     description: "Visados de estudio, nacionalidad por opción / LMD y legalizaciones consulares.",
-    tips: "Se requiere apostilla del MPPRE en títulos y notas certificadas."
+    tips: "Se requiere apostilla del MPPRE en títulos y notas certificadas.",
   },
 
   // --- BRASIL ---
@@ -270,7 +280,7 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     website: "https://www.exteriores.gob.es/Consulados/saopaulo",
     hours: "Segunda a Sexta: 8:30 - 13:00",
     description: "Vistos de estudante para universidades espanholas, bolsas e legalizações.",
-    tips: "Documentos com apostila de Haia emitida por cartório brasileiro."
+    tips: "Documentos com apostila de Haia emitida por cartório brasileiro.",
   },
 
   // --- BOLIVIA ---
@@ -288,7 +298,7 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     website: "https://www.exteriores.gob.es/Consulados/santacruz",
     hours: "Lunes a Viernes: 8:30 - 13:00",
     description: "Tramitación de visados de estudio y residencia para ciudadanos bolivianos.",
-    tips: "Certificados de estudios legalizados por Cancillería de Bolivia."
+    tips: "Certificados de estudios legalizados por Cancillería de Bolivia.",
   },
   {
     id: "loc-bo-2",
@@ -304,7 +314,7 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     website: "https://www.exteriores.gob.es/Embajadas/lapaz",
     hours: "Lunes a Viernes: 8:30 - 13:30",
     description: "Atención consular y visados nacionales en la sede diplomática de La Paz.",
-    tips: "Presentar demostración de solvencia económica y matrícula universitaria."
+    tips: "Presentar demostración de solvencia económica y matrícula universitaria.",
   },
 
   // --- GUATEMALA ---
@@ -321,8 +331,9 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     phone: "+502 2379 3530",
     website: "https://www.exteriores.gob.es/Embajadas/guatemala",
     hours: "Lunes a Viernes: 8:30 - 13:00",
-    description: "Visados de estudio, becas Fundación Carolina y AECID para estudiantes guatemaltecos.",
-    tips: "Certificados de notas y títulos con apostilla del MINEX."
+    description:
+      "Visados de estudio, becas Fundación Carolina y AECID para estudiantes guatemaltecos.",
+    tips: "Certificados de notas y títulos con apostilla del MINEX.",
   },
 
   // --- COSTA RICA ---
@@ -340,7 +351,7 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     website: "https://www.exteriores.gob.es/Embajadas/sanjose",
     hours: "Lunes a Viernes: 8:00 - 13:00",
     description: "Expedición de visados de estudio y convenios bilaterales para costarricenses.",
-    tips: "Seguro médico internacional con repatriación y certificado de antecedentes penales."
+    tips: "Seguro médico internacional con repatriación y certificado de antecedentes penales.",
   },
 
   // --- PANAMÁ ---
@@ -358,7 +369,7 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     website: "https://www.exteriores.gob.es/Embajadas/panama",
     hours: "Lunes a Viernes: 8:30 - 13:00",
     description: "Trámites de visado nacional de estudiante, becas IFARHU-España y residencias.",
-    tips: "Constancia de beca o certificación bancaria con los montos exigidos."
+    tips: "Constancia de beca o certificación bancaria con los montos exigidos.",
   },
 
   // --- REPÚBLICA DOMINICANA ---
@@ -376,7 +387,7 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     website: "https://www.exteriores.gob.es/Consulados/santodomingo",
     hours: "Lunes a Viernes: 8:00 - 13:00",
     description: "Visados de estudio para universidades españolas y becas MESCYT en España.",
-    tips: "Certificados de antecedentes y títulos apostillados por MIREX."
+    tips: "Certificados de antecedentes y títulos apostillados por MIREX.",
   },
 
   // --- URUGUAY ---
@@ -394,7 +405,7 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     website: "https://www.exteriores.gob.es/Consulados/montevideo",
     hours: "Lunes a Viernes: 8:30 - 13:30",
     description: "Visas de estancia por estudios, becas ANII y convenios de homologación.",
-    tips: "Presentar carta de admisión y certificado de cobertura médica."
+    tips: "Presentar carta de admisión y certificado de cobertura médica.",
   },
 
   // --- PARAGUAY ---
@@ -411,8 +422,9 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     phone: "+595 21 490 686",
     website: "https://www.exteriores.gob.es/Embajadas/asuncion",
     hours: "Lunes a Viernes: 8:00 - 13:00",
-    description: "Visas de estudio, becas BECAL para posgrados en el exterior y trámites consulares.",
-    tips: "Apostilla del MRE en títulos de grado y certificados médicos."
+    description:
+      "Visas de estudio, becas BECAL para posgrados en el exterior y trámites consulares.",
+    tips: "Apostilla del MRE en títulos de grado y certificados médicos.",
   },
 
   // --- EL SALVADOR ---
@@ -430,7 +442,7 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     website: "https://www.exteriores.gob.es/Embajadas/sansalvador",
     hours: "Lunes a Viernes: 8:30 - 13:00",
     description: "Sección consular de visados de estudio e investigación académica.",
-    tips: "Presentar constancia de antecedentes policiales y penales con apostilla."
+    tips: "Presentar constancia de antecedentes policiales y penales con apostilla.",
   },
 
   // --- HONDURAS ---
@@ -447,8 +459,9 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     phone: "+504 2235 7797",
     website: "https://www.exteriores.gob.es/Embajadas/tegucigalpa",
     hours: "Lunes a Viernes: 8:30 - 13:00",
-    description: "Gestión de visas de estudios y convenios de cooperación con universidades hondureñas.",
-    tips: "Revisar la validez del pasaporte (mínimo 1 año restante)."
+    description:
+      "Gestión de visas de estudios y convenios de cooperación con universidades hondureñas.",
+    tips: "Revisar la validez del pasaporte (mínimo 1 año restante).",
   },
 
   // --- UNIVERSIDADES DESTACADAS EN EUROPA Y NORTEAMÉRICA ---
@@ -465,8 +478,9 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     phone: "+34 923 294 400",
     website: "https://www.usal.es",
     hours: "Campus Abierto",
-    description: "Universidad histórica fundada en 1218, sede de las Becas Internacionales de Máster USAL-Banco Santander.",
-    tips: "Los becarios cuentan con alojamiento cubierto en Colegio Mayor y exención completa de tasas académicas."
+    description:
+      "Universidad histórica fundada en 1218, sede de las Becas Internacionales de Máster USAL-Banco Santander.",
+    tips: "Los becarios cuentan con alojamiento cubierto en Colegio Mayor y exención completa de tasas académicas.",
   },
   {
     id: "loc-u-2",
@@ -481,8 +495,9 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     phone: "+34 913 941 000",
     website: "https://www.ucm.es",
     hours: "Campus Abierto",
-    description: "Una de las universidades más prestigiosas de España, receptora de becarios Fundación Carolina y OEA.",
-    tips: "Alojamiento recomendado cerca de Moncloa o Cuatro Caminos con acceso directo en Metro Línea 6."
+    description:
+      "Una de las universidades más prestigiosas de España, receptora de becarios Fundación Carolina y OEA.",
+    tips: "Alojamiento recomendado cerca de Moncloa o Cuatro Caminos con acceso directo en Metro Línea 6.",
   },
   {
     id: "loc-u-3",
@@ -497,8 +512,9 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     phone: "+41 44 632 11 11",
     website: "https://ethz.ch",
     hours: "Campus Abierto",
-    description: "Instituto Federal de Tecnología de Zurich, institución líder mundial en ingeniería y ciencias que ofrece el programa ESOP.",
-    tips: "La beca ESOP otorga 12.000 CHF semestrales y exención total de aranceles."
+    description:
+      "Instituto Federal de Tecnología de Zurich, institución líder mundial en ingeniería y ciencias que ofrece el programa ESOP.",
+    tips: "La beca ESOP otorga 12.000 CHF semestrales y exención total de aranceles.",
   },
   {
     id: "loc-u-4",
@@ -514,7 +530,7 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     website: "https://www.tum.de",
     hours: "Campus Abierto",
     description: "Universidad de excelencia en ingeniería y tecnología. Convenios con becas DAAD.",
-    tips: "Aplica al Studentenwerk con anticipación para conseguir residencia universitaria de bajo costo."
+    tips: "Aplica al Studentenwerk con anticipación para conseguir residencia universitaria de bajo costo.",
   },
   {
     id: "loc-u-5",
@@ -529,8 +545,9 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     phone: "+1 416 978 2011",
     website: "https://www.utoronto.ca",
     hours: "Campus Abierto",
-    description: "Principal universidad de Canadá y sede de las prestigiosas becas Lester B. Pearson.",
-    tips: "Permite trabajar legalmente durante los estudios con tu permiso Study Permit de Canadá."
+    description:
+      "Principal universidad de Canadá y sede de las prestigiosas becas Lester B. Pearson.",
+    tips: "Permite trabajar legalmente durante los estudios con tu permiso Study Permit de Canadá.",
   },
   {
     id: "loc-u-6",
@@ -545,7 +562,8 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     phone: "+44 1223 337733",
     website: "https://www.cam.ac.uk",
     hours: "Campus Abierto",
-    description: "Sede de las becas Gates Cambridge con financiamiento total para posgrado y doctorado.",
-    tips: "Requiere carta de motivación de alto impacto social y liderazgo probado."
-  }
+    description:
+      "Sede de las becas Gates Cambridge con financiamiento total para posgrado y doctorado.",
+    tips: "Requiere carta de motivación de alto impacto social y liderazgo probado.",
+  },
 ];

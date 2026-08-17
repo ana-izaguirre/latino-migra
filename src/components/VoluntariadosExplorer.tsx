@@ -15,7 +15,7 @@ import {
   Info,
   Layers,
   MapPin,
-  Clock
+  Clock,
 } from "lucide-react";
 import { NavigationTab, GoogleUser } from "../types";
 import { Breadcrumbs } from "./Breadcrumbs";
@@ -45,7 +45,7 @@ export const VoluntariadosExplorer: React.FC<VoluntariadosExplorerProps> = ({
     "Intercambio Cultural",
     "Work & Travel / Working Holiday",
     "Asistente de Idioma",
-    "Au Pair"
+    "Au Pair",
   ];
 
   const filteredPrograms = VOLUNTEERING_PROGRAMS_DATA.filter((prog) => {
@@ -87,7 +87,8 @@ Sé que este programa NO es para migrar de forma permanente, pero me gustaría s
           </h1>
 
           <p className="text-white/90 text-sm md:text-base leading-relaxed">
-            Descubre programas para viajar, practicar idiomas, hacer voluntariado comunitario o trabajar temporalmente con alojamiento y comidas cubiertas.
+            Descubre programas para viajar, practicar idiomas, hacer voluntariado comunitario o
+            trabajar temporalmente con alojamiento y comidas cubiertas.
           </p>
         </div>
       </div>
@@ -96,7 +97,12 @@ Sé que este programa NO es para migrar de forma permanente, pero me gustaría s
       <div className="p-5 md:p-6 bg-amber-500/10 dark:bg-amber-950/40 rounded-3xl border-2 border-amber-500/40 text-amber-950 dark:text-amber-200 space-y-2.5 shadow-sm">
         <div className="flex items-center gap-3 font-bold text-sm md:text-base text-amber-900 dark:text-amber-300">
           <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400 shrink-0" />
-          <span>{t("vol.disclaimerTitle", "Aviso Importante: Voluntariados e Intercambios NO son Vías de Migración Permanente")}</span>
+          <span>
+            {t(
+              "vol.disclaimerTitle",
+              "Aviso Importante: Voluntariados e Intercambios NO son Vías de Migración Permanente"
+            )}
+          </span>
         </div>
         <p className="text-xs md:text-sm text-amber-900/90 dark:text-amber-200/90 leading-relaxed pl-9">
           {t(
@@ -159,11 +165,7 @@ Sé que este programa NO es para migrar de forma permanente, pero me gustaría s
           >
             <div>
               <div className="relative h-44 w-full overflow-hidden">
-                <img
-                  src={prog.imageUrl}
-                  alt={prog.title}
-                  className="w-full h-full object-cover"
-                />
+                <img src={prog.imageUrl} alt={prog.title} className="w-full h-full object-cover" />
                 <div className="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md text-white text-[11px] font-bold px-2.5 py-1 rounded-full border border-white/20">
                   {prog.category}
                 </div>
@@ -175,7 +177,9 @@ Sé que este programa NO es para migrar de forma permanente, pero me gustaría s
               <div className="p-5 space-y-3">
                 <div className="text-[11px] font-bold text-secondary dark:text-teal-400 flex items-center gap-1.5">
                   <Globe2 className="w-3.5 h-3.5" />
-                  <span>{prog.country} • {prog.organization}</span>
+                  <span>
+                    {prog.country} • {prog.organization}
+                  </span>
                 </div>
 
                 <h3 className="font-bold text-base text-primary dark:text-sky-300 leading-snug line-clamp-2">
