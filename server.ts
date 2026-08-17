@@ -26,7 +26,12 @@ app.set("trust proxy", 1);
  * mounting at all. Page CSP belongs in vercel.json (see issue for the GA4
  * inline script, which needs a hash or nonce first).
  */
-app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+app.use(
+  helmet({
+    contentSecurityPolicy: process.env.NODE_ENV === "development" ? false : undefined,
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
 // The API only ever returns JSON, so it can take the strictest possible policy:
 // nothing is allowed to load or execute from an API response.
