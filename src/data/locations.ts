@@ -186,6 +186,22 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     description: "Tramitación de visados de estudiante, becas AUIP y convenios de movilidad académica.",
     tips: "Títulos universitarios chilenos con apostilla electrónica del MINEDUC."
   },
+  {
+    id: "loc-cl-2",
+    name: "Embajada de Alemania en Santiago de Chile",
+    type: "embajada",
+    country: "Alemania",
+    city: "Santiago",
+    hostCountry: "Chile",
+    address: "Las Hualtatas 5677, Vitacura, Santiago",
+    lat: -33.3912,
+    lng: -70.5731,
+    phone: "+56 2 2463 2500",
+    website: "https://santiago.diplo.de/",
+    hours: "Lunes a Jueves: 8:30 - 12:00",
+    description: "Visas de estudio, Chancenkarte y visados Working Holiday para jóvenes chilenos.",
+    tips: "El cupo Working Holiday se abre en fechas específicas durante el año."
+  },
 
   // --- ECUADOR ---
   {
@@ -203,6 +219,236 @@ export const LOCATIONS_DATA: LocationMarker[] = [
     hours: "Lunes a Viernes: 8:00 - 13:00",
     description: "Visados de estudio, becas Senescyt y validación de títulos universitarios.",
     tips: "Presentar certificado de antecedentes penales ecuatoriano apostillado."
+  },
+  {
+    id: "loc-ec-2",
+    name: "Consulado General de España en Guayaquil",
+    type: "consulado",
+    country: "España",
+    city: "Guayaquil",
+    hostCountry: "Ecuador",
+    address: "Calle Tungurahua 614 y Vélez, Guayaquil",
+    lat: -2.1901,
+    lng: -79.8973,
+    phone: "+593 4 245 1555",
+    website: "https://www.exteriores.gob.es/Consulados/guayaquil",
+    hours: "Lunes a Viernes: 8:30 - 13:00",
+    description: "Atención consular para provincias del Litoral y Galápagos en trámites de visado de estudios y residencia.",
+    tips: "Solicitar cita para entrega de expediente con comprobante bancario de pago de tasas."
+  },
+
+  // --- VENEZUELA ---
+  {
+    id: "loc-ve-1",
+    name: "Consulado General de España en Caracas",
+    type: "consulado",
+    country: "España",
+    city: "Caracas",
+    hostCountry: "Venezuela",
+    address: "Plaza La Castellana, Edif. Bancaribe, Piso 1, Caracas",
+    lat: 10.4965,
+    lng: -66.8522,
+    phone: "+58 212 266 3822",
+    website: "https://www.exteriores.gob.es/Consulados/caracas",
+    hours: "Lunes a Viernes: 8:00 - 12:30",
+    description: "Visados de estudio, nacionalidad por opción / LMD y legalizaciones consulares.",
+    tips: "Se requiere apostilla del MPPRE en títulos y notas certificadas."
+  },
+
+  // --- BRASIL ---
+  {
+    id: "loc-br-1",
+    name: "Consulado General de España en São Paulo",
+    type: "consulado",
+    country: "España",
+    city: "São Paulo",
+    hostCountry: "Brasil",
+    address: "Av. Brasil 948, Jardim América, São Paulo",
+    lat: -23.5684,
+    lng: -46.6743,
+    phone: "+55 11 3084 1800",
+    website: "https://www.exteriores.gob.es/Consulados/saopaulo",
+    hours: "Segunda a Sexta: 8:30 - 13:00",
+    description: "Vistos de estudante para universidades espanholas, bolsas e legalizações.",
+    tips: "Documentos com apostila de Haia emitida por cartório brasileiro."
+  },
+
+  // --- BOLIVIA ---
+  {
+    id: "loc-bo-1",
+    name: "Consulado General de España en Santa Cruz de la Sierra",
+    type: "consulado",
+    country: "España",
+    city: "Santa Cruz",
+    hostCountry: "Bolivia",
+    address: "Calle Barrón 134, Santa Cruz de la Sierra",
+    lat: -17.7833,
+    lng: -63.1821,
+    phone: "+591 3 332 8922",
+    website: "https://www.exteriores.gob.es/Consulados/santacruz",
+    hours: "Lunes a Viernes: 8:30 - 13:00",
+    description: "Tramitación de visados de estudio y residencia para ciudadanos bolivianos.",
+    tips: "Certificados de estudios legalizados por Cancillería de Bolivia."
+  },
+  {
+    id: "loc-bo-2",
+    name: "Embajada de España en La Paz",
+    type: "embajada",
+    country: "España",
+    city: "La Paz",
+    hostCountry: "Bolivia",
+    address: "Av. 6 de Agosto 2827, San Jorge, La Paz",
+    lat: -16.5142,
+    lng: -68.1218,
+    phone: "+591 2 243 0118",
+    website: "https://www.exteriores.gob.es/Embajadas/lapaz",
+    hours: "Lunes a Viernes: 8:30 - 13:30",
+    description: "Atención consular y visados nacionales en la sede diplomática de La Paz.",
+    tips: "Presentar demostración de solvencia económica y matrícula universitaria."
+  },
+
+  // --- GUATEMALA ---
+  {
+    id: "loc-gt-1",
+    name: "Embajada de España en Ciudad de Guatemala",
+    type: "embajada",
+    country: "España",
+    city: "Ciudad de Guatemala",
+    hostCountry: "Guatemala",
+    address: "6ª Avenida 6-48, Zona 9, Ciudad de Guatemala",
+    lat: 14.6033,
+    lng: -90.5186,
+    phone: "+502 2379 3530",
+    website: "https://www.exteriores.gob.es/Embajadas/guatemala",
+    hours: "Lunes a Viernes: 8:30 - 13:00",
+    description: "Visados de estudio, becas Fundación Carolina y AECID para estudiantes guatemaltecos.",
+    tips: "Certificados de notas y títulos con apostilla del MINEX."
+  },
+
+  // --- COSTA RICA ---
+  {
+    id: "loc-cr-1",
+    name: "Embajada de España en San José",
+    type: "embajada",
+    country: "España",
+    city: "San José",
+    hostCountry: "Costa Rica",
+    address: "Calle 32, entre Paseo Colón y Avenida Segunda, San José",
+    lat: 9.9347,
+    lng: -84.0931,
+    phone: "+506 2222 5745",
+    website: "https://www.exteriores.gob.es/Embajadas/sanjose",
+    hours: "Lunes a Viernes: 8:00 - 13:00",
+    description: "Expedición de visados de estudio y convenios bilaterales para costarricenses.",
+    tips: "Seguro médico internacional con repatriación y certificado de antecedentes penales."
+  },
+
+  // --- PANAMÁ ---
+  {
+    id: "loc-pa-1",
+    name: "Embajada de España en Panamá",
+    type: "embajada",
+    country: "España",
+    city: "Ciudad de Panamá",
+    hostCountry: "Panamá",
+    address: "Plaza Belisario Porras, Calle 33 y Ave. Perú, Panamá",
+    lat: 8.9712,
+    lng: -79.5344,
+    phone: "+507 227 5122",
+    website: "https://www.exteriores.gob.es/Embajadas/panama",
+    hours: "Lunes a Viernes: 8:30 - 13:00",
+    description: "Trámites de visado nacional de estudiante, becas IFARHU-España y residencias.",
+    tips: "Constancia de beca o certificación bancaria con los montos exigidos."
+  },
+
+  // --- REPÚBLICA DOMINICANA ---
+  {
+    id: "loc-do-1",
+    name: "Consulado General de España en Santo Domingo",
+    type: "consulado",
+    country: "España",
+    city: "Santo Domingo",
+    hostCountry: "República Dominicana",
+    address: "Av. Independencia 1205, Santo Domingo",
+    lat: 18.4552,
+    lng: -69.9198,
+    phone: "+1 809 450 2222",
+    website: "https://www.exteriores.gob.es/Consulados/santodomingo",
+    hours: "Lunes a Viernes: 8:00 - 13:00",
+    description: "Visados de estudio para universidades españolas y becas MESCYT en España.",
+    tips: "Certificados de antecedentes y títulos apostillados por MIREX."
+  },
+
+  // --- URUGUAY ---
+  {
+    id: "loc-uy-1",
+    name: "Consulado General de España en Montevideo",
+    type: "consulado",
+    country: "España",
+    city: "Montevideo",
+    hostCountry: "Uruguay",
+    address: "Calle Libertad 2738, Pocitos, Montevideo",
+    lat: -34.9142,
+    lng: -56.1558,
+    phone: "+598 2708 0048",
+    website: "https://www.exteriores.gob.es/Consulados/montevideo",
+    hours: "Lunes a Viernes: 8:30 - 13:30",
+    description: "Visas de estancia por estudios, becas ANII y convenios de homologación.",
+    tips: "Presentar carta de admisión y certificado de cobertura médica."
+  },
+
+  // --- PARAGUAY ---
+  {
+    id: "loc-py-1",
+    name: "Embajada de España en Asunción",
+    type: "embajada",
+    country: "España",
+    city: "Asunción",
+    hostCountry: "Paraguay",
+    address: "Calle Yegros 437, Edif. San Rafael, Asunción",
+    lat: -25.2821,
+    lng: -57.6354,
+    phone: "+595 21 490 686",
+    website: "https://www.exteriores.gob.es/Embajadas/asuncion",
+    hours: "Lunes a Viernes: 8:00 - 13:00",
+    description: "Visas de estudio, becas BECAL para posgrados en el exterior y trámites consulares.",
+    tips: "Apostilla del MRE en títulos de grado y certificados médicos."
+  },
+
+  // --- EL SALVADOR ---
+  {
+    id: "loc-sv-1",
+    name: "Embajada de España en San Salvador",
+    type: "embajada",
+    country: "España",
+    city: "San Salvador",
+    hostCountry: "El Salvador",
+    address: "Calle La Reforma 158, Colonia San Benito, San Salvador",
+    lat: 13.6931,
+    lng: -89.2412,
+    phone: "+503 2257 5700",
+    website: "https://www.exteriores.gob.es/Embajadas/sansalvador",
+    hours: "Lunes a Viernes: 8:30 - 13:00",
+    description: "Sección consular de visados de estudio e investigación académica.",
+    tips: "Presentar constancia de antecedentes policiales y penales con apostilla."
+  },
+
+  // --- HONDURAS ---
+  {
+    id: "loc-hn-1",
+    name: "Embajada de España en Tegucigalpa",
+    type: "embajada",
+    country: "España",
+    city: "Tegucigalpa",
+    hostCountry: "Honduras",
+    address: "Colonia Los Robles, Calle 8, Tegucigalpa",
+    lat: 14.0722,
+    lng: -87.1923,
+    phone: "+504 2235 7797",
+    website: "https://www.exteriores.gob.es/Embajadas/tegucigalpa",
+    hours: "Lunes a Viernes: 8:30 - 13:00",
+    description: "Gestión de visas de estudios y convenios de cooperación con universidades hondureñas.",
+    tips: "Revisar la validez del pasaporte (mínimo 1 año restante)."
   },
 
   // --- UNIVERSIDADES DESTACADAS EN EUROPA Y NORTEAMÉRICA ---

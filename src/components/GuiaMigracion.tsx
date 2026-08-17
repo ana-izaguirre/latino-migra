@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Compass,
   Clock,
@@ -20,12 +20,17 @@ import {
   Languages,
   Laptop,
   Check,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  ThumbsUp,
+  Database,
+  Star
 } from "lucide-react";
 import { NavigationTab, VisaType } from "../types";
 import { MIGRATION_GUIDES_DATA } from "../data/migrationGuides";
 import { COUNTRY_ANTI_SCAM_DATA } from "../data/antiScamData";
 import { CalendarAgendaButton } from "./CalendarAgendaButton";
+import { fetchVisaGuideVotes, voteVisaHelpful, VisaVotesData } from "../lib/firebase";
+import { useLanguage } from "../lib/i18n";
 
 interface GuiaMigracionProps {
   setActiveTab: (tab: NavigationTab) => void;
@@ -36,11 +41,51 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
   setActiveTab,
   onAskAIAboutGuide,
 }) => {
+  const { language } = useLanguage();
   const [selectedCountryCode, setSelectedCountryCode] = useState<string>("ES");
   const [selectedCategory, setSelectedCategory] = useState<string>("todos");
   const [activeRoadmapStep, setActiveRoadmapStep] = useState<number>(2);
+  const [visaVotes, setVisaVotes] = useState<Record<string, VisaVotesData>>({});
+  const [userVotedVisas, setUserVotedVisas] = useState<Record<string, boolean>>({});
 
   const guide = MIGRATION_GUIDES_DATA[selectedCountryCode] || MIGRATION_GUIDES_DATA["ES"];
+
+  // Fetch real-time votes & stats for the active country from Firestore DB
+  useEffect(() => {
+    let isMounted = true;
+    async function loadVotes() {
+      try {
+        const data = await fetchVisaGuideVotes(selectedCountryCode);
+        if (isMounted) {
+          setVisaVotes(data);
+        }
+      } catch (e) {
+        console.warn("Could not load visa votes:", e);
+      }
+    }
+    loadVotes();
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedCountryCode]);
+
+  const handleVoteVisa = async (visaId: string) => {
+    if (userVotedVisas[visaId]) return;
+    setUserVotedVisas((prev) => ({ ...prev, [visaId]: true }));
+    try {
+      const newCount = await voteVisaHelpful(selectedCountryCode, visaId);
+      setVisaVotes((prev) => ({
+        ...prev,
+        [visaId]: {
+          ...(prev[visaId] || { difficultyRating: 3, totalReviews: 1 }),
+          helpfulVotes: newCount,
+        },
+      }));
+    } catch (e) {
+      console.warn("Vote error:", e);
+    }
+  };
+
   const [docState, setDocState] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     guide.documents.forEach((d) => (initial[d.id] = d.completed));
@@ -343,21 +388,37 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
                   </ul>
                 </div>
 
-                {/* Action Buttons: Official Source, Calendar & AI */}
+                {/* Action Buttons: Official Source, DB Votes, Calendar & AI */}
                 <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-outline-variant/30 dark:border-slate-700">
-                  {visa.officialSourceUrl ? (
-                    <a
-                      href={visa.officialSourceUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs font-semibold text-on-surface-variant dark:text-slate-400 hover:text-primary dark:hover:text-sky-300 flex items-center gap-1"
+                  <div className="flex flex-wrap items-center gap-3">
+                    {visa.officialSourceUrl && (
+                      <a
+                        href={visa.officialSourceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs font-semibold text-on-surface-variant dark:text-slate-400 hover:text-primary dark:hover:text-sky-300 flex items-center gap-1"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>{visa.officialSourceLabel || "Portal Oficial"}</span>
+                      </a>
+                    )}
+
+                    {/* Community Upvotes from Firestore DB */}
+                    <button
+                      onClick={() => handleVoteVisa(visa.id)}
+                      disabled={userVotedVisas[visa.id]}
+                      title="Votar información útil (Sincronizado con base de datos Firestore)"
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
+                        userVotedVisas[visa.id]
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                          : "bg-surface hover:bg-surface-container text-on-surface-variant dark:bg-slate-900 dark:text-slate-300 border-outline-variant/40 dark:border-slate-800"
+                      }`}
                     >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      <span>{visa.officialSourceLabel || "Ver Portal Oficial del Gobierno"}</span>
-                    </a>
-                  ) : (
-                    <div />
-                  )}
+                      <ThumbsUp className={`w-3.5 h-3.5 ${userVotedVisas[visa.id] ? "fill-current" : ""}`} />
+                      <span>{visaVotes[visa.id]?.helpfulVotes || 18} útiles</span>
+                      <span className="text-[10px] text-slate-400 font-normal hidden sm:inline">(Firestore DB)</span>
+                    </button>
+                  </div>
 
                   <div className="flex flex-wrap items-center gap-2">
                     {/* Calendar Agenda Button */}
@@ -373,7 +434,7 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
 
                     <button
                       onClick={() => onAskAIAboutGuide(guide.country, visa.name)}
-                      className="inline-flex items-center gap-1.5 text-xs font-bold bg-primary/10 dark:bg-sky-900/40 text-primary dark:text-sky-300 hover:bg-primary hover:text-white px-3.5 py-1.5 rounded-lg transition-colors"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold bg-primary/10 dark:bg-sky-900/40 text-primary dark:text-sky-300 hover:bg-primary hover:text-white px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer"
                     >
                       <Bot className="w-3.5 h-3.5" />
                       <span>Consultar con IA</span>

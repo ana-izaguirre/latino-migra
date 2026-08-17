@@ -244,10 +244,10 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({
           </div>
           <div className="text-xs space-y-1">
             <p className="font-bold text-on-surface dark:text-slate-200">
-              ¿Cómo funciona este buzón y dónde se guardan tus sugerencias?
+              ¿Cómo funciona este buzón y cómo se procesan tus sugerencias?
             </p>
             <p className="text-on-surface-variant dark:text-slate-400 leading-relaxed">
-              • <strong>Almacenamiento Seguro:</strong> Todas las propuestas y votos se sincronizan y guardan en tiempo real en la base de datos de <strong>Firebase Firestore</strong>.<br />
+              • <strong>Sincronización Segura:</strong> Todas las propuestas y votos se guardan de forma segura y en tiempo real.<br />
               • <strong>Origen de las ideas:</strong> Provienen directamente de estudiantes y migrantes de toda Latinoamérica. Las sugerencias con más votos son analizadas semanalmente por el equipo.<br />
               • <strong>Seguimiento de Estado:</strong> Cuando una idea es revisada, desarrollada o lanzada, se actualiza su etiqueta a <em>En Revisión</em>, <em>En Desarrollo</em> o <em>Implementado</em> con una respuesta oficial.
             </p>

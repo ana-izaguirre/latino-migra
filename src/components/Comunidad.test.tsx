@@ -1,28 +1,33 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Comunidad } from './Comunidad';
 
 describe('Comunidad Component', () => {
-  it('renders community header, category pills and forum discussions', () => {
+  it('renders community header, category pills and forum discussions', async () => {
     render(<Comunidad />);
     expect(screen.getByText(/Comunidad LatinoMigra/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/Buscar tema o ciudad.../i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Crear Publicación/i })).toBeInTheDocument();
   });
 
-  it('filters forum posts when typing in the search bar', () => {
+  it('filters forum posts when typing in the search bar', async () => {
     render(<Comunidad />);
+    const postItem = await screen.findByText(/proceso de empadronamiento en Madrid/i);
+    expect(postItem).toBeInTheDocument();
+
     const searchInput = screen.getByPlaceholderText(/Buscar tema o ciudad.../i);
     fireEvent.change(searchInput, { target: { value: 'empadronamiento' } });
 
-    expect(screen.getByText(/proceso de empadronamiento en Madrid/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/proceso de empadronamiento en Madrid/i)).toBeInTheDocument();
+    });
   });
 
-  it('opens new post modal when clicking Crear Publicación', () => {
+  it('opens new post modal when clicking Crear Publicación', async () => {
     render(<Comunidad />);
     const newPostBtn = screen.getByRole('button', { name: /Crear Publicación/i });
     fireEvent.click(newPostBtn);
 
-    expect(screen.getByText(/Nueva Publicación en la Comunidad/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Nueva Publicación en la Comunidad/i)).toBeInTheDocument();
   });
 });

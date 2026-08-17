@@ -39,6 +39,8 @@ import {
   fetchScholarshipsFromDB,
   seedScholarshipsToDB,
   triggerScholarshipSync,
+  getUserAlertPreferences,
+  getUserMigrationPlan,
 } from "../lib/firebase";
 
 interface BecasExplorerProps {
@@ -71,8 +73,14 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
   const [selectedInstitutionType, setSelectedInstitutionType] = useState<string>("Todas");
   const [selectedDateRange, setSelectedDateRange] = useState<string>("Todas");
   const [sortBy, setSortBy] = useState<"deadline-asc" | "deadline-desc" | "title-asc" | "support-first">("deadline-asc");
-  // Favorites persisted in Firestore (or in-memory state for guest session)
-  const [favorites, setFavorites] = useState<string[]>(["beca-carolina-2026", "beca-usal-internacional"]);
+  // Favorites persisted in Firestore (and local backup for guests)
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    try {
+      const cached = localStorage.getItem("latinomigra_favorite_scholarships");
+      if (cached) return JSON.parse(cached);
+    } catch {}
+    return ["beca-carolina-2026", "beca-usal-internacional"];
+  });
 
   // Load scholarships from Firestore on mount
   useEffect(() => {
@@ -96,7 +104,13 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
     };
   }, []);
 
-  // Fetch favorites from Firestore when user logs in or changes
+  // Fetch favorites and profile settings from Firestore when user logs in or changes
+  const [userProfileFilters, setUserProfileFilters] = useState<{
+    destinationCountry?: string;
+    preferredArea?: string;
+    educationLevel?: string;
+  } | null>(null);
+
   useEffect(() => {
     if (currentUser?.id) {
       fetchUserBookmarks(currentUser.id)
@@ -106,10 +120,26 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
           }
         })
         .catch((e) => console.log("Error loading bookmarks from Firestore:", e));
+
+      Promise.all([
+        getUserAlertPreferences(currentUser.id).catch(() => null),
+        getUserMigrationPlan(currentUser.id).catch(() => null),
+      ]).then(([alertPrefs, migrationPlan]) => {
+        const dest = migrationPlan?.destinationCountry || alertPrefs?.destinationCountry;
+        const area = alertPrefs?.preferredArea && alertPrefs.preferredArea !== "Todas las áreas" && alertPrefs.preferredArea !== "Todas" ? alertPrefs.preferredArea : undefined;
+        const edu = migrationPlan?.migrationPathway === "estudios" ? "postgrado" : undefined;
+        if (dest || area || edu) {
+          setUserProfileFilters({
+            destinationCountry: dest,
+            preferredArea: area,
+            educationLevel: edu,
+          });
+        }
+      });
     }
   }, [currentUser?.id]);
 
-  const [viewModeTab, setViewModeTab] = useState<"all" | "favorites">("all");
+  const [viewModeTab, setViewModeTab] = useState<"all" | "favorites" | "profile">("all");
   const [selectedScholarship, setSelectedScholarship] = useState<Scholarship | null>(null);
   const [showSuggestModal, setShowSuggestModal] = useState<boolean>(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
@@ -191,9 +221,13 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
     const title = scholarship?.title || id;
     const country = scholarship?.country || "Europa";
 
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
+    setFavorites((prev) => {
+      const next = prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id];
+      try {
+        localStorage.setItem("latinomigra_favorite_scholarships", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
 
     if (currentUser?.id) {
       try {
@@ -443,12 +477,49 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                 {favorites.length}
               </span>
             </button>
+
+            {userProfileFilters && (
+              <button
+                type="button"
+                onClick={() => {
+                  setViewModeTab("profile");
+                  if (userProfileFilters.destinationCountry) {
+                    setSelectedCountry(userProfileFilters.destinationCountry);
+                  }
+                  if (userProfileFilters.preferredArea) {
+                    setSelectedArea(userProfileFilters.preferredArea);
+                  }
+                  if (userProfileFilters.educationLevel) {
+                    setSelectedEducationLevel(userProfileFilters.educationLevel);
+                  }
+                }}
+                id="tab-profile-scholarships"
+                className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all ${
+                  viewModeTab === "profile"
+                    ? "bg-secondary text-white dark:bg-teal-600 shadow-sm"
+                    : "bg-surface-container-lowest dark:bg-slate-800 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700 border border-outline-variant/40 dark:border-slate-700"
+                }`}
+              >
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span>🎯 Para mi Perfil</span>
+                {userProfileFilters.destinationCountry && (
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-surface-container dark:bg-slate-700 text-on-surface dark:text-slate-200">
+                    {userProfileFilters.destinationCountry}
+                  </span>
+                )}
+              </button>
+            )}
           </div>
 
           {viewModeTab === "favorites" && favorites.length > 0 && (
             <button
               type="button"
-              onClick={() => setFavorites([])}
+              onClick={() => {
+                setFavorites([]);
+                try {
+                  localStorage.removeItem("latinomigra_favorite_scholarships");
+                } catch {}
+              }}
               id="clear-all-favorites-btn"
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 dark:text-red-400 hover:underline self-start sm:self-auto"
             >
@@ -470,7 +541,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                   Sección: Mis Becas Guardadas ({favorites.length})
                 </h3>
                 <p className="text-xs text-red-700 dark:text-red-300 mt-0.5">
-                  Tus becas de interés se almacenan en tu dispositivo (LocalStorage) para que puedas consultarlas, agendarlas y comparar requisitos en cualquier momento.
+                  Tus becas de interés están sincronizadas para que puedas consultarlas, agendarlas y comparar requisitos en cualquier momento.
                 </p>
               </div>
             </div>
@@ -483,6 +554,35 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                 + Explorar más becas
               </button>
             )}
+          </div>
+        )}
+
+        {/* Profile Filter Banner when active */}
+        {viewModeTab === "profile" && userProfileFilters && (
+          <div className="bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800/50 rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in">
+            <div className="flex items-start md:items-center gap-3">
+              <div className="p-3 bg-secondary text-white rounded-xl shadow-xs shrink-0">
+                <Sparkles className="w-6 h-6 text-amber-300" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-teal-950 dark:text-teal-200">
+                  Filtro Inteligente según tu Perfil
+                </h3>
+                <p className="text-xs text-teal-800 dark:text-teal-300 mt-0.5">
+                  Mostrando automáticamente las convocatorias adaptadas a tu destino ({userProfileFilters.destinationCountry || "General"}) y área preferida ({userProfileFilters.preferredArea || "Todas las áreas"}).
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                clearFilters();
+                setViewModeTab("all");
+              }}
+              className="text-xs font-bold text-teal-800 dark:text-teal-300 bg-white dark:bg-slate-800 border border-teal-300 dark:border-teal-700 px-4 py-2 rounded-xl hover:bg-teal-100 dark:hover:bg-slate-700 transition-colors whitespace-nowrap self-start md:self-auto"
+            >
+              Ver todas las becas
+            </button>
           </div>
         )}
 

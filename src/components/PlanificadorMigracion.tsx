@@ -34,11 +34,15 @@ import {
   Trophy,
   Target,
   FileCheck,
-  ArrowUpRight
+  ArrowUpRight,
+  Bus,
+  Bike
 } from "lucide-react";
 import { GoogleUser, NavigationTab, MigrationPlan } from "../types";
 import { saveUserMigrationPlan, getUserMigrationPlan } from "../lib/firebase";
 import { LATIN_AMERICAN_COUNTRIES, DESTINATION_COUNTRIES } from "../data/countriesData";
+import { useCurrency } from "../lib/CurrencyContext";
+import { formatCurrency } from "../lib/currency";
 
 interface PlanificadorMigracionProps {
   currentUser: GoogleUser | null;
@@ -149,6 +153,8 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
   setActiveTab,
   onAskAIWithCustomPrompt,
 }) => {
+  const { currency } = useCurrency();
+
   // Wizard State
   const [originCountry, setOriginCountry] = useState<string>(currentUser?.countryOfOrigin || "Colombia");
   const [destinationCountry, setDestinationCountry] = useState<string>("España");
@@ -157,6 +163,7 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
   const [numChildren, setNumChildren] = useState<number>(1);
   const [climate, setClimate] = useState<"calido_mediterraneo" | "templado" | "frio">("calido_mediterraneo");
   const [lifestyle, setLifestyle] = useState<"gran_metropolis" | "universitaria_tranquila" | "costera">("universitaria_tranquila");
+  const [mobility, setMobility] = useState<"cualquiera" | "ave_tren" | "aeropuerto" | "bus_metro" | "bici_caminable">("cualquiera");
   const [hasTraveledBefore, setHasTraveledBefore] = useState<boolean>(false);
   const [planSaved, setPlanSaved] = useState<boolean>(false);
 
@@ -542,18 +549,34 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
   };
 
   const handleConsultAI = () => {
+    const mobilityLabel =
+      mobility === "ave_tren"
+        ? "Tren de Alta Velocidad (AVE / ICE / TGV)"
+        : mobility === "aeropuerto"
+        ? "Aeropuerto Internacional cercano (< 45 min)"
+        : mobility === "bus_metro"
+        ? "Red Integral de Autobús y Metro"
+        : mobility === "bici_caminable"
+        ? "Carriles Bici y Ciudad 100% Ciclable / Caminable"
+        : "Cualquier conectividad urbana";
+
     const prompt = `Hola LatinoMigra IA, generé mi plan de migración con estos datos:
 - País de Origen: ${originCountry}
 - País de Destino: ${destinationCountry}
 - Vía de Migración: ${pathway === "estudios" ? "Estudios / Beca" : pathway === "trabajo" ? "Trabajo Altamente Cualificado" : pathway === "nomada" ? "Nómada Digital" : pathway === "busqueda" ? "Búsqueda de Empleo" : "Ahorros"}
 - Situación Familiar: ${familyStatus === "solo" ? "Viajo Solo/a" : familyStatus === "pareja" ? "En Pareja" : `Con Familia (${numChildren} hijos)`}
+- Requisito de Movilidad y Transporte: ${mobilityLabel}
 - Experiencia de Viaje Previo: ${hasTraveledBefore ? "Ya he viajado al exterior antes" : "NUNCA he viajado al extranjero, es mi primer viaje internacional"}
-- Presupuesto mensual estimado: ~${budget.monthlyTotal}€/mes
-- Presupuesto de ahorro inicial: ~${budget.initialSavings}€
+- Presupuesto mensual estimado: ~${formatCurrency(budget.monthlyTotal, currency)} (${currency})
+- Presupuesto de ahorro inicial: ~${formatCurrency(budget.initialSavings, currency)} (${currency})
 
-¿Podrías darme un cronograma de 6 meses con los pasos exactos, cómo evitar estafas en el primer alquiler y qué trámites legales (como empadronamiento/visado) debo realizar al llegar?`;
+¿Podrías darme un cronograma de 6 meses con los pasos exactos, cómo moverme con transporte público / ${mobilityLabel}, cómo evitar estafas en el primer alquiler y qué trámites legales (como empadronamiento/visado) debo realizar al llegar?`;
 
-    onAskAIWithCustomPrompt(prompt);
+    if (onAskAIWithCustomPrompt) {
+      onAskAIWithCustomPrompt(prompt);
+    } else {
+      setActiveTab("chat");
+    }
   };
 
   return (
@@ -952,12 +975,102 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
             </div>
           </div>
 
+          {/* Step 6: Mobility & Transport Requirement */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-primary dark:text-sky-300 font-headline-sm text-lg font-bold border-b border-outline-variant/30 dark:border-slate-800 pb-2">
+              <Train className="w-5 h-5 text-secondary dark:text-teal-400" />
+              <span>6. Movilidad y Conectividad Urbana Requerida</span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              <button
+                type="button"
+                onClick={() => setMobility("ave_tren")}
+                className={`p-3 rounded-xl border text-left transition-all text-xs flex items-center gap-2 cursor-pointer ${
+                  mobility === "ave_tren"
+                    ? "border-secondary bg-secondary/15 dark:bg-teal-950/40 text-primary dark:text-teal-300 font-bold shadow-xs"
+                    : "border-outline-variant/50 dark:border-slate-800 hover:border-outline-variant text-on-surface-variant dark:text-slate-300"
+                }`}
+              >
+                <Train className="w-4 h-4 text-secondary shrink-0" />
+                <div>
+                  <div className="font-bold">🚆 Tren / AVE</div>
+                  <div className="text-[10px] text-slate-500">Alta velocidad</div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setMobility("aeropuerto")}
+                className={`p-3 rounded-xl border text-left transition-all text-xs flex items-center gap-2 cursor-pointer ${
+                  mobility === "aeropuerto"
+                    ? "border-secondary bg-secondary/15 dark:bg-teal-950/40 text-primary dark:text-teal-300 font-bold shadow-xs"
+                    : "border-outline-variant/50 dark:border-slate-800 hover:border-outline-variant text-on-surface-variant dark:text-slate-300"
+                }`}
+              >
+                <Plane className="w-4 h-4 text-secondary shrink-0" />
+                <div>
+                  <div className="font-bold">✈️ Aeropuerto</div>
+                  <div className="text-[10px] text-slate-500">&lt; 45 minutos</div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setMobility("bus_metro")}
+                className={`p-3 rounded-xl border text-left transition-all text-xs flex items-center gap-2 cursor-pointer ${
+                  mobility === "bus_metro"
+                    ? "border-secondary bg-secondary/15 dark:bg-teal-950/40 text-primary dark:text-teal-300 font-bold shadow-xs"
+                    : "border-outline-variant/50 dark:border-slate-800 hover:border-outline-variant text-on-surface-variant dark:text-slate-300"
+                }`}
+              >
+                <Bus className="w-4 h-4 text-secondary shrink-0" />
+                <div>
+                  <div className="font-bold">🚌 Bus / Metro</div>
+                  <div className="text-[10px] text-slate-500">Red integral</div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setMobility("bici_caminable")}
+                className={`p-3 rounded-xl border text-left transition-all text-xs flex items-center gap-2 cursor-pointer ${
+                  mobility === "bici_caminable"
+                    ? "border-secondary bg-secondary/15 dark:bg-teal-950/40 text-primary dark:text-teal-300 font-bold shadow-xs"
+                    : "border-outline-variant/50 dark:border-slate-800 hover:border-outline-variant text-on-surface-variant dark:text-slate-300"
+                }`}
+              >
+                <Bike className="w-4 h-4 text-secondary shrink-0" />
+                <div>
+                  <div className="font-bold">🚲 Bici / Caminable</div>
+                  <div className="text-[10px] text-slate-500">Carriles bici</div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setMobility("cualquiera")}
+                className={`p-3 rounded-xl border text-left transition-all text-xs flex items-center gap-2 col-span-2 sm:col-span-2 cursor-pointer ${
+                  mobility === "cualquiera"
+                    ? "border-secondary bg-secondary/15 dark:bg-teal-950/40 text-primary dark:text-teal-300 font-bold shadow-xs"
+                    : "border-outline-variant/50 dark:border-slate-800 hover:border-outline-variant text-on-surface-variant dark:text-slate-300"
+                }`}
+              >
+                <Compass className="w-4 h-4 text-secondary shrink-0" />
+                <div>
+                  <div className="font-bold">🌐 Cualquier Conectividad</div>
+                  <div className="text-[10px] text-slate-500">Flexible / Sin preferencia</div>
+                </div>
+              </button>
+            </div>
+          </div>
+
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-outline-variant/30 dark:border-slate-800">
             <button
               onClick={handleSavePlan}
               id="save-plan-btn"
-              className="flex items-center gap-2 bg-secondary dark:bg-teal-500 text-white dark:text-slate-950 px-5 py-2.5 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity shadow-sm"
+              className="flex items-center gap-2 bg-secondary dark:bg-teal-500 text-white dark:text-slate-950 px-5 py-2.5 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity shadow-sm cursor-pointer"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>{planSaved ? "¡Plan Guardado!" : "Guardar mi Plan"}</span>
@@ -966,7 +1079,7 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
             <button
               onClick={handleConsultAI}
               id="ask-ai-plan-btn"
-              className="flex items-center gap-2 bg-primary dark:bg-sky-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity shadow-sm"
+              className="flex items-center gap-2 bg-primary dark:bg-sky-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity shadow-sm cursor-pointer"
             >
               <Sparkles className="w-4 h-4 text-amber-300" />
               <span>Consultar Detalles a la IA</span>
@@ -1070,7 +1183,7 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-primary dark:text-sky-300 font-headline-sm text-lg font-bold">
                 <DollarSign className="w-5 h-5 text-emerald-500" />
-                <span>Presupuesto Realista Estimado</span>
+                <span>Presupuesto Realista Estimado ({currency})</span>
               </div>
               <span className="text-xs font-bold bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 px-2.5 py-1 rounded-full">
                 {destinationCountry}
@@ -1084,7 +1197,7 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
                   Costo de Vida Mensual:
                 </div>
                 <div className="text-2xl font-extrabold text-primary dark:text-sky-300">
-                  ~{budget.monthlyTotal}€ <span className="text-xs font-normal">/mes</span>
+                  ~{formatCurrency(budget.monthlyTotal, currency)} <span className="text-xs font-normal">/mes</span>
                 </div>
               </div>
               <div>
@@ -1092,7 +1205,7 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
                   Colchón de Llegada Sugerido:
                 </div>
                 <div className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
-                  ~{budget.initialSavings}€
+                  ~{formatCurrency(budget.initialSavings, currency)}
                 </div>
               </div>
             </div>
@@ -1102,7 +1215,7 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
               <div>
                 <div className="flex justify-between font-medium mb-1">
                   <span>🏠 Alojamiento (Habitación/Piso)</span>
-                  <span className="font-bold">~{budget.rentEstimate}€</span>
+                  <span className="font-bold">~{formatCurrency(budget.rentEstimate, currency)}</span>
                 </div>
                 <div className="w-full h-2 bg-surface-container-high dark:bg-slate-800 rounded-full overflow-hidden">
                   <div className="h-full bg-blue-500 rounded-full" style={{ width: '45%' }} />
@@ -1112,7 +1225,7 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
               <div>
                 <div className="flex justify-between font-medium mb-1">
                   <span>🛒 Alimentación y Supermercado</span>
-                  <span className="font-bold">~{budget.foodEstimate}€</span>
+                  <span className="font-bold">~{formatCurrency(budget.foodEstimate, currency)}</span>
                 </div>
                 <div className="w-full h-2 bg-surface-container-high dark:bg-slate-800 rounded-full overflow-hidden">
                   <div className="h-full bg-emerald-500 rounded-full" style={{ width: '28%' }} />
@@ -1121,8 +1234,8 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
 
               <div>
                 <div className="flex justify-between font-medium mb-1">
-                  <span>🚇 Transporte Público Local</span>
-                  <span className="font-bold">~{budget.transportEstimate}€</span>
+                  <span>🚇 Transporte Público Local ({mobility === "ave_tren" ? "Tren/AVE" : mobility === "bici_caminable" ? "Bici/Caminata" : "Bus/Metro"})</span>
+                  <span className="font-bold">~{formatCurrency(budget.transportEstimate, currency)}</span>
                 </div>
                 <div className="w-full h-2 bg-surface-container-high dark:bg-slate-800 rounded-full overflow-hidden">
                   <div className="h-full bg-amber-500 rounded-full" style={{ width: '12%' }} />
@@ -1132,7 +1245,7 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
               <div>
                 <div className="flex justify-between font-medium mb-1">
                   <span>🏥 Seguro Médico, Telefonía y Servicios</span>
-                  <span className="font-bold">~{budget.utilitiesHealth}€</span>
+                  <span className="font-bold">~{formatCurrency(budget.utilitiesHealth, currency)}</span>
                 </div>
                 <div className="w-full h-2 bg-surface-container-high dark:bg-slate-800 rounded-full overflow-hidden">
                   <div className="h-full bg-purple-500 rounded-full" style={{ width: '15%' }} />

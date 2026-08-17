@@ -113,6 +113,57 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
             </div>
 
+            {/* Role Switcher */}
+            <div className="p-3 bg-surface dark:bg-slate-800/90 rounded-2xl border border-outline-variant/40 dark:border-slate-700 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-on-surface dark:text-slate-200">
+                  Rol de Cuenta:
+                </span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  currentUser.role === "admin"
+                    ? "bg-violet-100 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border border-violet-300 dark:border-violet-700"
+                    : "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700"
+                }`}>
+                  {currentUser.role === "admin" ? "🔑 Administrador" : "👤 Usuario Estándar"}
+                </span>
+              </div>
+              <p className="text-[11px] text-on-surface-variant dark:text-slate-400">
+                {currentUser.role === "admin"
+                  ? "Como administrador puedes gestionar convocatorias, acceder al Panel Admin y sincronizar la base de datos."
+                  : "Como usuario estándar ves la plataforma limpia sin herramientas técnicas ni botones de administración."}
+              </p>
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSignIn({ ...currentUser, role: "user" });
+                  }}
+                  id="role-user-btn"
+                  className={`btn-tactile py-2 px-3 rounded-xl text-xs font-bold transition-all border ${
+                    currentUser.role !== "admin"
+                      ? "bg-primary text-white border-primary shadow-xs"
+                      : "bg-surface-container dark:bg-slate-750 text-on-surface-variant dark:text-slate-300 border-outline-variant/50 hover:bg-surface-container-high"
+                  }`}
+                >
+                  👤 Persona Normal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSignIn({ ...currentUser, role: "admin" });
+                  }}
+                  id="role-admin-btn"
+                  className={`btn-tactile py-2 px-3 rounded-xl text-xs font-bold transition-all border ${
+                    currentUser.role === "admin"
+                      ? "bg-violet-600 text-white border-violet-600 shadow-xs"
+                      : "bg-surface-container dark:bg-slate-750 text-on-surface-variant dark:text-slate-300 border-outline-variant/50 hover:bg-surface-container-high"
+                  }`}
+                >
+                  🔑 Administrador
+                </button>
+              </div>
+            </div>
+
             {/* Sync Features List */}
             <div className="space-y-2 text-xs text-on-surface-variant dark:text-slate-300">
               <div className="flex items-center gap-2 p-2.5 bg-surface dark:bg-slate-800 rounded-xl">

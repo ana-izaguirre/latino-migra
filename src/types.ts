@@ -24,6 +24,7 @@ export interface GoogleUser {
   avatar: string;
   countryOfOrigin?: string;
   signedInAt: string;
+  role?: "admin" | "user";
 }
 
 export interface MigrationPlan {

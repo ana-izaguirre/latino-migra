@@ -156,7 +156,14 @@ export default function App() {
 
         {activeTab === "planificador" && (
           <main className="animate-fade-in">
-            <PlanificadorMigracion setActiveTab={setActiveTab} currentUser={currentUser} />
+            <PlanificadorMigracion
+              setActiveTab={setActiveTab}
+              currentUser={currentUser}
+              onAskAIWithCustomPrompt={(prompt) => {
+                setChatInitialPrompt(prompt);
+                setActiveTab("chat");
+              }}
+            />
           </main>
         )}
 

@@ -9,11 +9,11 @@ describe('Footer Component', () => {
 
     expect(screen.getByText('LatinoMigra')).toBeInTheDocument();
     expect(screen.getByText(/Empoderando a la comunidad estudiantil/i)).toBeInTheDocument();
-    expect(screen.getByText(/Catálogo de Becas 2026/i)).toBeInTheDocument();
-    expect(screen.getByText(/Guía Migratoria España/i)).toBeInTheDocument();
+    expect(screen.getByText(/Catálogo de Becas/i)).toBeInTheDocument();
+    expect(screen.getByText(/Guía Oficial de Migración/i)).toBeInTheDocument();
 
     // Click on link
-    fireEvent.click(screen.getByText(/Catálogo de Becas 2026/i));
+    fireEvent.click(screen.getByText(/Catálogo de Becas/i));
     expect(setActiveTab).toHaveBeenCalledWith('becas');
   });
 });

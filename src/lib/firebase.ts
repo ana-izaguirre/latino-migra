@@ -689,3 +689,77 @@ export async function triggerScholarshipSync(academicYear: string = "2026-2027")
   }
 }
 
+// ----------------------------------------------------
+// VISA GUIDES REAL-TIME VOTES & COMMUNITY RATINGS
+// ----------------------------------------------------
+
+export interface VisaVotesData {
+  helpfulVotes: number;
+  difficultyRating: number; // 1-5
+  totalReviews: number;
+}
+
+/**
+ * Fetch persistent community votes and rating stats for visas of a country from Firestore
+ */
+export async function fetchVisaGuideVotes(countryCode: string): Promise<Record<string, VisaVotesData>> {
+  const path = `visa_guide_votes/${countryCode}/visas`;
+  try {
+    if (!db) {
+      const cached = localStorage.getItem(`latinomigra_visa_votes_${countryCode}`);
+      return cached ? JSON.parse(cached) : {};
+    }
+    const q = collection(db, "visa_guide_votes", countryCode, "visas");
+    const snapshot = await getDocs(q);
+    const result: Record<string, VisaVotesData> = {};
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      result[docSnap.id] = {
+        helpfulVotes: data.helpfulVotes || 0,
+        difficultyRating: data.difficultyRating || 3,
+        totalReviews: data.totalReviews || 1,
+      };
+    });
+    localStorage.setItem(`latinomigra_visa_votes_${countryCode}`, JSON.stringify(result));
+    return result;
+  } catch (err) {
+    console.warn("Could not fetch visa votes from Firestore, using local state fallback:", err);
+    const cached = localStorage.getItem(`latinomigra_visa_votes_${countryCode}`);
+    return cached ? JSON.parse(cached) : {};
+  }
+}
+
+/**
+ * Save / upvote a specific visa in Firestore with fallback
+ */
+export async function voteVisaHelpful(countryCode: string, visaId: string): Promise<number> {
+  const path = `visa_guide_votes/${countryCode}/visas/${visaId}`;
+  try {
+    if (db) {
+      const docRef = doc(db, "visa_guide_votes", countryCode, "visas", visaId);
+      await setDoc(
+        docRef,
+        {
+          helpfulVotes: increment(1),
+          lastVotedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+      const snap = await getDoc(docRef);
+      return snap.data()?.helpfulVotes || 1;
+    }
+  } catch (err) {
+    console.warn("Firestore vote failed, updating local store:", err);
+  }
+  
+  // Local fallback
+  const localKey = `latinomigra_visa_votes_${countryCode}`;
+  const existing = JSON.parse(localStorage.getItem(localKey) || "{}");
+  const current = existing[visaId]?.helpfulVotes || 12;
+  const updated = current + 1;
+  existing[visaId] = { ...(existing[visaId] || { difficultyRating: 3, totalReviews: 5 }), helpfulVotes: updated };
+  localStorage.setItem(localKey, JSON.stringify(existing));
+  return updated;
+}
+
+

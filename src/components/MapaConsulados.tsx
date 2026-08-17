@@ -19,6 +19,7 @@ import {
 import { APIProvider, Map, AdvancedMarker, Pin, InfoWindow } from "@vis.gl/react-google-maps";
 import { LocationMarker } from "../types";
 import { LOCATIONS_DATA } from "../data/locations";
+import { useLanguage } from "../lib/i18n";
 
 const GOOGLE_MAPS_KEY =
   process.env.GOOGLE_MAPS_PLATFORM_KEY ||
@@ -28,20 +29,57 @@ const GOOGLE_MAPS_KEY =
 
 const hasValidApiKey = Boolean(GOOGLE_MAPS_KEY) && GOOGLE_MAPS_KEY !== "YOUR_API_KEY";
 
-// Country Coordinates mapping for fast centering
+// Comprehensive Country Centers mapping for all Latin America and destination countries
 const COUNTRY_CENTERS: Record<string, { lat: number; lng: number; zoom: number; name: string }> = {
   todos: { lat: 10.0, lng: -55.0, zoom: 3, name: "Toda Latinoamérica y Europa" },
-  México: { lat: 19.4326, lng: -99.1332, zoom: 6, name: "México" },
-  Colombia: { lat: 4.711, lng: -74.0721, zoom: 6, name: "Colombia" },
-  Perú: { lat: -12.0464, lng: -77.0428, zoom: 6, name: "Perú" },
   Argentina: { lat: -34.6037, lng: -58.3816, zoom: 6, name: "Argentina" },
+  Bolivia: { lat: -16.5000, lng: -68.1500, zoom: 6, name: "Bolivia" },
+  Brasil: { lat: -15.7975, lng: -47.8919, zoom: 5, name: "Brasil" },
   Chile: { lat: -33.4489, lng: -70.6693, zoom: 6, name: "Chile" },
+  Colombia: { lat: 4.711, lng: -74.0721, zoom: 6, name: "Colombia" },
+  "Costa Rica": { lat: 9.9281, lng: -84.0907, zoom: 7, name: "Costa Rica" },
+  Cuba: { lat: 23.1136, lng: -82.3666, zoom: 7, name: "Cuba" },
   Ecuador: { lat: -0.1807, lng: -78.4678, zoom: 6, name: "Ecuador" },
+  "El Salvador": { lat: 13.6929, lng: -89.2182, zoom: 7, name: "El Salvador" },
+  Guatemala: { lat: 14.6349, lng: -90.5069, zoom: 7, name: "Guatemala" },
+  Honduras: { lat: 14.0723, lng: -87.1921, zoom: 7, name: "Honduras" },
+  México: { lat: 19.4326, lng: -99.1332, zoom: 6, name: "México" },
+  Nicaragua: { lat: 12.1149, lng: -86.2362, zoom: 7, name: "Nicaragua" },
+  Panamá: { lat: 8.9824, lng: -79.5199, zoom: 7, name: "Panamá" },
+  Paraguay: { lat: -25.2637, lng: -57.5759, zoom: 6, name: "Paraguay" },
+  Perú: { lat: -12.0464, lng: -77.0428, zoom: 6, name: "Perú" },
+  "República Dominicana": { lat: 18.4861, lng: -69.9312, zoom: 7, name: "República Dominicana" },
+  Uruguay: { lat: -34.9011, lng: -56.1645, zoom: 7, name: "Uruguay" },
+  Venezuela: { lat: 10.4806, lng: -66.9036, zoom: 6, name: "Venezuela" },
   España: { lat: 40.4168, lng: -3.7038, zoom: 6, name: "España" },
   Alemania: { lat: 51.1657, lng: 10.4515, zoom: 6, name: "Alemania" },
   Canadá: { lat: 43.6532, lng: -79.3832, zoom: 6, name: "Canadá" },
   "EE.UU.": { lat: 38.9072, lng: -77.0369, zoom: 5, name: "Estados Unidos" },
+  Suiza: { lat: 47.3769, lng: 8.5417, zoom: 7, name: "Suiza" },
+  "Reino Unido": { lat: 51.5074, lng: -0.1278, zoom: 6, name: "Reino Unido" },
 };
+
+export const LATIN_AMERICAN_COUNTRIES_LIST = [
+  { name: "Argentina", flag: "🇦🇷" },
+  { name: "Bolivia", flag: "🇧🇴" },
+  { name: "Brasil", flag: "🇧🇷" },
+  { name: "Chile", flag: "🇨🇱" },
+  { name: "Colombia", flag: "🇨🇴" },
+  { name: "Costa Rica", flag: "🇨🇷" },
+  { name: "Cuba", flag: "🇨🇺" },
+  { name: "Ecuador", flag: "🇪🇨" },
+  { name: "El Salvador", flag: "🇸🇻" },
+  { name: "Guatemala", flag: "🇬🇹" },
+  { name: "Honduras", flag: "🇭🇳" },
+  { name: "México", flag: "🇲🇽" },
+  { name: "Nicaragua", flag: "🇳🇮" },
+  { name: "Panamá", flag: "🇵🇦" },
+  { name: "Paraguay", flag: "🇵🇾" },
+  { name: "Perú", flag: "🇵🇪" },
+  { name: "República Dominicana", flag: "🇩🇴" },
+  { name: "Uruguay", flag: "🇺🇾" },
+  { name: "Venezuela", flag: "🇻🇪" },
+];
 
 function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371; // Radius of earth in km
@@ -57,41 +95,77 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
   return Math.round(R * c);
 }
 
-export const MapaConsulados: React.FC = () => {
+interface MapaConsuladosProps {
+  initialCountry?: string;
+}
+
+export const MapaConsulados: React.FC<MapaConsuladosProps> = ({ initialCountry }) => {
+  const { language } = useLanguage();
   const [selectedType, setSelectedType] = useState<string>("todos");
   const [userHomeCountry, setUserHomeCountry] = useState<string>(() => {
+    if (initialCountry && initialCountry !== "todos") return initialCountry;
     return localStorage.getItem("latino_migra_home_country") || "todos";
   });
   const [destinationFilter, setDestinationFilter] = useState<string>("todos");
   const [searchQuery, setSearchQuery] = useState<string>("");
   
-  // Sensitive location data is kept in-memory state only (not stored in plain-text storage)
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-
   const [isDetectingLocation, setIsDetectingLocation] = useState<boolean>(false);
   const [locationStatus, setLocationStatus] = useState<string | null>(null);
 
-  const [activeMarker, setActiveMarker] = useState<LocationMarker | null>(() => {
-    if (userHomeCountry !== "todos") {
-      const match = LOCATIONS_DATA.find((l) => l.hostCountry === userHomeCountry);
-      if (match) return match;
+  // Filter and sort locations
+  const filteredLocations = LOCATIONS_DATA.filter((loc) => {
+    // Check type matching
+    let matchesType = true;
+    if (selectedType === "consulado") {
+      matchesType = loc.type === "consulado" || loc.type === "embajada";
+    } else if (selectedType === "universidad") {
+      matchesType = loc.type === "universidad";
     }
-    return LOCATIONS_DATA[0];
+
+    const matchesDestination = destinationFilter === "todos" || loc.country === destinationFilter;
+    const matchesHomeCountry =
+      userHomeCountry === "todos" ||
+      loc.hostCountry === userHomeCountry ||
+      (selectedType === "universidad" && loc.type === "universidad");
+      
+    const matchesSearch =
+      loc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      loc.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      loc.hostCountry.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      loc.country.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return matchesType && matchesDestination && matchesHomeCountry && matchesSearch;
   });
+
+  const [activeMarker, setActiveMarker] = useState<LocationMarker | null>(() => {
+    return filteredLocations[0] || LOCATIONS_DATA[0];
+  });
+
+  // Whenever filters change, update active marker to the first matching entry
+  useEffect(() => {
+    if (filteredLocations.length > 0) {
+      if (!activeMarker || !filteredLocations.some((l) => l.id === activeMarker.id)) {
+        setActiveMarker(filteredLocations[0]);
+      }
+    } else {
+      setActiveMarker(null);
+    }
+  }, [selectedType, userHomeCountry, destinationFilter, searchQuery]);
 
   // Handle Home Country selection change
   const handleHomeCountryChange = (country: string) => {
     setUserHomeCountry(country);
     localStorage.setItem("latino_migra_home_country", country);
     if (country !== "todos") {
-      const firstInCountry = LOCATIONS_DATA.find((l) => l.hostCountry === country);
-      if (firstInCountry) {
-        setActiveMarker(firstInCountry);
+      const match = LOCATIONS_DATA.find((l) => l.hostCountry === country);
+      if (match) {
+        setActiveMarker(match);
       }
     }
   };
 
-  // Detect GPS Location
+  // Detect GPS Location and sync dropdown
   const handleDetectLocation = () => {
     if (!navigator.geolocation) {
       setLocationStatus("Tu navegador no soporta geolocalización.");
@@ -126,8 +200,9 @@ export const MapaConsulados: React.FC = () => {
         if (nearest) {
           setActiveMarker(nearest);
           if ((nearest as LocationMarker).hostCountry) {
-            setUserHomeCountry((nearest as LocationMarker).hostCountry);
-            localStorage.setItem("latino_migra_home_country", (nearest as LocationMarker).hostCountry);
+            const countryName = (nearest as LocationMarker).hostCountry;
+            setUserHomeCountry(countryName);
+            localStorage.setItem("latino_migra_home_country", countryName);
           }
         }
 
@@ -146,20 +221,6 @@ export const MapaConsulados: React.FC = () => {
     );
   };
 
-  // Filter and sort locations
-  const filteredLocations = LOCATIONS_DATA.filter((loc) => {
-    const matchesType = selectedType === "todos" || loc.type === selectedType;
-    const matchesDestination = destinationFilter === "todos" || loc.country === destinationFilter;
-    const matchesHomeCountry = userHomeCountry === "todos" || loc.hostCountry === userHomeCountry || loc.type === "universidad";
-    const matchesSearch =
-      loc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      loc.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      loc.hostCountry.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      loc.country.toLowerCase().includes(searchQuery.toLowerCase());
-
-    return matchesType && matchesDestination && matchesHomeCountry && matchesSearch;
-  });
-
   const getMarkerColor = (type: LocationMarker["type"]) => {
     if (type === "consulado" || type === "embajada") return "#0284c7"; // Sky blue
     return "#10b981"; // Emerald green for university
@@ -174,19 +235,21 @@ export const MapaConsulados: React.FC = () => {
     : { lat: 10.0, lng: -55.0 };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-8 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-outline-variant/30 dark:border-slate-800 pb-6">
         <div>
           <div className="flex items-center gap-2 text-secondary dark:text-teal-300 text-xs font-bold uppercase tracking-wider mb-1">
             <Compass className="w-4 h-4" />
-            <span>Mapa y Directorio Consular Interactivo</span>
+            <span>{language === "en" ? "Interactive Consular Map & Directory" : "Mapa y Directorio Consular Interactivo"}</span>
           </div>
           <h1 className="font-headline-lg text-3xl md:text-4xl font-extrabold text-primary dark:text-sky-300">
-            Consulados, Embajadas y Campus Destino
+            {language === "en" ? "Consulates, Embassies & Target Campuses" : "Consulados, Embajadas y Campus Destino"}
           </h1>
           <p className="text-on-surface-variant dark:text-slate-300 text-sm mt-1">
-            Encuentra las sedes consulares oficiales para tramitar tus visados en tu país y explora las universidades receptoras en el extranjero.
+            {language === "en"
+              ? "Find official consular offices to process visas in your country and explore receiving universities abroad."
+              : "Encuentra las sedes consulares oficiales para tramitar tus visados en tu país y explora las universidades receptoras en el extranjero."}
           </p>
         </div>
 
@@ -196,19 +259,19 @@ export const MapaConsulados: React.FC = () => {
             onClick={handleDetectLocation}
             disabled={isDetectingLocation}
             id="btn-detect-location"
-            className="flex items-center gap-2 bg-secondary/10 dark:bg-teal-500/20 text-secondary dark:text-teal-300 hover:bg-secondary/20 dark:hover:bg-teal-500/30 px-4 py-2.5 rounded-xl text-xs font-bold transition-all border border-secondary/30 disabled:opacity-50"
+            className="flex items-center gap-2 bg-secondary/10 dark:bg-teal-500/20 text-secondary dark:text-teal-300 hover:bg-secondary/20 dark:hover:bg-teal-500/30 px-4 py-2.5 rounded-xl text-xs font-bold transition-all border border-secondary/30 disabled:opacity-50 cursor-pointer active:scale-95"
           >
             {isDetectingLocation ? (
               <Loader2 className="w-4 h-4 animate-spin text-teal-500" />
             ) : (
               <LocateFixed className="w-4 h-4 text-teal-500" />
             )}
-            <span>{userLocation ? "Actualizar mi GPS" : "Detectar mi ubicación actual"}</span>
+            <span>{userLocation ? (language === "en" ? "Update GPS Location" : "Actualizar mi GPS") : (language === "en" ? "Detect My Location" : "Detectar mi ubicación actual")}</span>
           </button>
 
           <div className="flex items-center gap-2 bg-primary/10 dark:bg-sky-500/20 text-primary dark:text-sky-300 px-4 py-2.5 rounded-xl text-xs font-bold shrink-0">
             <ShieldCheck className="w-4.5 h-4.5 text-emerald-500" />
-            <span>Sedes Oficiales Verificadas</span>
+            <span>{language === "en" ? "Verified Official Venues" : "Sedes Oficiales Verificadas"}</span>
           </div>
         </div>
       </div>
@@ -227,7 +290,7 @@ export const MapaConsulados: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-bold text-on-surface-variant dark:text-slate-400 flex items-center gap-1">
             <MapPin className="w-3.5 h-3.5 text-primary dark:text-sky-400" />
-            <span>Tu País de Origen:</span>
+            <span>{language === "en" ? "Your Origin Country:" : "Tu País de Origen:"}</span>
           </span>
           <select
             value={userHomeCountry}
@@ -235,13 +298,12 @@ export const MapaConsulados: React.FC = () => {
             id="select-user-country"
             className="p-2 bg-surface dark:bg-slate-800 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs font-bold text-primary dark:text-sky-300 focus:outline-none focus:ring-1 focus:ring-sky-500"
           >
-            <option value="todos">🌎 Todos los países</option>
-            <option value="México">🇲🇽 México</option>
-            <option value="Colombia">🇨🇴 Colombia</option>
-            <option value="Perú">🇵🇪 Perú</option>
-            <option value="Argentina">🇦🇷 Argentina</option>
-            <option value="Chile">🇨🇱 Chile</option>
-            <option value="Ecuador">🇪🇨 Ecuador</option>
+            <option value="todos">🌎 {language === "en" ? "All countries" : "Todos los países"}</option>
+            {LATIN_AMERICAN_COUNTRIES_LIST.map((c) => (
+              <option key={c.name} value={c.name}>
+                {c.flag} {c.name}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -251,35 +313,35 @@ export const MapaConsulados: React.FC = () => {
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setSelectedType("todos")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
                 selectedType === "todos"
                   ? "bg-primary dark:bg-sky-600 text-white"
                   : "bg-surface dark:bg-slate-800 text-on-surface-variant dark:text-slate-300 border border-outline-variant/40 dark:border-slate-700"
               }`}
             >
-              Todos
+              {language === "en" ? "All" : "Todos"}
             </button>
             <button
               onClick={() => setSelectedType("consulado")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer ${
                 selectedType === "consulado"
                   ? "bg-primary dark:bg-sky-600 text-white"
                   : "bg-surface dark:bg-slate-800 text-on-surface-variant dark:text-slate-300 border border-outline-variant/40 dark:border-slate-700"
               }`}
             >
               <Building2 className="w-3.5 h-3.5" />
-              <span>Consulados y Embajadas</span>
+              <span>{language === "en" ? "Consulates & Embassies" : "Consulados y Embajadas"}</span>
             </button>
             <button
               onClick={() => setSelectedType("universidad")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer ${
                 selectedType === "universidad"
                   ? "bg-primary dark:bg-sky-600 text-white"
                   : "bg-surface dark:bg-slate-800 text-on-surface-variant dark:text-slate-300 border border-outline-variant/40 dark:border-slate-700"
               }`}
             >
               <GraduationCap className="w-3.5 h-3.5" />
-              <span>Universidades</span>
+              <span>{language === "en" ? "Universities" : "Universidades"}</span>
             </button>
           </div>
 
@@ -289,7 +351,7 @@ export const MapaConsulados: React.FC = () => {
             onChange={(e) => setDestinationFilter(e.target.value)}
             className="p-2 bg-surface dark:bg-slate-800 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs font-semibold text-on-surface dark:text-slate-200"
           >
-            <option value="todos">País Destino: Todos</option>
+            <option value="todos">{language === "en" ? "Destination: All" : "País Destino: Todos"}</option>
             <option value="España">España 🇪🇸</option>
             <option value="Alemania">Alemania 🇩🇪</option>
             <option value="EE.UU.">Estados Unidos 🇺🇸</option>
@@ -305,14 +367,14 @@ export const MapaConsulados: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar ciudad..."
-              className="w-full pl-8 pr-3 py-1.5 bg-surface dark:bg-slate-800 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs"
+              placeholder={language === "en" ? "Search city..." : "Buscar ciudad..."}
+              className="w-full pl-8 pr-3 py-1.5 bg-surface dark:bg-slate-800 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs text-on-surface dark:text-slate-100 outline-none"
             />
           </div>
         </div>
       </div>
 
-      {/* Main Map + List Grid */}
+      {/* Main Map + Details / Directory Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Left Side: Interactive Map Frame */}
         <div className="lg:col-span-2 bg-surface-container-lowest dark:bg-slate-900 rounded-3xl overflow-hidden border border-outline-variant/40 dark:border-slate-800 h-[520px] relative shadow-lg">
@@ -378,73 +440,90 @@ export const MapaConsulados: React.FC = () => {
             </APIProvider>
           ) : (
             /* Google Maps Fallback Embed Preview when key is pending */
-            <div className="w-full h-full relative flex flex-col items-center justify-center p-6 bg-slate-900 text-white text-center space-y-4">
+            <div className="w-full h-full flex flex-col relative bg-slate-900">
               <iframe
-                title="Google Maps Embedded"
-                width="100%"
-                height="100%"
-                className="absolute inset-0 opacity-40 pointer-events-none filter grayscale contrast-125"
+                title="Consulados y Universidades Map"
+                className="w-full h-full border-0 filter contrast-105"
+                src={`https://maps.google.com/maps?q=${
+                  activeMarker
+                    ? `${activeMarker.lat},${activeMarker.lng}`
+                    : centerCoords.lat + "," + centerCoords.lng
+                }&hl=es&z=${userHomeCountry !== "todos" || activeMarker ? 13 : 4}&output=embed`}
                 loading="lazy"
-                allowFullScreen
-                src={`https://maps.google.com/maps?q=${encodeURIComponent(
-                  activeMarker ? activeMarker.address : "Consulado Espana"
-                )}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
               />
 
-              <div className="relative z-10 bg-slate-900/90 backdrop-blur-md p-6 rounded-2xl border border-slate-700 max-w-md shadow-2xl space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-sky-500/20 text-sky-300 flex items-center justify-center mx-auto">
-                  <MapPin className="w-6 h-6" />
-                </div>
-                <h3 className="font-bold text-lg text-white">Visualizador de Mapa Interactivo</h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  {userLocation
-                    ? "Ubicación detectada. Para activar vista satélite 3D completa y geocodificación en vivo, puedes agregar tu clave de Google Maps Platform."
-                    : "Para activar marcadores dinámicos 3D y búsqueda en tiempo real, puedes agregar tu clave de Google Maps Platform en los Secretos."}
-                </p>
-                <div className="text-[11px] bg-slate-800 p-3 rounded-xl text-left font-mono text-slate-300">
-                  Ajustes ⚙️ → Secretos → <span className="text-sky-300">GOOGLE_MAPS_PLATFORM_KEY</span>
-                </div>
-                {activeMarker && (
+              {/* Floating Current Location Card */}
+              {activeMarker && (
+                <div className="absolute bottom-4 left-4 right-4 bg-surface-container-lowest/95 dark:bg-slate-900/95 backdrop-blur-md p-4 rounded-2xl border border-outline-variant/40 dark:border-slate-800 shadow-xl flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold ${
+                        activeMarker.type === "universidad"
+                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
+                          : "bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300"
+                      }`}
+                    >
+                      {activeMarker.type === "universidad" ? (
+                        <GraduationCap className="w-5 h-5" />
+                      ) : (
+                        <Building2 className="w-5 h-5" />
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-primary dark:text-sky-300 truncate max-w-xs md:max-w-md">
+                        {activeMarker.name}
+                      </h4>
+                      <p className="text-xs text-on-surface-variant dark:text-slate-400">
+                        {activeMarker.city}, {activeMarker.hostCountry} (Destino: {activeMarker.country})
+                      </p>
+                    </div>
+                  </div>
+
                   <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
                       activeMarker.address
                     )}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 bg-sky-500 text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-sky-400 transition-colors"
+                    className="inline-flex items-center gap-1.5 bg-primary dark:bg-sky-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold hover:bg-primary-container shrink-0"
                   >
-                    <Navigation className="w-4 h-4" />
-                    <span>Abrir ubicación de {activeMarker.city} en Google Maps</span>
+                    <Navigation className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Ruta GPS</span>
                   </a>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* Right Side: Selected Location Detail & Directory */}
-        <div className="space-y-4">
-          {/* Active Detail Card */}
-          {activeMarker && (
-            <div className="bg-surface-container-lowest dark:bg-slate-900 p-6 rounded-3xl border-2 border-primary/40 dark:border-sky-500/40 space-y-4 shadow-md">
-              <div className="flex items-center justify-between gap-2">
-                <span className="bg-primary/10 dark:bg-sky-500/20 text-primary dark:text-sky-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5">
-                  {activeMarker.type === "universidad" ? (
-                    <GraduationCap className="w-3.5 h-3.5" />
-                  ) : (
-                    <Building2 className="w-3.5 h-3.5" />
-                  )}
-                  {activeMarker.type} • {activeMarker.country}
+        {/* Right Side: Active Marker Detail Card + Fast Directory (5 cols) */}
+        <div className="space-y-6">
+          {activeMarker ? (
+            <div className="bg-surface-container-lowest dark:bg-slate-900 rounded-3xl p-6 border border-outline-variant/40 dark:border-slate-800 shadow-md space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <span
+                  className={`text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full ${
+                    activeMarker.type === "universidad"
+                      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+                      : "bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300"
+                  }`}
+                >
+                  {activeMarker.type === "universidad" ? "🎓 Universidad / Campus" : "🏛️ Consulado / Embajada"}
                 </span>
 
-                <span className="text-xs text-on-surface-variant font-bold">
+                <span className="text-xs font-bold text-on-surface-variant dark:text-slate-400">
                   {activeMarker.city}, {activeMarker.hostCountry}
                 </span>
               </div>
 
-              <h3 className="font-headline-sm text-lg font-bold text-primary dark:text-sky-300">
-                {activeMarker.name}
-              </h3>
+              <div>
+                <h3 className="font-headline-sm text-lg font-bold text-primary dark:text-sky-300">
+                  {activeMarker.name}
+                </h3>
+                <p className="text-xs text-secondary dark:text-teal-400 font-medium">
+                  {activeMarker.type === "universidad" ? "País del Campus:" : "Representa a:"} <strong>{activeMarker.country}</strong>
+                </p>
+              </div>
 
               <p className="text-xs text-on-surface-variant dark:text-slate-300 leading-relaxed">
                 {activeMarker.description}
@@ -493,7 +572,7 @@ export const MapaConsulados: React.FC = () => {
               {activeMarker.tips && (
                 <div className="bg-secondary-container/20 dark:bg-teal-500/10 p-3 rounded-xl border border-secondary/20 text-xs text-secondary-container-on font-medium space-y-1">
                   <span className="font-bold text-secondary dark:text-teal-300 block">
-                    💡 Consejos para la cita:
+                    💡 Consejos clave:
                   </span>
                   <p className="text-on-surface-variant dark:text-slate-300">{activeMarker.tips}</p>
                 </div>
@@ -526,18 +605,32 @@ export const MapaConsulados: React.FC = () => {
                 )}
               </div>
             </div>
+          ) : (
+            <div className="bg-surface-container-lowest dark:bg-slate-900 rounded-3xl p-6 border border-outline-variant/40 dark:border-slate-800 shadow-md text-center py-10 space-y-2">
+              <Building2 className="w-10 h-10 text-slate-400 mx-auto" />
+              <p className="text-sm font-bold text-on-surface dark:text-slate-200">
+                No hay resultados para este filtro
+              </p>
+              <p className="text-xs text-on-surface-variant dark:text-slate-400">
+                Prueba cambiando el país de origen o el tipo de sede.
+              </p>
+            </div>
           )}
 
           {/* Directory List */}
           <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
             <h4 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-slate-400">
-              Directorio de Sedes ({filteredLocations.length})
+              {selectedType === "universidad"
+                ? `Campus Universitarios (${filteredLocations.length})`
+                : selectedType === "consulado"
+                ? `Consulados y Embajadas (${filteredLocations.length})`
+                : `Directorio de Sedes (${filteredLocations.length})`}
             </h4>
             {filteredLocations.map((loc) => (
               <button
                 key={loc.id}
                 onClick={() => setActiveMarker(loc)}
-                className={`w-full text-left p-3 rounded-2xl border text-xs transition-all ${
+                className={`w-full text-left p-3 rounded-2xl border text-xs transition-all cursor-pointer ${
                   activeMarker?.id === loc.id
                     ? "bg-primary/10 border-primary dark:bg-sky-950/40 dark:border-sky-500 font-bold"
                     : "bg-surface-container-lowest dark:bg-slate-800 border-outline-variant/40 dark:border-slate-700 hover:bg-surface-container"

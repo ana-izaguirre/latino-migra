@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { NavigationTab, ThemeMode, GoogleUser } from "../types";
 import { useLanguage } from "../lib/i18n";
+import { useCurrency } from "../lib/CurrencyContext";
 import { getSafeImageUrl } from "../lib/sanitize";
 
 interface TopNavBarProps {
@@ -52,6 +53,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { language, setLanguage, t } = useLanguage();
+  const { currency, setCurrency, availableCurrencies } = useCurrency();
   const [langToast, setLangToast] = useState<string | null>(null);
 
   // Close mobile drawer on resize to desktop
@@ -77,7 +79,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
     };
   }, [mobileMenuOpen]);
 
-  const navItems: { id: NavigationTab; label: string; icon: React.ReactNode }[] = [
+  const allNavItems: { id: NavigationTab; label: string; icon: React.ReactNode; adminOnly?: boolean }[] = [
     { id: "planificador", label: t("nav.planificador", "Planificador 360°"), icon: <Compass className="w-4 h-4 text-emerald-500" /> },
     { id: "calculadora", label: t("nav.calculadora", "Calculadora Costo de Vida"), icon: <Calculator className="w-4 h-4 text-teal-500" /> },
     { id: "becas", label: t("nav.becas", "Becas"), icon: <GraduationCap className="w-4 h-4 text-sky-500" /> },
@@ -87,8 +89,10 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
     { id: "comunidad", label: t("nav.comunidad", "Comunidad"), icon: <Users className="w-4 h-4 text-amber-500" /> },
     { id: "feedback", label: t("nav.feedback", "Sugerencias"), icon: <MessageSquarePlus className="w-4 h-4 text-pink-500" /> },
     { id: "chat", label: t("nav.chat", "Chat IA"), icon: <Sparkles className="w-4 h-4 text-purple-500" /> },
-    { id: "admin", label: t("nav.admin", "Panel Admin"), icon: <Database className="w-4 h-4 text-violet-500" /> },
+    { id: "admin", label: t("nav.admin", "Panel Admin"), icon: <Database className="w-4 h-4 text-violet-500" />, adminOnly: true },
   ];
+
+  const navItems = allNavItems.filter((item) => !item.adminOnly || currentUser?.role === "admin");
 
   const toggleLanguage = () => {
     const newLang = language === "es" ? "en" : "es";
@@ -114,8 +118,19 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
       )}
 
       <div className="flex justify-between items-center px-4 md:px-8 py-3 max-w-7xl mx-auto">
-        {/* Brand Logo */}
-        <div className="flex items-center gap-6">
+        {/* Left Side: Mobile Hamburger & Brand Logo */}
+        <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
+          {/* Mobile Hamburger Menu Button (Positioned at the Left as requested) */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            id="mobile-menu-toggle"
+            aria-label={mobileMenuOpen ? "Cerrar menú de navegación" : "Abrir menú de navegación"}
+            className="lg:hidden p-2 -ml-1 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-800 rounded-xl transition-all active:scale-90"
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6 text-primary dark:text-sky-300" /> : <Menu className="w-6 h-6" />}
+          </button>
+
+          {/* Brand Logo */}
           <button
             onClick={() => handleNavClick("home")}
             className="flex items-center gap-2.5 text-left focus:outline-none group cursor-pointer active:scale-95 transition-transform"
@@ -206,6 +221,23 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
             </button>
           )}
 
+          {/* Currency Switcher Dropdown */}
+          <div className="relative">
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              id="currency-select-nav"
+              aria-label="Seleccionar moneda"
+              className="px-2 py-1.5 rounded-xl text-xs font-bold bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 text-on-surface dark:text-slate-200 hover:bg-surface-container dark:hover:bg-slate-750 transition-all cursor-pointer shadow-xs outline-none focus:ring-1 focus:ring-secondary"
+            >
+              {availableCurrencies.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.flag} {c.code} ({c.symbol})
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Language Switcher Button (ES / EN) */}
           <button
             onClick={toggleLanguage}
@@ -237,7 +269,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
           <button
             onClick={onOpenAuthModal}
             id="login-profile-btn"
-            aria-label={currentUser ? `Cuenta de ${currentUser.name}` : (language === "en" ? "Sign In with Google" : "Acceder con Google")}
+            aria-label={currentUser ? `Cuenta de ${currentUser.name}` : "Acceder con Google"}
             className="flex items-center gap-2 bg-primary dark:bg-sky-600 text-white px-3 md:px-3.5 py-2 rounded-xl font-label-md text-xs font-bold hover:bg-primary-container dark:hover:bg-sky-500 transition-all shadow-sm shrink-0 cursor-pointer active:scale-95"
           >
             {currentUser ? (
@@ -270,34 +302,24 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                   />
                 </svg>
-                <span className="hidden sm:inline">{language === "en" ? "Sign In" : "Acceder"}</span>
+                <span className="hidden sm:inline">{language === "en" ? "Sign In" : "Acceder con Google"}</span>
               </>
             )}
-          </button>
-
-          {/* Mobile Hamburger Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            id="mobile-menu-toggle"
-            aria-label={mobileMenuOpen ? "Cerrar menú de navegación" : "Abrir menú de navegación"}
-            className="lg:hidden p-2 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-800 rounded-xl transition-all active:scale-90"
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6 text-primary dark:text-sky-300" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </div>
 
-      {/* Modern Mobile Hamburger Drawer & Backdrop Overlay */}
+      {/* Modern Mobile Hamburger Drawer & Backdrop Overlay (Opens smoothly from Left side) */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden flex justify-end">
+        <div className="fixed inset-0 z-50 lg:hidden flex justify-start">
           {/* Backdrop Blur Overlay */}
           <div
             className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
             onClick={() => setMobileMenuOpen(false)}
           />
 
-          {/* Slide-out Drawer Panel */}
-          <div className="relative w-full max-w-sm bg-surface-container-lowest dark:bg-slate-900 h-full shadow-2xl border-l border-outline-variant/30 dark:border-slate-800 flex flex-col z-10 animate-in slide-in-from-right duration-250">
+          {/* Slide-out Drawer Panel (Left-aligned) */}
+          <div className="relative w-full max-w-xs bg-surface-container-lowest dark:bg-slate-900 h-full shadow-2xl border-r border-outline-variant/30 dark:border-slate-800 flex flex-col z-10 animate-in slide-in-from-left duration-250">
             {/* Drawer Header */}
             <div className="p-4 border-b border-outline-variant/30 dark:border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -426,8 +448,25 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
               </div>
             </div>
 
-            {/* Drawer Footer Controls (Language & Theme) */}
+            {/* Drawer Footer Controls (Currency, Language & Theme) */}
             <div className="p-4 border-t border-outline-variant/30 dark:border-slate-800 bg-surface dark:bg-slate-900/80 space-y-3">
+              <div>
+                <label className="block text-[11px] font-bold text-on-surface-variant dark:text-slate-400 mb-1">
+                  {language === "en" ? "Preferred Currency" : "Moneda Preferida"}
+                </label>
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className="w-full py-2 px-3 rounded-xl bg-surface-container-lowest dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 text-xs font-bold text-on-surface dark:text-slate-200 outline-none"
+                >
+                  {availableCurrencies.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.flag} {c.code} - {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="flex items-center justify-between gap-2">
                 <button
                   onClick={toggleLanguage}

@@ -159,3 +159,11 @@ export function formatCurrencyAmount(amount: number, currencyCode: string): stri
 
   return `${curr.symbol} ${formattedNumber}`;
 }
+
+/**
+ * Converts a base EUR amount to the target currency and formats it.
+ */
+export function formatCurrency(amountInEur: number, targetCurrencyCode: string): string {
+  const converted = convertCurrency(amountInEur, "EUR", targetCurrencyCode);
+  return formatCurrencyAmount(converted, targetCurrencyCode);
+}

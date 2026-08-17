@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { ChatMessage, ChatConversation, Scholarship } from "../types";
 import { useLanguage } from "../lib/i18n";
+import { useCurrency } from "../lib/CurrencyContext";
+import { formatCurrency } from "../lib/currency";
 
 interface ChatIAProps {
   initialPrompt?: string;
@@ -33,6 +35,7 @@ interface ChatIAProps {
 
 export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContext }) => {
   const { language, t } = useLanguage();
+  const { currency } = useCurrency();
   const [conversations, setConversations] = useState<ChatConversation[]>([
     {
       id: "conv-1",
@@ -94,8 +97,16 @@ export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContex
   const [diagCareer, setDiagCareer] = useState<string>("Ingeniería de Software / IT");
   const [diagAge, setDiagAge] = useState<number>(28);
   const [diagFamily, setDiagFamily] = useState<string>("Soltero/a sin hijos");
-  const [diagEnglish, setDiagEnglish] = useState<string>("Intermedio (B1/B2)");
-  const [diagBudget, setDiagBudget] = useState<string>("$3,000 - $8,000 USD");
+  // Multilingual state
+  const [userLanguages, setUserLanguages] = useState<Array<{ name: string; level: string; enabled: boolean }>>([
+    { name: "Español", level: "Nativo / C2", enabled: true },
+    { name: "Inglés", level: "Intermedio (B2)", enabled: true },
+    { name: "Alemán", level: "Básico (A2)", enabled: false },
+    { name: "Francés", level: "Básico (A1/A2)", enabled: false },
+    { name: "Italiano", level: "Intermedio (B1)", enabled: false },
+    { name: "Portugués", level: "Intermedio (B1/B2)", enabled: false },
+  ]);
+  const [diagBudgetTier, setDiagBudgetTier] = useState<"low" | "medium" | "high" | "premium">("medium");
   const [diagGoal, setDiagGoal] = useState<string>("Beca de Maestría o Posgrado 100% financiada");
   const [diagOrigin, setDiagOrigin] = useState<string>("Colombia");
 
@@ -206,22 +217,36 @@ export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContex
   };
 
   const handleRunProfileDiagnosis = () => {
-    const generatedPrompt = `[DIAGNÓSTICO DE PERFIL MIGRATORIO PERSONALIZADO]
+    const activeLanguagesStr = userLanguages
+      .filter((l) => l.enabled)
+      .map((l) => `${l.name} (${l.level})`)
+      .join(", ") || "Solo Español Nativo";
+
+    const budgetLabels = {
+      low: `Menos de ${formatCurrency(2000, currency)} (Prioridad Becas 100% financiada)`,
+      medium: `${formatCurrency(3000, currency)} - ${formatCurrency(8000, currency)}`,
+      high: `${formatCurrency(8000, currency)} - ${formatCurrency(15000, currency)} (Sperrkonto / Cursos)`,
+      premium: `Más de ${formatCurrency(15000, currency)} (Estudios o mudanza familiar)`
+    };
+
+    const budgetSelectedStr = budgetLabels[diagBudgetTier];
+
+    const generatedPrompt = `[DIAGNÓSTICO DE PERFIL MIGRATORIO MULTILINGÜE Y PERSONALIZADO]
 Por favor analiza mi perfil completo y dime exactamente cuáles son mis mejores opciones de migración (¿Beca completa, Empleo calificado, Curso de idiomas con permiso laboral o Residencia?):
 - País de Origen: ${diagOrigin}
 - Carrera / Profesión: ${diagCareer}
 - Edad: ${diagAge} años
 - Situación Familiar: ${diagFamily}
-- Nivel de Idiomas: ${diagEnglish}
-- Presupuesto Disponible: ${diagBudget}
+- Dominio de Idiomas (Multilingüe): ${activeLanguagesStr}
+- Presupuesto Disponible: ${budgetSelectedStr} (${currency})
 - Meta Principal: ${diagGoal}
 
 Estructura tu diagnóstico con:
-1. 🏆 Top 2 Países recomendados acordes a mi carrera y edad.
+1. 🏆 Top 2 Países recomendados acordes a mi carrera, idiomas conocidos y edad.
 2. 🛣️ Vía óptima (Beca vs Trabajo vs Estudio) con programas oficiales reales (ej. DAAD, Chancenkarte, Stamp 2 Irlanda, Express Entry Canadá, Beca Carolina).
 3. 👨‍👩‍👧 Requisitos para mi familia (si aplica: permiso de trabajo para pareja, colegio público para hijos).
-4. 💰 Presupuesto estimado y fondos de manutención exigidos por consulados.
-5. 📋 3 Pasos concretos para empezar este mes.`;
+4. 💰 Presupuesto estimado en ${currency} y fondos de manutención exigidos por consulados.
+5. 📋 3 Pasos concretos para empezar este mes considerando mi nivel de idiomas.`;
 
     setShowProfileDiagnosisModal(false);
     handleSendMessage(generatedPrompt);
@@ -609,42 +634,76 @@ Estructura tu diagnóstico con:
                 </div>
               </div>
 
-              {/* Situación Familiar y Idiomas */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center gap-1.5">
-                    <Users className="w-3.5 h-3.5 text-secondary" />
-                    <span>{language === "en" ? "Family Status" : "Situación Familiar"}</span>
-                  </label>
-                  <select
-                    value={diagFamily}
-                    onChange={(e) => setDiagFamily(e.target.value)}
-                    className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
-                  >
-                    <option value="Soltero/a sin hijos">🧍 Soltero/a sin hijos</option>
-                    <option value="En pareja sin hijos">👫 En pareja sin hijos</option>
-                    <option value="Familia con 1 hijo">👨‍👩‍👧 Familia con 1 hijo</option>
-                    <option value="Familia con 2 o más hijos">👨‍👩‍👧‍👦 Familia con 2 o más hijos</option>
-                  </select>
-                </div>
+              {/* Situación Familiar */}
+              <div>
+                <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-secondary" />
+                  <span>{language === "en" ? "Family Status" : "Situación Familiar"}</span>
+                </label>
+                <select
+                  value={diagFamily}
+                  onChange={(e) => setDiagFamily(e.target.value)}
+                  className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
+                >
+                  <option value="Soltero/a sin hijos">🧍 Soltero/a sin hijos</option>
+                  <option value="En pareja sin hijos">👫 En pareja sin hijos</option>
+                  <option value="Familia con 1 hijo">👨‍👩‍👧 Familia con 1 hijo</option>
+                  <option value="Familia con 2 o más hijos">👨‍👩‍👧‍👦 Familia con 2 o más hijos</option>
+                </select>
+              </div>
 
-                <div>
-                  <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center gap-1.5">
+              {/* Idiomas Conocidos (Multilingüe) */}
+              <div className="space-y-2">
+                <label className="block font-bold text-primary dark:text-sky-300 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
                     <Languages className="w-3.5 h-3.5 text-secondary" />
-                    <span>{language === "en" ? "English / Languages" : "Nivel de Idiomas"}</span>
-                  </label>
-                  <select
-                    value={diagEnglish}
-                    onChange={(e) => setDiagEnglish(e.target.value)}
-                    className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
-                  >
-                    <option value="Solo español básico">Solo Español nativo</option>
-                    <option value="Inglés Básico (A2)">Inglés Básico (A2)</option>
-                    <option value="Inglés Intermedio (B1/B2)">Inglés Intermedio (B1/B2)</option>
-                    <option value="Inglés Avanzado (C1/C2)">Inglés Avanzado (C1/C2)</option>
-                    <option value="Alemán Básico/Intermedio">Alemán (A2/B1)</option>
-                    <option value="Francés Básico/Intermedio">Francés (B1/B2)</option>
-                  </select>
+                    <span>{language === "en" ? "Known Languages (Multilingual Profile)" : "Idiomas que dominas (Perfil Multilingüe)"}</span>
+                  </span>
+                  <span className="text-[11px] font-normal text-slate-500">Selecciona todos los que apliquen</span>
+                </label>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-surface dark:bg-slate-900/80 p-3 rounded-2xl border border-outline-variant/40 dark:border-slate-700/60 max-h-48 overflow-y-auto">
+                  {userLanguages.map((item, idx) => (
+                    <div
+                      key={item.name}
+                      className={`p-2 rounded-xl border flex items-center justify-between gap-2 transition-all ${
+                        item.enabled
+                          ? "bg-secondary/10 dark:bg-teal-950/40 border-secondary/40 text-primary dark:text-teal-200 font-semibold"
+                          : "bg-surface-container/40 dark:bg-slate-800/40 border-outline-variant/30 text-on-surface-variant/70 dark:text-slate-400 opacity-80"
+                      }`}
+                    >
+                      <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={item.enabled}
+                          onChange={(e) => {
+                            const updated = [...userLanguages];
+                            updated[idx].enabled = e.target.checked;
+                            setUserLanguages(updated);
+                          }}
+                          className="rounded text-secondary focus:ring-secondary w-3.5 h-3.5 accent-secondary cursor-pointer"
+                        />
+                        <span>{item.name}</span>
+                      </label>
+
+                      {item.enabled && (
+                        <select
+                          value={item.level}
+                          onChange={(e) => {
+                            const updated = [...userLanguages];
+                            updated[idx].level = e.target.value;
+                            setUserLanguages(updated);
+                          }}
+                          className="text-[11px] py-0.5 px-1.5 bg-surface dark:bg-slate-800 border border-outline-variant/50 rounded-lg outline-none text-on-surface dark:text-slate-200"
+                        >
+                          <option value="Básico (A1/A2)">A1/A2</option>
+                          <option value="Intermedio (B1/B2)">B1/B2</option>
+                          <option value="Avanzado (C1/C2)">C1/C2</option>
+                          <option value="Nativo / C2">Nativo</option>
+                        </select>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -653,17 +712,17 @@ Estructura tu diagnóstico con:
                 <div>
                   <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center gap-1.5">
                     <DollarSign className="w-3.5 h-3.5 text-secondary" />
-                    <span>{language === "en" ? "Available Budget / Savings" : "Presupuesto o Ahorro"}</span>
+                    <span>{language === "en" ? `Available Budget (${currency})` : `Presupuesto o Ahorro (${currency})`}</span>
                   </label>
                   <select
-                    value={diagBudget}
-                    onChange={(e) => setDiagBudget(e.target.value)}
+                    value={diagBudgetTier}
+                    onChange={(e) => setDiagBudgetTier(e.target.value as any)}
                     className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
                   >
-                    <option value="Menos de $2,000 USD">Menos de $2,000 USD (Prioridad Becas 100%)</option>
-                    <option value="$3,000 - $8,000 USD">$3,000 - $8,000 USD</option>
-                    <option value="$8,000 - $15,000 USD">$8,000 - $15,000 USD (Sperrkonto / Cursos)</option>
-                    <option value="Más de $15,000 USD">Más de $15,000 USD (Estudios familiares)</option>
+                    <option value="low">Menos de {formatCurrency(2000, currency)} (Prioridad Becas 100%)</option>
+                    <option value="medium">{formatCurrency(3000, currency)} - {formatCurrency(8000, currency)}</option>
+                    <option value="high">{formatCurrency(8000, currency)} - {formatCurrency(15000, currency)} (Sperrkonto / Cursos)</option>
+                    <option value="premium">Más de {formatCurrency(15000, currency)} (Estudios familiares)</option>
                   </select>
                 </div>
 
