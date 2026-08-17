@@ -368,6 +368,7 @@ export const MapaConsulados: React.FC<MapaConsuladosProps> = ({ initialCountry }
           <select
             value={destinationFilter}
             onChange={(e) => setDestinationFilter(e.target.value)}
+            id="map-destination-filter"
             className="p-2 bg-surface dark:bg-slate-800 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs font-semibold text-on-surface dark:text-slate-200"
           >
             <option value="todos">{language === "en" ? "Destination: All" : "País Destino: Todos"}</option>

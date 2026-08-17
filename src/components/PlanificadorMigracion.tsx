@@ -621,6 +621,7 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
                 <select
                   value={originCountry}
                   onChange={(e) => setOriginCountry(e.target.value)}
+                  id="planner-origin-country"
                   className="w-full px-3.5 py-2.5 bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 rounded-xl text-sm font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
                 >
                   {LATIN_AMERICAN_COUNTRIES.map((c) => (
@@ -638,6 +639,7 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
                 <select
                   value={destinationCountry}
                   onChange={(e) => setDestinationCountry(e.target.value)}
+                  id="planner-destination-country"
                   className="w-full px-3.5 py-2.5 bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 rounded-xl text-sm font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
                 >
                   {DESTINATION_COUNTRIES.map((c) => (

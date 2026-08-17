@@ -1132,7 +1132,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                       type="button"
                       onClick={() => setItemsPerPage(size)}
                       id={`items-per-page-${size === 0 ? "all" : size}`}
-                      className={`px-2 py-1 rounded-lg transition-colors ${
+                      className={`min-w-[40px] min-h-[40px] sm:min-w-0 sm:min-h-0 px-2 py-1 inline-flex items-center justify-center rounded-lg transition-colors ${
                         itemsPerPage === size
                           ? "bg-primary/15 dark:bg-sky-900/60 text-primary dark:text-sky-300 font-bold"
                           : "text-on-surface-variant dark:text-slate-400 hover:bg-surface-container dark:hover:bg-slate-800"

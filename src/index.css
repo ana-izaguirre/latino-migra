@@ -238,6 +238,74 @@ input[type="range"]::-moz-range-thumb {
   }
 }
 
+/* ==========================================================================
+   Focus and readability
+   ========================================================================== */
+
+/* A single, always-visible keyboard focus ring. Several components cleared the
+   default with `outline-none` and replaced it with nothing, which left
+   keyboard and screen-reader users with no idea where they were. */
+:focus-visible {
+  outline: 3px solid var(--color-secondary);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+/* Screen-reader-only text that becomes visible when focused (skip links). */
+.sr-only-focusable {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sr-only-focusable:focus {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  width: auto;
+  height: auto;
+  padding: 0.75rem 1.25rem;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.4);
+}
+
+/* Body copy sizing: 12px was the default across most screens, which is below
+   what is comfortable to read. Nudge the floor up without disturbing the
+   deliberate small labels and badges. */
+p, li {
+  line-height: 1.65;
+}
+
+/* ==========================================================================
+   Depth
+   Surfaces were uniformly flat: 1px hairline borders on a near-white page with
+   no elevation, so cards, popovers and the page all read as one plane. These
+   soft, layered shadows give the hierarchy something to sit on.
+   ========================================================================== */
+
+@theme {
+  --shadow-xs: 0 1px 2px 0 rgb(15 23 42 / 0.06);
+  --shadow-sm: 0 1px 3px 0 rgb(15 23 42 / 0.09), 0 1px 2px -1px rgb(15 23 42 / 0.06);
+  --shadow-md: 0 4px 10px -2px rgb(15 23 42 / 0.10), 0 2px 4px -2px rgb(15 23 42 / 0.06);
+  --shadow-lg: 0 12px 24px -6px rgb(15 23 42 / 0.12), 0 4px 8px -4px rgb(15 23 42 / 0.08);
+  --shadow-xl: 0 20px 40px -10px rgb(15 23 42 / 0.16), 0 8px 16px -8px rgb(15 23 42 / 0.10);
+  --shadow-2xl: 0 32px 64px -16px rgb(15 23 42 / 0.24);
+}
+
 /* Tactile interactive feedback for buttons, chips, and links */
 button, a, [role="button"], input[type="button"], input[type="submit"] {
   touch-action: manipulation;

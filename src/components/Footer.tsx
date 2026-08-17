@@ -60,7 +60,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               <li>
                 <button
                   onClick={() => handleNavigate("planificador")}
-                  className="footer-link w-full flex items-center gap-2 py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
+                  className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
                 >
                   <Compass className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                   <span>{t("nav.planificador", "Planificador 360° (Presupuesto & Clima)")}</span>
@@ -69,7 +69,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               <li>
                 <button
                   onClick={() => handleNavigate("calculadora")}
-                  className="footer-link w-full flex items-center gap-2 py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
+                  className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
                 >
                   <Calculator className="w-3.5 h-3.5 text-teal-500 shrink-0" />
                   <span>{t("nav.calculadora", "Calculadora de Costo de Vida y Divisas")}</span>
@@ -78,7 +78,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               <li>
                 <button
                   onClick={() => handleNavigate("becas")}
-                  className="footer-link w-full flex items-center gap-2 py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
+                  className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
                 >
                   <GraduationCap className="w-3.5 h-3.5 text-sky-500 shrink-0" />
                   <span>{t("nav.becas", "Catálogo de Becas 2026-2027")}</span>
@@ -87,7 +87,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               <li>
                 <button
                   onClick={() => handleNavigate("voluntariados")}
-                  className="footer-link w-full flex items-center gap-2 py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
+                  className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
                 >
                   <HeartHandshake className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                   <span>{language === "en" ? "Volunteering & Exchanges" : "Voluntariados e Intercambios"}</span>
@@ -96,7 +96,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               <li>
                 <button
                   onClick={() => handleNavigate("mapa")}
-                  className="footer-link w-full flex items-center gap-2 py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
+                  className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
                 >
                   <MapPin className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
                   <span>{t("nav.mapa", "Mapa Consular & Visados")}</span>
@@ -105,7 +105,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               <li>
                 <button
                   onClick={() => handleNavigate("guia")}
-                  className="footer-link w-full flex items-center gap-2 py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
+                  className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
                 >
                   <BookOpen className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                   <span>{t("nav.guia", "Guía Oficial de Migración")}</span>
@@ -123,7 +123,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               <li>
                 <button
                   onClick={() => handleNavigate("comunidad")}
-                  className="footer-link w-full flex items-center gap-2 py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
+                  className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
                 >
                   <MessageSquare className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                   <span>{language === "en" ? "Community Forum & Experiences" : "Foro de Migrantes & Consejos"}</span>
@@ -132,7 +132,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               <li>
                 <button
                   onClick={() => handleNavigate("feedback")}
-                  className="footer-link w-full flex items-center gap-2 py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
+                  className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
                 >
                   <MessageSquarePlus className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                   <span>{language === "en" ? "Suggest New Feature or Scholarship" : "Sugerir Nueva Beca o Función"}</span>
@@ -141,7 +141,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               <li>
                 <button
                   onClick={() => handleNavigate("chat")}
-                  className="footer-link w-full flex items-center gap-2 py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
+                  className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
                 >
                   <Bot className="w-3.5 h-3.5 text-purple-500 shrink-0" />
                   <span>{language === "en" ? "AI Migration Consultant" : "Consultor Migratorio con IA"}</span>
@@ -163,7 +163,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               <li>
                 <button
                   onClick={() => setActiveModal("terms")}
-                  className="footer-link w-full flex items-center gap-2 py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
+                  className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
                 >
                   <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                   <span>{t("footer.terms", "Términos y Condiciones de Uso")}</span>
@@ -172,7 +172,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               <li>
                 <button
                   onClick={() => setActiveModal("privacy")}
-                  className="footer-link w-full flex items-center gap-2 py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
+                  className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
                 >
                   <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                   <span>{t("footer.privacy", "Política de Privacidad")}</span>
@@ -181,7 +181,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               <li>
                 <button
                   onClick={() => setActiveModal("guidelines")}
-                  className="footer-link w-full flex items-center gap-2 py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
+                  className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
                 >
                   <HelpCircle className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                   <span>{t("footer.guidelines", "Normas de la Comunidad")}</span>
@@ -190,7 +190,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               <li>
                 <button
                   onClick={() => setActiveModal("contact")}
-                  className="footer-link w-full flex items-center gap-2 py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
+                  className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
                 >
                   <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                   <span>{t("footer.contact", "Contacto y Soporte")}</span>

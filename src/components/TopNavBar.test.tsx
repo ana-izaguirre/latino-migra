@@ -22,8 +22,19 @@ describe('TopNavBar Component', () => {
     expect(screen.getByText(/Becas & Estudios/)).toBeInTheDocument();
     expect(screen.getByText('Guía de Migración')).toBeInTheDocument();
     expect(screen.getByText('Mapa Consular')).toBeInTheDocument();
-    expect(screen.getByText('Comunidad')).toBeInTheDocument();
     expect(screen.getByText('Chat IA')).toBeInTheDocument();
+  });
+
+  it('groups secondary destinations behind the tools menu', () => {
+    render(<TopNavBar {...defaultProps} />);
+
+    // Not inline in the bar...
+    expect(screen.queryByText('Comunidad')).not.toBeInTheDocument();
+
+    // ...but one click away.
+    fireEvent.click(screen.getByRole('button', { name: /Herramientas/i }));
+    expect(screen.getByText('Comunidad')).toBeInTheDocument();
+    expect(screen.getByText(/Planificador/i)).toBeInTheDocument();
   });
 
   it('calls setActiveTab when a navigation item or logo is clicked', () => {
@@ -38,8 +49,11 @@ describe('TopNavBar Component', () => {
     expect(defaultProps.setActiveTab).toHaveBeenCalledWith('home');
   });
 
-  it('calls toggleTheme when the theme button is clicked', () => {
+  it('calls toggleTheme from the preferences menu', () => {
     render(<TopNavBar {...defaultProps} />);
+
+    // Currency, language and theme are grouped under one preferences menu.
+    fireEvent.click(screen.getByRole('button', { name: /Preferencias/i }));
     const themeBtn = screen.getByTitle(/Cambiar a Modo/i);
     fireEvent.click(themeBtn);
     expect(defaultProps.toggleTheme).toHaveBeenCalledTimes(1);

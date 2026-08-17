@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import {
   Globe,
   Search,
@@ -21,7 +21,10 @@ import {
   Users,
   MessageSquarePlus,
   MessageSquare,
-  Database
+  Database,
+  LayoutGrid,
+  ChevronDown,
+  Settings
 } from "lucide-react";
 import { NavigationTab, ThemeMode, GoogleUser } from "../types";
 import { useLanguage } from "../lib/i18n";
@@ -64,7 +67,38 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
   const { language, setLanguage, t } = useLanguage();
   const { currency, setCurrency, availableCurrencies } = useCurrency();
   const [langToast, setLangToast] = useState<string | null>(null);
+  const [toolsMenuOpen, setToolsMenuOpen] = useState(false);
+  const [prefsMenuOpen, setPrefsMenuOpen] = useState(false);
   const resetScrollOnCloseRef = useRef(false);
+  const toolsMenuRef = useRef<HTMLDivElement>(null);
+  const prefsMenuRef = useRef<HTMLDivElement>(null);
+
+  // Dismiss the desktop popover menus on outside click or Escape
+  useEffect(() => {
+    if (!toolsMenuOpen && !prefsMenuOpen) return;
+
+    const onPointerDown = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (toolsMenuRef.current && !toolsMenuRef.current.contains(target)) {
+        setToolsMenuOpen(false);
+      }
+      if (prefsMenuRef.current && !prefsMenuRef.current.contains(target)) {
+        setPrefsMenuOpen(false);
+      }
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setToolsMenuOpen(false);
+        setPrefsMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [toolsMenuOpen, prefsMenuOpen]);
 
   // Close mobile drawer on resize to desktop
   useEffect(() => {
@@ -79,7 +113,12 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
 
   // Prevent background scroll when mobile drawer is open. The scroll position
   // is restored on close so iOS does not jump the page back to the top.
-  useEffect(() => {
+  //
+  // useLayoutEffect, not useEffect: the drawer is a full-screen fixed overlay,
+  // and by the time a passive effect runs the browser has already painted it
+  // and clamped the scroll position to 0 — so the position being saved was
+  // always 0 and dismissing the drawer sent the user back to the top.
+  useLayoutEffect(() => {
     if (!mobileMenuOpen) return;
 
     const scrollY = window.scrollY;
@@ -105,7 +144,17 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
       // merely dismissing it should return to where the user was reading.
       const target = resetScrollOnCloseRef.current ? 0 : scrollY;
       resetScrollOnCloseRef.current = false;
-      window.scrollTo({ top: target, behavior: "auto" });
+
+      // Fixing the body collapses the document to viewport height, so the
+      // scrollable range is 0 until layout is recalculated. Read a layout
+      // property to force that reflow, otherwise the scroll below is clamped
+      // to 0 and the user is thrown back to the top of the page.
+      void document.body.offsetHeight;
+
+      // "instant" rather than "auto": the page sets `scroll-behavior: smooth`,
+      // and "auto" defers to that, which would animate the restore and leave
+      // the user watching the page glide back to where they already were.
+      window.scrollTo({ top: target, behavior: "instant" });
     };
   }, [mobileMenuOpen]);
 
@@ -119,21 +168,36 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [mobileMenuOpen]);
 
-  const allNavItems: { id: NavigationTab; label: string; icon: React.ReactNode; adminOnly?: boolean }[] = [
+  type NavItem = {
+    id: NavigationTab;
+    label: string;
+    icon: React.ReactNode;
+    adminOnly?: boolean;
+    /** Shown inline in the desktop bar; the rest live under "Herramientas". */
+    primary?: boolean;
+  };
+
+  // Ten inline items did not fit the desktop bar: they overlapped each other
+  // and the account controls. The five most-used destinations stay visible and
+  // the rest move into a single grouped menu.
+  const allNavItems: NavItem[] = [
+    { id: "becas", label: t("nav.becas", "Becas"), icon: <GraduationCap className="w-4 h-4 text-sky-500" />, primary: true },
+    { id: "guia", label: t("nav.guia", "Guía de Migración"), icon: <BookOpen className="w-4 h-4 text-blue-500" />, primary: true },
+    { id: "mapa", label: t("nav.mapa", "Mapa Consular"), icon: <MapPin className="w-4 h-4 text-indigo-500" />, primary: true },
+    { id: "comunidad", label: t("nav.comunidad", "Comunidad"), icon: <Users className="w-4 h-4 text-amber-500" /> },
+    { id: "chat", label: t("nav.chat", "Chat IA"), icon: <Sparkles className="w-4 h-4 text-purple-500" />, primary: true },
     { id: "planificador", label: t("nav.planificador", "Planificador 360°"), icon: <Compass className="w-4 h-4 text-emerald-500" /> },
     { id: "calculadora", label: t("nav.calculadora", "Calculadora Costo de Vida"), icon: <Calculator className="w-4 h-4 text-teal-500" /> },
-    { id: "becas", label: t("nav.becas", "Becas"), icon: <GraduationCap className="w-4 h-4 text-sky-500" /> },
     { id: "voluntariados", label: t("nav.voluntariados", "Voluntariados"), icon: <HeartHandshake className="w-4 h-4 text-rose-500" /> },
-    { id: "guia", label: t("nav.guia", "Guía de Migración"), icon: <BookOpen className="w-4 h-4 text-blue-500" /> },
-    { id: "mapa", label: t("nav.mapa", "Mapa Consular"), icon: <MapPin className="w-4 h-4 text-indigo-500" /> },
-    { id: "comunidad", label: t("nav.comunidad", "Comunidad"), icon: <Users className="w-4 h-4 text-amber-500" /> },
     { id: "feedback", label: t("nav.feedback", "Sugerencias"), icon: <MessageSquarePlus className="w-4 h-4 text-pink-500" /> },
-    { id: "chat", label: t("nav.chat", "Chat IA"), icon: <Sparkles className="w-4 h-4 text-purple-500" /> },
     { id: "admin", label: t("nav.admin", "Panel Admin"), icon: <Database className="w-4 h-4 text-violet-500" />, adminOnly: true },
   ];
 
   const userIsAdmin = isAdmin(currentUser);
   const navItems = allNavItems.filter((item) => !item.adminOnly || userIsAdmin);
+  const primaryNavItems = navItems.filter((item) => item.primary);
+  const secondaryNavItems = navItems.filter((item) => !item.primary);
+  const secondaryIsActive = secondaryNavItems.some((item) => item.id === activeTab);
 
   const toggleLanguage = () => {
     const newLang = language === "es" ? "en" : "es";
@@ -180,7 +244,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
           {/* Brand Logo */}
           <button
             onClick={() => handleNavClick("home")}
-            className="flex items-center gap-2 sm:gap-2.5 min-w-0 text-left focus:outline-none group cursor-pointer active:scale-95 transition-transform"
+            className="flex items-center gap-2 sm:gap-2.5 min-w-0 lg:shrink-0 text-left focus:outline-none group cursor-pointer active:scale-95 transition-transform"
             id="nav-logo-button"
             aria-label="LatinoMigra Inicio"
           >
@@ -198,16 +262,17 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
           </button>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-2 xl:gap-3 pl-2">
-            {navItems.map((item) => {
+          <div className="hidden lg:flex items-center gap-1 xl:gap-2 pl-2">
+            {primaryNavItems.map((item) => {
               const isActive = activeTab === item.id;
               return (
                 <button
                   key={item.id}
                   onClick={() => handleNavClick(item.id)}
                   id={`nav-item-${item.id}`}
+                  aria-current={isActive ? "page" : undefined}
                   aria-label={item.id === "guia" ? "Guía de Migración" : item.label}
-                  className={`font-body-md text-xs xl:text-sm font-medium transition-all py-1.5 px-2.5 rounded-lg relative flex items-center gap-1.5 cursor-pointer whitespace-nowrap active:scale-95 select-none ${
+                  className={`font-body-md text-sm font-medium transition-all py-2 px-3 rounded-lg relative flex items-center gap-1.5 cursor-pointer whitespace-nowrap active:scale-95 select-none ${
                     isActive
                       ? "text-primary dark:text-sky-300 font-bold bg-primary/10 dark:bg-sky-950/40"
                       : "text-on-surface-variant dark:text-slate-300 hover:text-primary dark:hover:text-sky-300 hover:bg-surface-container dark:hover:bg-slate-800"
@@ -221,6 +286,63 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
                 </button>
               );
             })}
+
+            {/* Grouped menu for the remaining tools */}
+            {secondaryNavItems.length > 0 && (
+              <div className="relative" ref={toolsMenuRef}>
+                <button
+                  onClick={() => setToolsMenuOpen((open) => !open)}
+                  id="nav-tools-menu-btn"
+                  aria-haspopup="menu"
+                  aria-expanded={toolsMenuOpen}
+                  className={`font-body-md text-sm font-medium transition-all py-2 px-3 rounded-lg relative flex items-center gap-1.5 cursor-pointer whitespace-nowrap active:scale-95 select-none ${
+                    secondaryIsActive || toolsMenuOpen
+                      ? "text-primary dark:text-sky-300 font-bold bg-primary/10 dark:bg-sky-950/40"
+                      : "text-on-surface-variant dark:text-slate-300 hover:text-primary dark:hover:text-sky-300 hover:bg-surface-container dark:hover:bg-slate-800"
+                  }`}
+                >
+                  <LayoutGrid className="w-4 h-4 text-emerald-500 scale-90" />
+                  <span>{language === "en" ? "Tools" : "Herramientas"}</span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform ${toolsMenuOpen ? "rotate-180" : ""}`}
+                  />
+                  {secondaryIsActive && (
+                    <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-secondary dark:bg-teal-400 rounded-full" />
+                  )}
+                </button>
+
+                {toolsMenuOpen && (
+                  <div
+                    role="menu"
+                    id="nav-tools-menu"
+                    className="absolute left-0 top-full mt-2 w-72 p-2 bg-surface-container-lowest dark:bg-slate-900 rounded-2xl shadow-xl border border-outline-variant/50 dark:border-slate-700 animate-in fade-in z-50"
+                  >
+                    {secondaryNavItems.map((item) => {
+                      const isActive = activeTab === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          role="menuitem"
+                          onClick={() => {
+                            handleNavClick(item.id);
+                            setToolsMenuOpen(false);
+                          }}
+                          id={`nav-item-${item.id}`}
+                          className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-left transition-colors ${
+                            isActive
+                              ? "bg-primary/10 dark:bg-sky-950/50 text-primary dark:text-sky-300 font-bold"
+                              : "text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-800"
+                          }`}
+                        >
+                          {item.icon}
+                          <span>{item.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -268,52 +390,92 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
             </button>
           )}
 
-          {/* Currency Switcher Dropdown.
-              Hidden below lg: on a phone this select alone was 118px wide and
-              pushed the whole action cluster off-screen. The same control
-              lives in the mobile drawer footer. */}
-          <div className="relative hidden lg:block">
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              id="currency-select-nav"
-              aria-label="Seleccionar moneda"
-              className="px-2 py-1.5 rounded-xl text-xs font-bold bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 text-on-surface dark:text-slate-200 hover:bg-surface-container dark:hover:bg-slate-750 transition-all cursor-pointer shadow-xs outline-none focus:ring-1 focus:ring-secondary"
+          {/* Preferences menu (desktop).
+              Currency, language and theme used to sit in the bar as three bare
+              controls that crowded the navigation and offered no explanation of
+              what they did. Grouping them behind one labelled menu frees the
+              bar and gives each setting a plain-language label. On phones the
+              same settings live in the drawer footer. */}
+          <div className="relative hidden lg:block" ref={prefsMenuRef}>
+            <button
+              onClick={() => setPrefsMenuOpen((open) => !open)}
+              id="preferences-menu-btn"
+              aria-haspopup="menu"
+              aria-expanded={prefsMenuOpen}
+              aria-label={language === "en" ? "Preferences" : "Preferencias"}
+              title={language === "en" ? "Preferences" : "Preferencias"}
+              className={`tap-target p-2 rounded-xl transition-all cursor-pointer active:scale-90 ${
+                prefsMenuOpen
+                  ? "bg-primary/10 dark:bg-sky-950/40 text-primary dark:text-sky-300"
+                  : "text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-800"
+              }`}
             >
-              {availableCurrencies.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.flag} {c.code} ({c.symbol})
-                </option>
-              ))}
-            </select>
-          </div>
+              <Settings className="w-5 h-5" />
+            </button>
 
-          {/* Language Switcher Button (ES / EN) */}
-          <button
-            onClick={toggleLanguage}
-            id="lang-toggle-btn"
-            title={language === "es" ? "Cambiar a Inglés / Switch to English" : "Cambiar a Español / Switch to Spanish"}
-            className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 text-on-surface dark:text-slate-200 hover:bg-surface-container dark:hover:bg-slate-750 transition-all cursor-pointer shadow-xs active:scale-95 active:bg-secondary/20"
-            aria-label="Cambiar Idioma"
-          >
-            <Languages className="w-3.5 h-3.5 text-secondary dark:text-teal-400" />
-            <span className="font-mono">{language === "es" ? "🇪🇸 ES" : "🇺🇸 EN"}</span>
-          </button>
+            {prefsMenuOpen && (
+              <div
+                role="menu"
+                id="preferences-menu"
+                className="absolute right-0 top-full mt-2 w-72 p-3 space-y-3 bg-surface-container-lowest dark:bg-slate-900 rounded-2xl shadow-xl border border-outline-variant/50 dark:border-slate-700 animate-in fade-in z-50"
+              >
+                <div>
+                  <label
+                    htmlFor="currency-select-nav"
+                    className="block text-xs font-bold text-on-surface dark:text-slate-200 mb-1.5"
+                  >
+                    {language === "en" ? "Show prices in" : "Mostrar precios en"}
+                  </label>
+                  <select
+                    value={currency}
+                    onChange={(e) => setCurrency(e.target.value)}
+                    id="currency-select-nav"
+                    className="w-full px-3 py-2 rounded-xl text-sm font-semibold bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 text-on-surface dark:text-slate-200 cursor-pointer outline-none focus:ring-2 focus:ring-secondary"
+                  >
+                    {availableCurrencies.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.flag} {c.code} — {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-          {/* Theme Toggle Button */}
-          <button
-            onClick={toggleTheme}
-            id="theme-toggle-btn"
-            title={theme === "light" ? "Cambiar a Modo Oscuro" : "Cambiar a Modo Claro"}
-            className="tap-target p-2 rounded-xl text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-800 transition-all cursor-pointer active:scale-90 active:rotate-12"
-            aria-label="Cambiar tema visual"
-          >
-            {theme === "light" ? (
-              <Moon className="w-5 h-5 text-slate-700 hover:text-primary transition-colors" />
-            ) : (
-              <Sun className="w-5 h-5 text-amber-300 hover:text-amber-400 transition-colors" />
+                <button
+                  onClick={toggleLanguage}
+                  id="lang-toggle-btn"
+                  className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 text-on-surface dark:text-slate-200 hover:bg-surface-container dark:hover:bg-slate-700 transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <Languages className="w-4 h-4 text-secondary dark:text-teal-400" />
+                    {language === "en" ? "Language" : "Idioma"}
+                  </span>
+                  <span>{language === "es" ? "🇪🇸 Español" : "🇺🇸 English"}</span>
+                </button>
+
+                <button
+                  onClick={toggleTheme}
+                  id="theme-toggle-btn"
+                  title={theme === "light" ? "Cambiar a Modo Oscuro" : "Cambiar a Modo Claro"}
+                  aria-label="Cambiar tema visual"
+                  className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 text-on-surface dark:text-slate-200 hover:bg-surface-container dark:hover:bg-slate-700 transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    {theme === "light" ? (
+                      <Moon className="w-4 h-4 text-slate-700 dark:text-slate-300" />
+                    ) : (
+                      <Sun className="w-4 h-4 text-amber-400" />
+                    )}
+                    {language === "en" ? "Appearance" : "Apariencia"}
+                  </span>
+                  <span>
+                    {theme === "light"
+                      ? language === "en" ? "Light" : "Claro"
+                      : language === "en" ? "Dark" : "Oscuro"}
+                  </span>
+                </button>
+              </div>
             )}
-          </button>
+          </div>
 
           {/* Login / Profile Button */}
           <button
