@@ -11,7 +11,21 @@ export default defineConfig({
     include: ['src/**/*.test.{ts,tsx}'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      // json-summary feeds scripts/coverage-summary.mjs, which renders the
+      // totals into the CI job summary.
+      reporter: ['text', 'json', 'json-summary', 'html'],
+      exclude: [
+        'node_modules/**',
+        'dist/**',
+        'coverage/**',
+        'scripts/**',
+        'tests/**',
+        'src/test/**',
+        '**/*.test.{ts,tsx}',
+        '**/*.config.{ts,js,mjs}',
+        'src/main.tsx',
+        'src/vite-env.d.ts',
+      ],
     },
   },
   resolve: {

@@ -11,16 +11,31 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Administrators, kept in sync with ADMIN_EMAILS in src/lib/authUtils.ts.
+    // The client-side check there is for showing UI only; this is the one that
+    // actually protects the data.
+    function isAdmin() {
+      return isSignedIn()
+             && request.auth.token.email_verified == true
+             && request.auth.token.email.lower() in [
+                  'ana.izaguirrematamoros@gmail.com',
+                  'latinomigra@gmail.com',
+                  'admin@latinomigra.com',
+                  'ana.izaguirre@gmail.com'
+                ];
+    }
+
     // Default deny catch-all
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // Public Scholarships Catalog: Anyone can read
+    // Public Scholarships Catalog: anyone can read, only admins can change it.
+    // This previously allowed any signed-in user to write, which meant anyone
+    // with a Google account could rewrite or delete the entire catalogue.
     match /scholarships/{scholarshipId} {
       allow read: if true;
-      // Allow write if authenticated or admin / backend
-      allow write: if isSignedIn();
+      allow write: if isAdmin();
     }
 
     // User profile: owner can read/write
@@ -59,7 +74,10 @@ service cloud.firestore {
                     && request.resource.data.title.size() <= 300
                     && request.resource.data.description is string
                     && request.resource.data.description.size() <= 3000;
-      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasAny(['upvotes']);
+      // hasOnly, not hasAny: hasAny passes as long as *one* affected key is in
+      // the list, so a write of {upvotes: 999, description: "spam"} was
+      // accepted and let anyone rewrite any suggestion.
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['upvotes']);
       allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
 
@@ -70,8 +88,9 @@ service cloud.firestore {
                     && request.resource.data.title.size() <= 300
                     && request.resource.data.content is string
                     && request.resource.data.content.size() <= 5000;
-      // Allow like count increment / reply count updates
-      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasAny(['likes', 'repliesCount']);
+      // Allow like count increment / reply count updates only. hasAny would
+      // accept a write that also rewrote the post's title or content.
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'repliesCount']);
       allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
 
       // Subcollection: Replies to forum posts

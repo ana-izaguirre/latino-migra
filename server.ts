@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
+import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -16,7 +16,35 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 // header by appending their own entries.
 app.set("trust proxy", 1);
 
-app.use(express.json({ limit: "10mb" }));
+/**
+ * Security headers.
+ *
+ * No page-level Content-Security-Policy here on purpose. In production this
+ * process only answers /api/*: the HTML and assets are served by Vercel's CDN,
+ * so a CSP set here would never reach the document but *would* apply to the
+ * dev server, where it blocks Vite's inline preamble and stops React from
+ * mounting at all. Page CSP belongs in vercel.json (see issue for the GA4
+ * inline script, which needs a hash or nonce first).
+ */
+app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+
+// The API only ever returns JSON, so it can take the strictest possible policy:
+// nothing is allowed to load or execute from an API response.
+app.use(
+  "/api",
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+      baseUri: ["'none'"],
+      formAction: ["'none'"],
+    },
+  })
+);
+
+// 10mb was sized for file uploads the API does not accept. The chat endpoint
+// only takes a message and a short history, both length-capped below.
+app.use(express.json({ limit: "128kb" }));
 
 /**
  * Rate limiting.
@@ -88,12 +116,22 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok", app: "LatinoMigra" });
 });
 
+/** Caps on untrusted input forwarded to the model, to bound cost and abuse. */
+const MAX_MESSAGE_LENGTH = 4000;
+const MAX_HISTORY_TURNS = 20;
+
 app.post("/api/chat", chatLimiter, async (req, res) => {
   try {
     const { message, history } = req.body;
 
     if (!message || typeof message !== "string") {
       return res.status(400).json({ error: "El mensaje es requerido." });
+    }
+
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      return res.status(413).json({
+        error: `El mensaje supera el límite de ${MAX_MESSAGE_LENGTH} caracteres.`,
+      });
     }
 
     const systemInstruction = `
@@ -116,11 +154,15 @@ Capacidades y Principios de Respuesta:
     // Construct conversation context if provided
     let contents = [];
     if (history && Array.isArray(history) && history.length > 0) {
-      for (const item of history) {
+      // Only the most recent turns are forwarded, and each is length-capped,
+      // so a caller cannot inflate a request with unbounded history.
+      for (const item of history.slice(-MAX_HISTORY_TURNS)) {
+        if (typeof item?.content !== "string") continue;
+        const text = item.content.slice(0, MAX_MESSAGE_LENGTH);
         if (item.role === "user") {
-          contents.push({ role: "user", parts: [{ text: item.content }] });
+          contents.push({ role: "user", parts: [{ text }] });
         } else if (item.role === "model" || item.role === "assistant") {
-          contents.push({ role: "model", parts: [{ text: item.content }] });
+          contents.push({ role: "model", parts: [{ text }] });
         }
       }
     }
@@ -152,8 +194,17 @@ app.post("/api/cron/sync-scholarships", cronLimiter, async (req, res) => {
   try {
     const { academicYear = "2026-2027", secretKey } = req.body;
 
-    // Optional webhook security guard if CRON_SECRET is configured
-    if (process.env.CRON_SECRET && secretKey !== process.env.CRON_SECRET) {
+    // Fails closed. This used to be `if (process.env.CRON_SECRET && ...)`,
+    // which meant that with the variable unset the endpoint was wide open and
+    // any caller could burn the project's Gemini quota.
+    const cronSecret = process.env.CRON_SECRET;
+    if (!cronSecret) {
+      console.error("CRON_SECRET is not configured; refusing to run the sync job.");
+      return res.status(503).json({
+        error: "El sincronizador no está configurado en este entorno.",
+      });
+    }
+    if (secretKey !== cronSecret) {
       return res.status(401).json({ error: "Unauthorized: Invalid CRON_SECRET key." });
     }
 
@@ -247,6 +298,9 @@ Genera al menos 15 convocatorias oficiales líderes. Asegúrate de que el format
 // Vite Development or Production Server
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
+    // Imported lazily so Vite is never pulled into the production bundle or
+    // the Vercel serverless function, which only ever serve the API routes.
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
@@ -265,10 +319,14 @@ async function startServer() {
   });
 }
 
-// Exported so the rate limiting behaviour can be exercised from tests without
-// booting Vite or binding a port.
+// Exported so tests can exercise the routes without booting Vite or binding a
+// port, and so the Vercel serverless entry point in api/index.ts can mount the
+// same app rather than duplicating it.
 export { app, apiLimiter, chatLimiter, cronLimiter, staticLimiter, buildLimiter };
+export default app;
 
-if (process.env.NODE_ENV !== "test") {
+// On Vercel each request is handled by the exported app, so there is no server
+// to start and no port to bind.
+if (process.env.NODE_ENV !== "test" && !process.env.VERCEL) {
   startServer();
 }

@@ -1,10 +1,16 @@
-name: Sincronización Automática Anual de Becas (Cron Job)
+name: Sincronización Automática de Becas (Cron Job)
 
 on:
   schedule:
-    # Se ejecuta todos los domingos a las 04:00 UTC (o el primer día de cada mes)
+    # Domingos a las 04:00 UTC
     - cron: '0 4 * * 0'
-  workflow_dispatch: # Permite ejecutar el job manualmente desde la consola de GitHub
+  workflow_dispatch:
+    inputs:
+      academic_year:
+        description: 'Ciclo académico a sincronizar (ej. 2026-2027)'
+        required: false
+        default: '2026-2027'
+        type: string
 
 permissions:
   contents: read
@@ -13,26 +19,51 @@ jobs:
   update-scholarships:
     name: Actualizar Convocatorias y Fechas de Becas
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    timeout-minutes: 10
     steps:
-      - name: Checkout Código
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Instalar Dependencias
-        run: npm ci
-
-      - name: Ejecutar Sincronizador con Gemini IA & Firestore
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
-          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+      # This job previously installed the whole project and then only ran an
+      # `echo`, so it consumed CI minutes every week without syncing anything.
+      # It now calls the deployed endpoint, which owns the Gemini call and the
+      # Firestore write, and fails loudly when the sync does not succeed.
+      - name: Verificar configuración
         run: |
-          echo "Ejecutando actualización anual de convocatorias..."
-          # El script contacta los portales oficiales y actualiza Firestore
+          if [ -z "${{ secrets.CRON_SECRET }}" ]; then
+            echo "::error::CRON_SECRET no está configurado en los secrets del repositorio."
+            exit 1
+          fi
+          if [ -z "${{ vars.APP_BASE_URL }}" ]; then
+            echo "::error::La variable APP_BASE_URL no está configurada (ej. https://latinomigra.vercel.app)."
+            exit 1
+          fi
+
+      - name: Ejecutar sincronización de convocatorias
+        env:
+          APP_BASE_URL: ${{ vars.APP_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          ACADEMIC_YEAR: ${{ github.event.inputs.academic_year || '2026-2027' }}
+        run: |
+          echo "Sincronizando convocatorias para el ciclo ${ACADEMIC_YEAR}..."
+
+          http_code=$(curl --silent --show-error --fail-with-body \
+            --max-time 300 \
+            --retry 2 --retry-delay 10 \
+            --output response.json \
+            --write-out '%{http_code}' \
+            -X POST "${APP_BASE_URL}/api/cron/sync-scholarships" \
+            -H 'Content-Type: application/json' \
+            -d "{\"academicYear\":\"${ACADEMIC_YEAR}\",\"secretKey\":\"${CRON_SECRET}\"}") || {
+              echo "::error::La petición de sincronización falló (HTTP ${http_code})."
+              # The body may echo the request, so surface only the error field.
+              jq -r '.error // "sin detalle"' response.json 2>/dev/null || true
+              exit 1
+            }
+
+          updated=$(jq -r '.updatedCount // 0' response.json)
+          echo "Convocatorias actualizadas: ${updated}"
+          echo "### Sincronización de becas" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Ciclo: \`${ACADEMIC_YEAR}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Convocatorias actualizadas: **${updated}**" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "${updated}" -eq 0 ]; then
+            echo "::warning::La sincronización no devolvió convocatorias."
+          fi

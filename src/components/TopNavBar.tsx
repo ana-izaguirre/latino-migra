@@ -262,7 +262,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
           </button>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-1 xl:gap-2 pl-2">
+          <div className="hidden lg:flex items-center gap-1 xl:gap-2 pl-2 min-w-0">
             {primaryNavItems.map((item) => {
               const isActive = activeTab === item.id;
               return (
@@ -359,22 +359,6 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
               )}
             </div>
           )}
-
-          {/* Quick Search Input */}
-          <div className="relative hidden 2xl:block">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                if (activeTab !== "becas") setActiveTab("becas");
-              }}
-              placeholder={language === "en" ? "Search scholarships or visas..." : "Buscar becas o visas..."}
-              id="global-search-input"
-              className="pl-9 pr-4 py-1.5 bg-surface dark:bg-slate-800 rounded-full border border-outline-variant/60 dark:border-slate-700 focus:border-secondary dark:focus:border-teal-400 focus:ring-1 focus:ring-secondary outline-none text-xs text-on-surface dark:text-slate-100 w-44 transition-all"
-            />
-          </div>
 
           {/* Notification Alerts Center Button */}
           {onOpenAlertsModal && (
