@@ -19,8 +19,8 @@ function main() {
   try {
     total = JSON.parse(readFileSync(SUMMARY_PATH, "utf8")).total;
   } catch (error) {
-    console.log("### Cobertura de tests\n");
-    console.log(`No se pudo leer \`coverage/coverage-summary.json\`: ${error.message}`);
+    console.log("### Test coverage\n");
+    console.log(`Could not read \`coverage/coverage-summary.json\`: ${error.message}`);
     return;
   }
 
@@ -30,8 +30,8 @@ function main() {
     return `| ${metric} | ${mark} ${pct}% | ${covered}/${count} |`;
   });
 
-  console.log("### Cobertura de tests\n");
-  console.log("| Métrica | % | Cubierto |");
+  console.log("### Test coverage\n");
+  console.log("| Metric | % | Covered |");
   console.log("|---|---|---|");
   console.log(rows.join("\n"));
 }

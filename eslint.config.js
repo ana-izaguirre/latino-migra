@@ -19,6 +19,8 @@ export default tseslint.config(
       "node_modules/**",
       "playwright-report/**",
       "test-results/**",
+      // Plain browser script loaded directly by index.html, outside the build.
+      "public/**",
     ],
   },
 

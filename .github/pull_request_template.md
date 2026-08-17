@@ -1,18 +1,18 @@
-## Qué cambia
+## What changes
 
-<!-- Una o dos frases. Si cierra un issue: "Closes #12" -->
+<!-- One or two sentences. If it closes an issue: "Closes #12" -->
 
-## Por qué
+## Why
 
-<!-- El problema que resuelve. Si es un bug, cómo se reproducía. -->
+<!-- The problem it solves. For a bug, how it reproduced. -->
 
-## Cómo probarlo
+## How to test
 
-<!-- Pasos concretos, o "cubierto por los tests" si aplica. -->
+<!-- Concrete steps, or "covered by the tests" where that applies. -->
 
 ## Checklist
 
-- [ ] Probado en móvil (375 px) y escritorio
-- [ ] Tests añadidos o actualizados
-- [ ] Sin secretos ni claves en el diff
-- [ ] Si toca datos o reglas de Firestore, revisadas las implicaciones de seguridad
+- [ ] Tested on mobile (375px) and desktop
+- [ ] Tests added or updated
+- [ ] No secrets or keys in the diff
+- [ ] If it touches data or Firestore rules, security implications reviewed

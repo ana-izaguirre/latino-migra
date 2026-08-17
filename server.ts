@@ -16,19 +16,53 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 // header by appending their own entries.
 app.set("trust proxy", 1);
 
+const isDevelopment = process.env.NODE_ENV !== "production";
+
 /**
- * Security headers.
+ * Security headers, including an enforced Content-Security-Policy.
  *
- * No page-level Content-Security-Policy here on purpose. In production this
- * process only answers /api/*: the HTML and assets are served by Vercel's CDN,
- * so a CSP set here would never reach the document but *would* apply to the
- * dev server, where it blocks Vite's inline preamble and stops React from
- * mounting at all. Page CSP belongs in vercel.json (see issue for the GA4
- * inline script, which needs a hash or nonce first).
+ * Disabling the CSP outright is not an option — it is the header that limits
+ * what a successful injection can do. The only reason it was hard to enable is
+ * that the Vite dev server injects an inline preamble script and opens an HMR
+ * websocket, both of which a strict policy blocks (React then never mounts).
+ * So the policy is enforced everywhere and only *relaxed* in development.
+ *
+ * The GA4 configuration was moved out of index.html into /analytics.js so
+ * production needs no 'unsafe-inline' for scripts.
  */
 app.use(
   helmet({
-    contentSecurityPolicy: process.env.NODE_ENV === "development" ? false : undefined,
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          "https://www.googletagmanager.com",
+          "https://maps.googleapis.com",
+          // Vite's dev preamble is inline and has no stable hash.
+          ...(isDevelopment ? ["'unsafe-inline'"] : []),
+        ],
+        // Tailwind injects styles at runtime.
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+        imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: [
+          "'self'",
+          "https://*.googleapis.com",
+          "https://*.firebaseio.com",
+          "https://www.google-analytics.com",
+          // HMR websocket.
+          ...(isDevelopment ? ["ws:", "wss:"] : []),
+        ],
+        frameSrc: ["'self'", "https://*.firebaseapp.com"],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        upgradeInsecureRequests: isDevelopment ? null : [],
+      },
+    },
+    // Cross-origin isolation would block the third-party maps and images.
     crossOriginEmbedderPolicy: false,
   })
 );

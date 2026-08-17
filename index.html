@@ -54,15 +54,8 @@
 
     <!-- Google Analytics 4 (GA4) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-MEASUREMENT_ID"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
-      gtag("js", new Date());
-      // Reemplaza 'G-MEASUREMENT_ID' con tu ID de seguimiento de Google Analytics
-      gtag("config", "G-MEASUREMENT_ID", { page_path: window.location.pathname });
-    </script>
+    <!-- Config lives in an external file so the page needs no script-src 'unsafe-inline'. -->
+    <script src="/analytics.js"></script>
   </head>
   <body>
     <div id="root"></div>

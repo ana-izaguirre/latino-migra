@@ -17,10 +17,6 @@
   ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index" },
-    {
-      "comment": "SPA fallback. Excludes /api/ (handled above) and /_vercel/, which Vercel injects for Analytics and Speed Insights — rewriting those to index.html makes both report 'No data available'.",
-      "source": "/((?!api/|_vercel/).*)",
-      "destination": "/index.html"
-    }
+    { "source": "/((?!api/|_vercel/).*)", "destination": "/index.html" }
   ]
 }

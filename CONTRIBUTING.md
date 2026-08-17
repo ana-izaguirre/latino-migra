@@ -1,55 +1,69 @@
-# Contribuir a LatinoMigra
+# Contributing to LatinoMigra
 
-## Comandos
+> Development artefacts — commits, pull requests, issues, code comments and these
+> docs — are written in English. The product itself (UI copy, guides, scholarship
+> data) stays in Spanish, since it is built for Latin American migrants.
+
+## Commands
 
 ```bash
-npm run dev            # servidor de desarrollo
+npm run dev            # development server
 npm run lint           # ESLint + TypeScript
-npm run lint:fix       # corrige lo autocorregible
-npm run format         # aplica Prettier
-npm run format:check   # verifica formato (lo que corre CI)
-npm run test:coverage  # unit tests + cobertura con umbrales
-npm run test:e2e       # Playwright (escritorio + móvil)
+npm run lint:fix       # auto-fix what can be fixed
+npm run format         # apply Prettier
+npm run format:check   # verify formatting (what CI runs)
+npm run test:coverage  # unit tests + coverage thresholds
+npm run test:e2e       # Playwright (desktop + mobile)
 ```
 
-## Reglas para fusionar en `main`
+## Merge requirements for `main`
 
-CI bloquea el merge si falla cualquiera de estas comprobaciones:
+CI blocks the merge if any of these fail:
 
-| Comprobación | Qué verifica |
+| Check | What it verifies |
 |---|---|
 | `format:check` | Prettier |
-| `lint` | ESLint (0 errores) + `tsc --noEmit` |
-| `test:coverage` | Tests y umbrales de cobertura |
-| `e2e-tests` | Playwright en escritorio y móvil |
+| `lint` | ESLint (0 errors) + `tsc --noEmit` |
+| `test:coverage` | Tests and coverage thresholds |
+| `e2e-tests` | Playwright on desktop and mobile |
 
-### Configuración en GitHub (una sola vez)
+### One-time GitHub setup
 
-**Settings → Branches → Add branch ruleset** sobre `main`:
+**Settings → Branches → Add branch ruleset** on `main`:
 
 - ☑️ Require a pull request before merging
-- ☑️ Require status checks to pass → seleccionar `Fast Unit Tests & Typecheck` y `End-to-End Tests`
+- ☑️ Require status checks to pass → select `Fast Unit Tests & Typecheck` and `End-to-End Tests`
 - ☑️ Require branches to be up to date before merging
 - ☑️ Block force pushes
 
-Como el proyecto lo mantiene una sola persona, **no** actives "Require approvals": te bloquearías a ti misma. La protección útil aquí es que los tests pasen, no que alguien apruebe.
+Since a single person maintains this project, do **not** enable "Require
+approvals" — you would lock yourself out. The protection that matters here is
+that the checks pass, not that someone approves.
 
-## Sobre el umbral de cobertura
+## About the coverage threshold
 
-Los umbrales viven en `vitest.config.ts` y funcionan como **trinquete**: están justo por debajo de la cobertura actual, así que nunca puede bajar, y se suben conforme entran tests.
+Thresholds live in `vitest.config.ts` and work as a **ratchet**: they sit just
+below current coverage, so it can never drop, and they are raised as tests land.
 
-Un umbral global del 95% no es realista hoy y sería contraproducente. El proyecto tiene ~11.900 líneas de componentes frente a ~1.550 de lógica pura. Llegar al 95% global obligaría a escribir miles de líneas de tests que sobre todo comprueban que el JSX se renderiza, lo cual da una falsa sensación de seguridad y frena cada cambio.
+A 95% global threshold is not realistic today and would be counterproductive.
+The codebase is ~11,900 lines of components against ~1,550 lines of pure logic.
+Reaching 95% globally would mean writing thousands of lines of tests that mostly
+assert that JSX renders — which buys false confidence and slows every change.
 
-La estrategia que sí funciona:
+What does work:
 
-1. **Cobertura alta donde importa**: `src/lib` es lógica pura y verificable. `PreferencesContext` ya está al 100% y tiene un umbral propio del 95%.
-2. **Trinquete global**: no puede bajar, y sube con cada PR que añada tests.
-3. **Cobertura del cambio**: lo nuevo llega cubierto. Con Codecov se puede exigir por PR sin necesidad de arreglar todo el pasado.
+1. **High coverage where it counts.** `src/lib` is pure, verifiable logic.
+   `PreferencesContext` is already at 100% and carries its own 95% threshold.
+2. **A global ratchet.** Coverage cannot fall, and rises with every PR that adds
+   tests.
+3. **Patch coverage.** New code arrives covered. Codecov can enforce this per PR
+   without having to fix the whole backlog first.
 
-Meta razonable a medio plazo: 70% global con `src/lib` por encima del 90%.
+Reasonable medium-term target: 70% globally, with `src/lib` above 90%.
 
-## Estilo
+## Style
 
-- Los componentes usan `const X: React.FC<Props> = ({...}) =>`.
-- Todo texto visible pasa por `t()` de `src/lib/i18n.tsx`, no por ternarios `language === "en" ? ...`.
-- Nada se guarda en `localStorage` ni `sessionStorage`; hay un test que lo verifica.
+- Components use `const X: React.FC<Props> = ({...}) =>`.
+- All user-visible text goes through `t()` from `src/lib/i18n.tsx`, not through
+  `language === "en" ? ...` ternaries.
+- Nothing is written to `localStorage` or `sessionStorage`; a test enforces this.
