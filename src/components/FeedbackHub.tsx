@@ -15,7 +15,7 @@ import {
   Bug,
   Heart,
   X,
-  Loader2
+  Loader2,
 } from "lucide-react";
 import { FeedbackSuggestion, GoogleUser } from "../types";
 import {
@@ -32,47 +32,57 @@ interface FeedbackHubProps {
 const INITIAL_SUGGESTIONS: FeedbackSuggestion[] = [
   {
     id: "sug-1",
-    title: "Calculadora de Conversión de Monedas en Vivo (COP, MXN, ARS, PEN, HNL, CLP a EUR/USD/AUD)",
-    description: "Sería genial poder ver los presupuestos mensuales de alquiler y manutención en la moneda local de mi país con el tipo de cambio oficial actualizado.",
+    title:
+      "Calculadora de Conversión de Monedas en Vivo (COP, MXN, ARS, PEN, HNL, CLP a EUR/USD/AUD)",
+    description:
+      "Sería genial poder ver los presupuestos mensuales de alquiler y manutención en la moneda local de mi país con el tipo de cambio oficial actualizado.",
     category: "feature",
     authorName: "Camila R.",
     authorCountry: "Colombia",
     upvotes: 48,
     hasUpvoted: false,
     status: "implementado",
-    officialResponse: "✅ ¡Ya implementado! Disponible en la Calculadora de Costo de Vida y Planificador con tasas de cambio oficiales en vivo para COP, MXN, ARS, PEN, HNL, CLP, BRL y GTQ.",
-    createdAt: "10 ago 2026"
+    officialResponse:
+      "✅ ¡Ya implementado! Disponible en la Calculadora de Costo de Vida y Planificador con tasas de cambio oficiales en vivo para COP, MXN, ARS, PEN, HNL, CLP, BRL y GTQ.",
+    createdAt: "10 ago 2026",
   },
   {
     id: "sug-2",
-    title: "Agregar Guía Paso a Paso para Visas Working Holiday y Nómada Digital en Portugal y Australia",
-    description: "Muchos latinoamericanos buscamos opciones de estudio, trabajo remoto y Working Holiday en Australia y Portugal.",
+    title:
+      "Agregar Guía Paso a Paso para Visas Working Holiday y Nómada Digital en Portugal y Australia",
+    description:
+      "Muchos latinoamericanos buscamos opciones de estudio, trabajo remoto y Working Holiday en Australia y Portugal.",
     category: "visa_update",
     authorName: "Mateo Silva",
     authorCountry: "Argentina",
     upvotes: 45,
     hasUpvoted: false,
     status: "implementado",
-    officialResponse: "✅ ¡Ya implementado! Se agregaron las guías oficiales completas de Australia (Subclass 500/462/485) y Portugal (Visto D4/D8 Nómada y Procura de Trabalho) con opciones de movilidad y empleo.",
-    createdAt: "11 ago 2026"
+    officialResponse:
+      "✅ ¡Ya implementado! Se agregaron las guías oficiales completas de Australia (Subclass 500/462/485) y Portugal (Visto D4/D8 Nómada y Procura de Trabalho) con opciones de movilidad y empleo.",
+    createdAt: "11 ago 2026",
   },
   {
     id: "sug-3",
     title: "Notificaciones y Recordatorios en Google Calendar para Cierre de Becas",
-    description: "Poder agendar con un solo clic en mi calendario la fecha de cierre de la beca con 7 días de anticipación.",
+    description:
+      "Poder agendar con un solo clic en mi calendario la fecha de cierre de la beca con 7 días de anticipación.",
     category: "feature",
     authorName: "Valeria Gómez",
     authorCountry: "México",
     upvotes: 65,
     hasUpvoted: true,
     status: "implementado",
-    officialResponse: "✅ ¡Ya implementado! En cada tarjeta de beca ahora puedes hacer clic en 'Agendar en Google Calendar'.",
-    createdAt: "05 ago 2026"
+    officialResponse:
+      "✅ ¡Ya implementado! En cada tarjeta de beca ahora puedes hacer clic en 'Agendar en Google Calendar'.",
+    createdAt: "05 ago 2026",
   },
   {
     id: "sug-4",
-    title: "Sección especial con checklist para familias que viajan con niños pequeños (colegios y vacunas)",
-    description: "Información clara sobre la inscripción al colegio público y cómo apostillar actas de nacimiento.",
+    title:
+      "Sección especial con checklist para familias que viajan con niños pequeños (colegios y vacunas)",
+    description:
+      "Información clara sobre la inscripción al colegio público y cómo apostillar actas de nacimiento.",
     category: "visa_update",
     authorName: "Diego & Laura",
     authorCountry: "Perú",
@@ -80,14 +90,11 @@ const INITIAL_SUGGESTIONS: FeedbackSuggestion[] = [
     hasUpvoted: false,
     status: "implementado",
     officialResponse: "✅ ¡Incorporado en el nuevo Planificador de Migración 360°!",
-    createdAt: "08 ago 2026"
-  }
+    createdAt: "08 ago 2026",
+  },
 ];
 
-export const FeedbackHub: React.FC<FeedbackHubProps> = ({
-  currentUser,
-  onOpenAuthModal
-}) => {
+export const FeedbackHub: React.FC<FeedbackHubProps> = ({ currentUser, onOpenAuthModal }) => {
   const [suggestions, setSuggestions] = useState<FeedbackSuggestion[]>(INITIAL_SUGGESTIONS);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -102,7 +109,7 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({
           setSuggestions([...items, ...baseRemaining]);
         }
       })
-      .catch((e) => console.log("Feedback suggestions fetched from local fallback:", e));
+      .catch((e) => console.info("Feedback suggestions fetched from local fallback:", e));
   }, []);
 
   const [selectedCategory, setSelectedCategory] = useState<string>("todas");
@@ -116,10 +123,14 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({
   const categories = [
     { id: "todas", label: "Todas las Ideas", icon: <Filter className="w-4 h-4" /> },
     { id: "feature", label: "💡 Nuevas Funciones", icon: <Lightbulb className="w-4 h-4" /> },
-    { id: "scholarship", label: "🎓 Becas & Convenios", icon: <GraduationCap className="w-4 h-4" /> },
+    {
+      id: "scholarship",
+      label: "🎓 Becas & Convenios",
+      icon: <GraduationCap className="w-4 h-4" />,
+    },
     { id: "visa_update", label: "📝 Guías de Visas", icon: <FileCheck className="w-4 h-4" /> },
     { id: "bug", label: "🐛 Errores Técnicos", icon: <Bug className="w-4 h-4" /> },
-    { id: "testimonial", label: "❤️ Testimonios", icon: <Heart className="w-4 h-4" /> }
+    { id: "testimonial", label: "❤️ Testimonios", icon: <Heart className="w-4 h-4" /> },
   ];
 
   const handleUpvote = async (id: string) => {
@@ -132,7 +143,7 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({
           return {
             ...s,
             upvotes: isUpvoted ? s.upvotes - 1 : s.upvotes + 1,
-            hasUpvoted: !isUpvoted
+            hasUpvoted: !isUpvoted,
           };
         }
         return s;
@@ -142,7 +153,7 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({
     try {
       await upvoteFeedbackSuggestion(id, delta);
     } catch (e) {
-      console.log("Upvoted in session state");
+      console.info("Upvoted in session state");
     }
   };
 
@@ -172,7 +183,7 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({
     try {
       createdId = await createFeedbackSuggestion(newSuggestionData);
     } catch (err) {
-      console.log("Created suggestion in session:", err);
+      console.info("Created suggestion in session:", err);
     }
 
     const item: FeedbackSuggestion = {
@@ -180,7 +191,7 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({
       ...newSuggestionData,
       upvotes: 1,
       hasUpvoted: true,
-      createdAt: "Hoy"
+      createdAt: "Hoy",
     };
 
     setSuggestions([item, ...suggestions]);
@@ -194,14 +205,16 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({
     }, 1800);
   };
 
-  const filtered = suggestions.filter((s) => {
-    const matchesCat = selectedCategory === "todas" || s.category === selectedCategory;
-    const matchesSearch =
-      s.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      s.description.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      s.authorCountry.toLowerCase().includes(searchFilter.toLowerCase());
-    return matchesCat && matchesSearch;
-  }).sort((a, b) => b.upvotes - a.upvotes);
+  const filtered = suggestions
+    .filter((s) => {
+      const matchesCat = selectedCategory === "todas" || s.category === selectedCategory;
+      const matchesSearch =
+        s.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
+        s.description.toLowerCase().includes(searchFilter.toLowerCase()) ||
+        s.authorCountry.toLowerCase().includes(searchFilter.toLowerCase());
+      return matchesCat && matchesSearch;
+    })
+    .sort((a, b) => b.upvotes - a.upvotes);
 
   return (
     <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-8 animate-fade-in">
@@ -216,7 +229,9 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({
             Sugerencias y Feedback para Mejorar LatinoMigra
           </h1>
           <p className="text-on-surface-variant dark:text-slate-300 text-sm md:text-base mt-1">
-            ¿Cómo manejamos el feedback para que sea transparente y user-friendly? <strong>Vota las ideas de la comunidad</strong> (👍) para priorizar las más pedidas o propón una nueva idea si no existe.
+            ¿Cómo manejamos el feedback para que sea transparente y user-friendly?{" "}
+            <strong>Vota las ideas de la comunidad</strong> (👍) para priorizar las más pedidas o
+            propón una nueva idea si no existe.
           </p>
         </div>
 
@@ -247,9 +262,14 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({
               ¿Cómo funciona este buzón y cómo se procesan tus sugerencias?
             </p>
             <p className="text-on-surface-variant dark:text-slate-400 leading-relaxed">
-              • <strong>Sincronización Segura:</strong> Todas las propuestas y votos se guardan de forma segura y en tiempo real.<br />
-              • <strong>Origen de las ideas:</strong> Provienen directamente de estudiantes y migrantes de toda Latinoamérica. Las sugerencias con más votos son analizadas semanalmente por el equipo.<br />
-              • <strong>Seguimiento de Estado:</strong> Cuando una idea es revisada, desarrollada o lanzada, se actualiza su etiqueta a <em>En Revisión</em>, <em>En Desarrollo</em> o <em>Implementado</em> con una respuesta oficial.
+              • <strong>Sincronización Segura:</strong> Todas las propuestas y votos se guardan de
+              forma segura y en tiempo real.
+              <br />• <strong>Origen de las ideas:</strong> Provienen directamente de estudiantes y
+              migrantes de toda Latinoamérica. Las sugerencias con más votos son analizadas
+              semanalmente por el equipo.
+              <br />• <strong>Seguimiento de Estado:</strong> Cuando una idea es revisada,
+              desarrollada o lanzada, se actualiza su etiqueta a <em>En Revisión</em>,{" "}
+              <em>En Desarrollo</em> o <em>Implementado</em> con una respuesta oficial.
             </p>
           </div>
         </div>
@@ -315,7 +335,7 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({
                 <h3 className="font-bold text-base md:text-lg text-primary dark:text-sky-300 leading-snug">
                   {item.title}
                 </h3>
-                
+
                 {/* Status Badge */}
                 <div>
                   {item.status === "implementado" && (
@@ -349,7 +369,9 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({
 
               {/* Author & Meta */}
               <div className="flex items-center gap-3 text-xs text-on-surface-variant/80 dark:text-slate-400 pt-1">
-                <span>Por <strong>{item.authorName}</strong> ({item.authorCountry})</span>
+                <span>
+                  Por <strong>{item.authorName}</strong> ({item.authorCountry})
+                </span>
                 <span>•</span>
                 <span>{item.createdAt}</span>
               </div>
@@ -381,9 +403,12 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({
             {successNotice ? (
               <div className="p-6 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl text-center space-y-2">
                 <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
-                <h3 className="font-bold text-emerald-900 dark:text-emerald-200">¡Sugerencia Registrada!</h3>
+                <h3 className="font-bold text-emerald-900 dark:text-emerald-200">
+                  ¡Sugerencia Registrada!
+                </h3>
                 <p className="text-xs text-emerald-700 dark:text-emerald-300">
-                  Tu idea ya está visible para que otros miembros de la comunidad puedan votar por ella.
+                  Tu idea ya está visible para que otros miembros de la comunidad puedan votar por
+                  ella.
                 </p>
               </div>
             ) : (

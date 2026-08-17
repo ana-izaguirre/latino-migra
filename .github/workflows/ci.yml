@@ -2,15 +2,15 @@ name: CI / Unit & E2E Tests
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
   workflow_dispatch:
     inputs:
       full_e2e:
-        description: 'Run full multi-browser E2E matrix (Chrome, Firefox, Safari, Mobile)'
+        description: "Run full multi-browser E2E matrix (Chrome, Firefox, Safari, Mobile)"
         required: false
-        default: 'false'
+        default: "false"
         type: boolean
 
 permissions:
@@ -23,20 +23,72 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: read
+      # Needed to post the coverage table as a pull request comment.
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
+          cache: "npm"
         env:
           NODE_ENV: test
       - name: Install dependencies
         run: npm ci || npm install
-      - name: Run TypeScript Check
+      - name: Check formatting (Prettier)
+        run: npm run format:check
+      - name: Lint (ESLint) and typecheck
         run: npm run lint
-      - name: Run Fast Vitest Unit Tests
-        run: npm run test:unit
+      # Fails the job when coverage drops below the thresholds in vitest.config.ts
+      - name: Run Unit Tests with Coverage
+        run: npm run test:coverage
+      - name: Report coverage in the job summary
+        if: ${{ !cancelled() }}
+        run: node scripts/coverage-summary.mjs >> "$GITHUB_STEP_SUMMARY"
+      - name: Comment coverage on the pull request
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { execFileSync } = require('node:child_process');
+            const body = [
+              '<!-- coverage-report -->',
+              execFileSync('node', ['scripts/coverage-summary.mjs'], { encoding: 'utf8' }),
+            ].join('\n');
+
+            // Update the existing comment instead of adding one per push.
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(
+              (c) => c.user.type === 'Bot' && c.body.includes('<!-- coverage-report -->')
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Upload coverage report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
 
   e2e-tests:
     name: End-to-End Tests
@@ -52,7 +104,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
+          cache: "npm"
       - name: Install dependencies
         run: npm ci || npm install
       - name: Install Playwright Chromium

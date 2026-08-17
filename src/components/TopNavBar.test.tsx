@@ -1,65 +1,65 @@
-import { describe, it, expect, vi } from 'vitest';
-import { screen, fireEvent } from '@testing-library/react';
-import { renderWithProviders as render } from '../test/renderWithProviders';
-import { TopNavBar } from './TopNavBar';
-import { GoogleUser } from '../types';
+import { describe, it, expect, vi } from "vitest";
+import { screen, fireEvent } from "@testing-library/react";
+import { renderWithProviders as render } from "../test/renderWithProviders";
+import { TopNavBar } from "./TopNavBar";
+import { GoogleUser } from "../types";
 
-describe('TopNavBar Component', () => {
+describe("TopNavBar Component", () => {
   const defaultProps = {
-    activeTab: 'home' as const,
+    activeTab: "home" as const,
     setActiveTab: vi.fn(),
-    theme: 'light' as const,
+    theme: "light" as const,
     toggleTheme: vi.fn(),
-    searchQuery: '',
+    searchQuery: "",
     setSearchQuery: vi.fn(),
     currentUser: null,
     onOpenAuthModal: vi.fn(),
   };
 
-  it('renders branding and main navigation items', () => {
+  it("renders branding and main navigation items", () => {
     render(<TopNavBar {...defaultProps} />);
-    expect(screen.getByText('LatinoMigra')).toBeInTheDocument();
+    expect(screen.getByText("LatinoMigra")).toBeInTheDocument();
     expect(screen.getByText(/Becas & Estudios/)).toBeInTheDocument();
-    expect(screen.getByText('Guía de Migración')).toBeInTheDocument();
-    expect(screen.getByText('Mapa Consular')).toBeInTheDocument();
-    expect(screen.getByText('Chat IA')).toBeInTheDocument();
+    expect(screen.getByText("Guía de Migración")).toBeInTheDocument();
+    expect(screen.getByText("Mapa Consular")).toBeInTheDocument();
+    expect(screen.getByText("Chat IA")).toBeInTheDocument();
   });
 
-  it('groups secondary destinations behind the tools menu', () => {
+  it("groups secondary destinations behind the tools menu", () => {
     render(<TopNavBar {...defaultProps} />);
 
     // Not inline in the bar...
-    expect(screen.queryByText('Comunidad')).not.toBeInTheDocument();
+    expect(screen.queryByText("Comunidad")).not.toBeInTheDocument();
 
     // ...but one click away.
-    fireEvent.click(screen.getByRole('button', { name: /Herramientas/i }));
-    expect(screen.getByText('Comunidad')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Herramientas/i }));
+    expect(screen.getByText("Comunidad")).toBeInTheDocument();
     expect(screen.getByText(/Planificador/i)).toBeInTheDocument();
   });
 
-  it('calls setActiveTab when a navigation item or logo is clicked', () => {
+  it("calls setActiveTab when a navigation item or logo is clicked", () => {
     render(<TopNavBar {...defaultProps} />);
-    
+
     // Click on Becas
     fireEvent.click(screen.getByText(/Becas & Estudios/));
-    expect(defaultProps.setActiveTab).toHaveBeenCalledWith('becas');
+    expect(defaultProps.setActiveTab).toHaveBeenCalledWith("becas");
 
     // Click on Logo
-    fireEvent.click(screen.getByText('LatinoMigra'));
-    expect(defaultProps.setActiveTab).toHaveBeenCalledWith('home');
+    fireEvent.click(screen.getByText("LatinoMigra"));
+    expect(defaultProps.setActiveTab).toHaveBeenCalledWith("home");
   });
 
-  it('calls toggleTheme from the preferences menu', () => {
+  it("calls toggleTheme from the preferences menu", () => {
     render(<TopNavBar {...defaultProps} />);
 
     // Currency, language and theme are grouped under one preferences menu.
-    fireEvent.click(screen.getByRole('button', { name: /Preferencias/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Preferencias/i }));
     const themeBtn = screen.getByTitle(/Cambiar a Modo/i);
     fireEvent.click(themeBtn);
     expect(defaultProps.toggleTheme).toHaveBeenCalledTimes(1);
   });
 
-  it('shows sign in button when user is not logged in and opens modal on click', () => {
+  it("shows sign in button when user is not logged in and opens modal on click", () => {
     render(<TopNavBar {...defaultProps} currentUser={null} />);
     const authBtn = screen.getByText(/Acceder con Google/i);
     expect(authBtn).toBeInTheDocument();
@@ -67,16 +67,16 @@ describe('TopNavBar Component', () => {
     expect(defaultProps.onOpenAuthModal).toHaveBeenCalled();
   });
 
-  it('displays user profile info when currentUser is logged in', () => {
+  it("displays user profile info when currentUser is logged in", () => {
     const mockUser: GoogleUser = {
-      id: 'user-123',
-      name: 'Ana María',
-      email: 'ana@example.com',
-      avatar: 'https://example.com/avatar.jpg',
-      countryOfOrigin: 'Colombia',
-      signedInAt: '12 ago 2026',
+      id: "user-123",
+      name: "Ana María",
+      email: "ana@example.com",
+      avatar: "https://example.com/avatar.jpg",
+      countryOfOrigin: "Colombia",
+      signedInAt: "12 ago 2026",
     };
     render(<TopNavBar {...defaultProps} currentUser={mockUser} />);
-    expect(screen.getByText('Ana María')).toBeInTheDocument();
+    expect(screen.getByText("Ana María")).toBeInTheDocument();
   });
 });

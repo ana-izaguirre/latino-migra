@@ -76,9 +76,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
           </span>
         </>
       ) : (
-        <span className="font-bold text-primary dark:text-sky-300 shrink-0">
-          {currentLabel}
-        </span>
+        <span className="font-bold text-primary dark:text-sky-300 shrink-0">{currentLabel}</span>
       )}
     </nav>
   );

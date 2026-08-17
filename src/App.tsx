@@ -27,14 +27,18 @@ export default function App() {
   // reload returns to whatever the device is set to.
   const [theme, setTheme] = useState<ThemeMode>(() => {
     try {
-      return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
     } catch {
       return "light";
     }
   });
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [chatInitialPrompt, setChatInitialPrompt] = useState<string>("");
-  const [selectedScholarshipForChat, setSelectedScholarshipForChat] = useState<Scholarship | null>(null);
+  const [selectedScholarshipForChat, setSelectedScholarshipForChat] = useState<Scholarship | null>(
+    null
+  );
   const [alertsModalOpen, setAlertsModalOpen] = useState<boolean>(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
 
@@ -58,7 +62,11 @@ export default function App() {
               "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
             countryOfOrigin: profile?.countryOfOrigin || "Colombia",
             role: profile?.role || "user",
-            signedInAt: new Date().toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" }),
+            signedInAt: new Date().toLocaleDateString("es-ES", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            }),
           };
           // Auto-verify admin role
           if (isAdmin(userData)) {
@@ -102,7 +110,7 @@ export default function App() {
     try {
       await signOutUser();
     } catch (e) {
-      console.log("Signout error:", e);
+      console.info("Signout error:", e);
     }
     setCurrentUser(null);
   };
@@ -215,19 +223,13 @@ export default function App() {
 
         {activeTab === "admin" && (
           <main className="animate-fade-in">
-            <AdminDashboard
-              currentUser={currentUser}
-              setActiveTab={setActiveTab}
-            />
+            <AdminDashboard currentUser={currentUser} setActiveTab={setActiveTab} />
           </main>
         )}
 
         {activeTab === "guia" && (
           <main className="animate-fade-in">
-            <GuiaMigracion
-              setActiveTab={setActiveTab}
-              onAskAIAboutGuide={handleAskAIAboutGuide}
-            />
+            <GuiaMigracion setActiveTab={setActiveTab} onAskAIAboutGuide={handleAskAIAboutGuide} />
           </main>
         )}
 

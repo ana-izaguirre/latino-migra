@@ -2,42 +2,63 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover"
+    />
     <title>LatinoMigra - Becas, Guías Migratorias y Asistente IA</title>
-    
+
     <!-- SEO Essential Meta Tags -->
-    <meta name="description" content="Encuentra becas verificadas (Carolina, DAAD, Fulbright, OEA), guías consulares de visados para España, Alemania, EE.UU. y Canadá, y consulta a nuestro Asistente LatinoMigra IA." />
-    <meta name="keywords" content="becas para latinoamericanos, estudiar en españa, visa estudiante alemania, fundacion carolina, beca daad, fulbright, consulados españa, latinomigra" />
+    <meta
+      name="description"
+      content="Encuentra becas verificadas (Carolina, DAAD, Fulbright, OEA), guías consulares de visados para España, Alemania, EE.UU. y Canadá, y consulta a nuestro Asistente LatinoMigra IA."
+    />
+    <meta
+      name="keywords"
+      content="becas para latinoamericanos, estudiar en españa, visa estudiante alemania, fundacion carolina, beca daad, fulbright, consulados españa, latinomigra"
+    />
     <meta name="author" content="LatinoMigra" />
     <meta name="robots" content="index, follow" />
 
     <!-- Open Graph / Facebook / WhatsApp Preview -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="LatinoMigra" />
-    <meta property="og:url" content="https://ais-pre-5qazlj6w4zn36uak32ku6x-6760394599.europe-west2.run.app" />
-    <meta property="og:title" content="LatinoMigra - Becas y Guías Migratorias para Latinoamérica" />
-    <meta property="og:description" content="Conecta con oportunidades educativas en el extranjero, consulta requisitos consulares y conversa con nuestro Asistente de IA." />
-    <meta property="og:image" content="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1200&auto=format&fit=crop&q=80" />
+    <meta
+      property="og:url"
+      content="https://ais-pre-5qazlj6w4zn36uak32ku6x-6760394599.europe-west2.run.app"
+    />
+    <meta
+      property="og:title"
+      content="LatinoMigra - Becas y Guías Migratorias para Latinoamérica"
+    />
+    <meta
+      property="og:description"
+      content="Conecta con oportunidades educativas en el extranjero, consulta requisitos consulares y conversa con nuestro Asistente de IA."
+    />
+    <meta
+      property="og:image"
+      content="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1200&auto=format&fit=crop&q=80"
+    />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="LatinoMigra - Becas y Guías Migratorias" />
-    <meta name="twitter:description" content="Encuentra becas internacionales y guías consulares verificadas para estudiantes y profesionales." />
-    <meta name="twitter:image" content="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1200&auto=format&fit=crop&q=80" />
+    <meta
+      name="twitter:description"
+      content="Encuentra becas internacionales y guías consulares verificadas para estudiantes y profesionales."
+    />
+    <meta
+      name="twitter:image"
+      content="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1200&auto=format&fit=crop&q=80"
+    />
 
     <!-- Google Analytics 4 (GA4) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-MEASUREMENT_ID"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      // Reemplaza 'G-MEASUREMENT_ID' con tu ID de seguimiento de Google Analytics
-      gtag('config', 'G-MEASUREMENT_ID', { page_path: window.location.pathname });
-    </script>
+    <!-- Config lives in an external file so the page needs no script-src 'unsafe-inline'. -->
+    <script src="/analytics.js"></script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

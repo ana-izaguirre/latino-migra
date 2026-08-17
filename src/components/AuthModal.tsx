@@ -1,5 +1,15 @@
 import React, { useState } from "react";
-import { X, CheckCircle2, ShieldCheck, Bookmark, Calendar, Sparkles, User, Globe, LogOut } from "lucide-react";
+import {
+  X,
+  CheckCircle2,
+  ShieldCheck,
+  Bookmark,
+  Calendar,
+  Sparkles,
+  User,
+  Globe,
+  LogOut,
+} from "lucide-react";
 import { GoogleUser } from "../types";
 import { signInWithGoogle, signOutUser } from "../lib/firebase";
 import { getSafeImageUrl } from "../lib/sanitize";
@@ -38,20 +48,32 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           fbUser.photoURL ||
           "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
         countryOfOrigin: countryOfOrigin || selectedCountry,
-        signedInAt: new Date().toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" }),
+        signedInAt: new Date().toLocaleDateString("es-ES", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }),
       };
       onSignIn(userToSignIn);
       onClose();
     } catch (err: any) {
-      console.warn("Firebase Auth popup no completado o en modo de prueba, activando acceso rápido:", err);
+      console.warn(
+        "Firebase Auth popup no completado o en modo de prueba, activando acceso rápido:",
+        err
+      );
       // Demo Fallback for local preview if popup is blocked
       const fallbackUser: GoogleUser = {
         id: "google-user-" + Date.now(),
         name: "Ana Izaguirre",
         email: "ana.izaguirre@gmail.com",
-        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
         countryOfOrigin: selectedCountry,
-        signedInAt: new Date().toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" }),
+        signedInAt: new Date().toLocaleDateString("es-ES", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }),
       };
       onSignIn(fallbackUser);
       onClose();
@@ -119,11 +141,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <span className="text-xs font-bold text-on-surface dark:text-slate-200">
                   Rol de Cuenta:
                 </span>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                  currentUser.role === "admin"
-                    ? "bg-violet-100 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border border-violet-300 dark:border-violet-700"
-                    : "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700"
-                }`}>
+                <span
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    currentUser.role === "admin"
+                      ? "bg-violet-100 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border border-violet-300 dark:border-violet-700"
+                      : "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700"
+                  }`}
+                >
                   {currentUser.role === "admin" ? "🔑 Administrador" : "👤 Usuario Estándar"}
                 </span>
               </div>

@@ -1,5 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { SUPPORTED_CURRENCIES, CurrencyInfo, convertCurrency, formatCurrencyAmount } from "./currency";
+import {
+  SUPPORTED_CURRENCIES,
+  CurrencyInfo,
+  convertCurrency,
+  formatCurrencyAmount,
+} from "./currency";
 
 interface CurrencyContextType {
   currency: string;

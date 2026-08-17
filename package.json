@@ -9,7 +9,7 @@
     "start": "node dist/server.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit",
+    "lint": "eslint . && tsc --noEmit",
     "test": "vitest run",
     "test:unit": "vitest run",
     "test:watch": "vitest",
@@ -17,7 +17,12 @@
     "test:e2e": "playwright test",
     "test:e2e:full": "FULL_E2E=true playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test:smoke": "playwright test --grep @smoke"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -30,6 +35,7 @@
     "express": "^4.21.2",
     "express-rate-limit": "^8.6.2",
     "firebase": "^12.17.1",
+    "helmet": "^8.3.0",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "react": "^19.0.1",
@@ -37,6 +43,7 @@
     "vite": "^6.2.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "@playwright/test": "^1.62.1",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",
@@ -47,11 +54,17 @@
     "@vitest/coverage-v8": "^4.1.10",
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.25.0",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "jsdom": "^30.0.1",
+    "prettier": "^3.9.6",
     "supertest": "^7.2.2",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
+    "typescript-eslint": "^8.67.0",
     "vite": "^6.2.3",
     "vitest": "^4.1.10"
   }

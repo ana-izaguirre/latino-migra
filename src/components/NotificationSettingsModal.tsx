@@ -11,7 +11,7 @@ import {
   Sliders,
   Send,
   Sparkles,
-  Info
+  Info,
 } from "lucide-react";
 import { GoogleUser, UserAlertPreferences } from "../types";
 import { useLanguage } from "../lib/i18n";
@@ -49,17 +49,19 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
   // Load user alert preferences from Firestore
   useEffect(() => {
     if (currentUser?.id) {
-      getUserAlertPreferences(currentUser.id).then((saved) => {
-        if (saved) {
-          setPreferences((prev) => ({
-            ...prev,
-            ...saved,
-            email: saved.email || currentUser.email || prev.email
-          }));
-        } else if (currentUser.email) {
-          setPreferences((prev) => ({ ...prev, email: currentUser.email }));
-        }
-      }).catch((e) => console.log("Preferences load error:", e));
+      getUserAlertPreferences(currentUser.id)
+        .then((saved) => {
+          if (saved) {
+            setPreferences((prev) => ({
+              ...prev,
+              ...saved,
+              email: saved.email || currentUser.email || prev.email,
+            }));
+          } else if (currentUser.email) {
+            setPreferences((prev) => ({ ...prev, email: currentUser.email }));
+          }
+        })
+        .catch((e) => console.info("Preferences load error:", e));
     }
   }, [currentUser]);
 
@@ -81,7 +83,7 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
 
   const handleRequestPushPermission = async () => {
     let granted = false;
-    
+
     if (typeof window !== "undefined" && "Notification" in window) {
       try {
         const result = await Notification.requestPermission();
@@ -93,14 +95,20 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
               body: "¡Notificaciones activadas! Te avisaremos cuando abran becas o cambien requisitos consulares.",
               icon: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
             });
-          } catch {}
+          } catch {
+            // Some browsers block constructing Notification directly from an
+            // iframe; the in-app confirmation below still runs.
+          }
         } else {
           // Fallback to in-app push activation
           granted = true;
           setPermissionState("granted");
         }
       } catch (e) {
-        console.warn("Navegador o iframe restringió Notification API directa, activando canal push en app:", e);
+        console.warn(
+          "Navegador o iframe restringió Notification API directa, activando canal push en app:",
+          e
+        );
         granted = true;
         setPermissionState("granted");
       }
@@ -126,12 +134,18 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
         ? "🔔 [Test Alert] New DAAD Scholarship deadline in 14 days & Spain visa updates available."
         : "🔔 [Alerta de Prueba] Beca DAAD Alemania cierra en 14 días y nueva actualización de visados en España."
     );
-    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+    if (
+      typeof window !== "undefined" &&
+      "Notification" in window &&
+      Notification.permission === "granted"
+    ) {
       try {
         new Notification("LatinoMigra - Alerta de Prueba 🎓", {
           body: "Beca DAAD Alemania cierra en 14 días. Revisa los requisitos oficiales en LatinoMigra.",
         });
-      } catch {}
+      } catch {
+        // Same iframe restriction as above; the toast covers the feedback.
+      }
     }
     setTimeout(() => setPushToast(null), 5000);
   };
@@ -167,7 +181,9 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
         <div className="space-y-1.5 pr-6">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 dark:bg-amber-400/20 text-amber-700 dark:text-amber-300 rounded-full text-xs font-bold uppercase tracking-wider">
             <Bell className="w-3.5 h-3.5" />
-            <span>{language === "en" ? "Alerts & Notifications" : "Centro de Alertas Migratorias"}</span>
+            <span>
+              {language === "en" ? "Alerts & Notifications" : "Centro de Alertas Migratorias"}
+            </span>
           </div>
           <h2 className="font-headline-md text-xl sm:text-2xl font-extrabold text-primary dark:text-sky-300">
             {language === "en" ? "Configure Your Alerts" : "Configura tus Notificaciones"}
@@ -183,7 +199,9 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
           <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 p-5 rounded-2xl text-center space-y-2">
             <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto animate-bounce" />
             <h3 className="font-bold text-sm">
-              {language === "en" ? "Alerts Saved Successfully!" : "¡Preferencias Guardadas con Éxito!"}
+              {language === "en"
+                ? "Alerts Saved Successfully!"
+                : "¡Preferencias Guardadas con Éxito!"}
             </h3>
             <p className="text-xs">
               {language === "en"
@@ -196,7 +214,9 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
             {/* Email Field */}
             <div>
               <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1">
-                {language === "en" ? "Notification Email Address" : "Correo electrónico para recibir alertas *"}
+                {language === "en"
+                  ? "Notification Email Address"
+                  : "Correo electrónico para recibir alertas *"}
               </label>
               <div className="relative">
                 <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400" />
@@ -240,7 +260,9 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
                 </label>
                 <select
                   value={preferences.preferredArea}
-                  onChange={(e) => setPreferences({ ...preferences, preferredArea: e.target.value })}
+                  onChange={(e) =>
+                    setPreferences({ ...preferences, preferredArea: e.target.value })
+                  }
                   className="w-full px-3 py-2 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs font-semibold outline-none focus:ring-1 focus:ring-secondary dark:text-slate-200"
                 >
                   <option value="Todas las áreas">🎓 Todas las áreas</option>
@@ -255,7 +277,9 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
             {/* Notification Types Toggles */}
             <div className="space-y-2.5">
               <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block">
-                {language === "en" ? "What alerts do you want to receive?" : "¿Qué alertas deseas activar?"}
+                {language === "en"
+                  ? "What alerts do you want to receive?"
+                  : "¿Qué alertas deseas activar?"}
               </label>
 
               {/* Toggle 1: Scholarship Deadlines */}
@@ -263,13 +287,19 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
                 <input
                   type="checkbox"
                   checked={preferences.notifyScholarshipDeadlines}
-                  onChange={(e) => setPreferences({ ...preferences, notifyScholarshipDeadlines: e.target.checked })}
+                  onChange={(e) =>
+                    setPreferences({ ...preferences, notifyScholarshipDeadlines: e.target.checked })
+                  }
                   className="mt-0.5 w-4 h-4 rounded text-secondary focus:ring-secondary accent-secondary"
                 />
                 <div className="space-y-0.5">
                   <div className="text-xs font-bold text-primary dark:text-sky-300 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-secondary dark:text-teal-400" />
-                    <span>{language === "en" ? "Scholarship Deadlines (30 / 15 / 5 days left)" : "Cierre de Becas (30, 15 y 5 días antes)"}</span>
+                    <span>
+                      {language === "en"
+                        ? "Scholarship Deadlines (30 / 15 / 5 days left)"
+                        : "Cierre de Becas (30, 15 y 5 días antes)"}
+                    </span>
                   </div>
                   <p className="text-[11px] text-on-surface-variant dark:text-slate-400">
                     {language === "en"
@@ -284,13 +314,19 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
                 <input
                   type="checkbox"
                   checked={preferences.notifyVisaPolicyChanges}
-                  onChange={(e) => setPreferences({ ...preferences, notifyVisaPolicyChanges: e.target.checked })}
+                  onChange={(e) =>
+                    setPreferences({ ...preferences, notifyVisaPolicyChanges: e.target.checked })
+                  }
                   className="mt-0.5 w-4 h-4 rounded text-secondary focus:ring-secondary accent-secondary"
                 />
                 <div className="space-y-0.5">
                   <div className="text-xs font-bold text-primary dark:text-sky-300 flex items-center gap-1.5">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>{language === "en" ? "Immigration & Visa Policy Changes" : "Cambios en Leyes de Extranjería y Visas"}</span>
+                    <span>
+                      {language === "en"
+                        ? "Immigration & Visa Policy Changes"
+                        : "Cambios en Leyes de Extranjería y Visas"}
+                    </span>
                   </div>
                   <p className="text-[11px] text-on-surface-variant dark:text-slate-400">
                     {language === "en"
@@ -305,13 +341,19 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
                 <input
                   type="checkbox"
                   checked={preferences.notifyForumReplies}
-                  onChange={(e) => setPreferences({ ...preferences, notifyForumReplies: e.target.checked })}
+                  onChange={(e) =>
+                    setPreferences({ ...preferences, notifyForumReplies: e.target.checked })
+                  }
                   className="mt-0.5 w-4 h-4 rounded text-secondary focus:ring-secondary accent-secondary"
                 />
                 <div className="space-y-0.5">
                   <div className="text-xs font-bold text-primary dark:text-sky-300 flex items-center gap-1.5">
                     <Mail className="w-3.5 h-3.5 text-sky-400" />
-                    <span>{language === "en" ? "Community Forum Responses" : "Respuestas a mis preguntas en la Comunidad"}</span>
+                    <span>
+                      {language === "en"
+                        ? "Community Forum Responses"
+                        : "Respuestas a mis preguntas en la Comunidad"}
+                    </span>
                   </div>
                   <p className="text-[11px] text-on-surface-variant dark:text-slate-400">
                     {language === "en"
@@ -327,12 +369,20 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
               <div className="space-y-0.5">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-primary dark:text-sky-300">
                   <Smartphone className="w-4 h-4" />
-                  <span>{language === "en" ? "Push Notifications on Device" : "Notificaciones en tu Móvil / Android"}</span>
+                  <span>
+                    {language === "en"
+                      ? "Push Notifications on Device"
+                      : "Notificaciones en tu Móvil / Android"}
+                  </span>
                 </div>
                 <p className="text-[10px] text-on-surface-variant dark:text-slate-400">
                   {permissionState === "granted"
-                    ? (language === "en" ? "✓ Push alerts enabled on this device" : "✓ Alertas push activas en este dispositivo")
-                    : (language === "en" ? "Allow instant notifications in your browser" : "Permite alertas instantáneas en tu navegador")}
+                    ? language === "en"
+                      ? "✓ Push alerts enabled on this device"
+                      : "✓ Alertas push activas en este dispositivo"
+                    : language === "en"
+                      ? "Allow instant notifications in your browser"
+                      : "Permite alertas instantáneas en tu navegador"}
                 </p>
               </div>
 

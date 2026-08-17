@@ -1,5 +1,25 @@
 import React, { useState } from "react";
-import { Globe, Heart, ShieldCheck, ExternalLink, HelpCircle, FileText, Lock, MessageSquare, Mail, X, Sparkles, Compass, Calculator, GraduationCap, MapPin, BookOpen, MessageSquarePlus, HeartHandshake, Bot } from "lucide-react";
+import {
+  Globe,
+  Heart,
+  ShieldCheck,
+  ExternalLink,
+  HelpCircle,
+  FileText,
+  Lock,
+  MessageSquare,
+  Mail,
+  X,
+  Sparkles,
+  Compass,
+  Calculator,
+  GraduationCap,
+  MapPin,
+  BookOpen,
+  MessageSquarePlus,
+  HeartHandshake,
+  Bot,
+} from "lucide-react";
 import { NavigationTab } from "../types";
 import { useLanguage } from "../lib/i18n";
 
@@ -46,7 +66,9 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                 className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-secondary/10 dark:bg-teal-950/40 text-secondary dark:text-teal-300 text-xs font-bold border border-secondary/20 hover:bg-secondary/20 transition-all active:scale-95 cursor-pointer shadow-xs"
               >
                 <Sparkles className="w-4 h-4 text-amber-500" />
-                <span>{language === "en" ? "Evaluate Profile with AI" : "Evaluar Perfil con IA"}</span>
+                <span>
+                  {language === "en" ? "Evaluate Profile with AI" : "Evaluar Perfil con IA"}
+                </span>
               </button>
             </div>
           </div>
@@ -90,7 +112,11 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                   className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
                 >
                   <HeartHandshake className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                  <span>{language === "en" ? "Volunteering & Exchanges" : "Voluntariados e Intercambios"}</span>
+                  <span>
+                    {language === "en"
+                      ? "Volunteering & Exchanges"
+                      : "Voluntariados e Intercambios"}
+                  </span>
                 </button>
               </li>
               <li>
@@ -126,7 +152,11 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                   className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
                 >
                   <MessageSquare className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                  <span>{language === "en" ? "Community Forum & Experiences" : "Foro de Migrantes & Consejos"}</span>
+                  <span>
+                    {language === "en"
+                      ? "Community Forum & Experiences"
+                      : "Foro de Migrantes & Consejos"}
+                  </span>
                 </button>
               </li>
               <li>
@@ -135,7 +165,11 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                   className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
                 >
                   <MessageSquarePlus className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                  <span>{language === "en" ? "Suggest New Feature or Scholarship" : "Sugerir Nueva Beca o Función"}</span>
+                  <span>
+                    {language === "en"
+                      ? "Suggest New Feature or Scholarship"
+                      : "Sugerir Nueva Beca o Función"}
+                  </span>
                 </button>
               </li>
               <li>
@@ -144,7 +178,9 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                   className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
                 >
                   <Bot className="w-3.5 h-3.5 text-purple-500 shrink-0" />
-                  <span>{language === "en" ? "AI Migration Consultant" : "Consultor Migratorio con IA"}</span>
+                  <span>
+                    {language === "en" ? "AI Migration Consultant" : "Consultor Migratorio con IA"}
+                  </span>
                 </button>
               </li>
             </ul>
@@ -222,10 +258,18 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                 {activeModal === "guidelines" && <HelpCircle className="w-5 h-5 text-sky-400" />}
                 {activeModal === "contact" && <Mail className="w-5 h-5 text-indigo-400" />}
                 <span>
-                  {activeModal === "terms" && (language === "en" ? "Terms & Conditions" : "Términos y Condiciones de Uso")}
-                  {activeModal === "privacy" && (language === "en" ? "Privacy Policy" : "Política de Privacidad y Manejo de Datos")}
-                  {activeModal === "guidelines" && (language === "en" ? "Community Guidelines" : "Normas de Convivencia de la Comunidad")}
-                  {activeModal === "contact" && (language === "en" ? "Contact & Support" : "Contacto y Asistencia")}
+                  {activeModal === "terms" &&
+                    (language === "en" ? "Terms & Conditions" : "Términos y Condiciones de Uso")}
+                  {activeModal === "privacy" &&
+                    (language === "en"
+                      ? "Privacy Policy"
+                      : "Política de Privacidad y Manejo de Datos")}
+                  {activeModal === "guidelines" &&
+                    (language === "en"
+                      ? "Community Guidelines"
+                      : "Normas de Convivencia de la Comunidad")}
+                  {activeModal === "contact" &&
+                    (language === "en" ? "Contact & Support" : "Contacto y Asistencia")}
                 </span>
               </h3>
               <button
@@ -243,13 +287,19 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                     1. Naturaleza Informativa y Orientativa
                   </p>
                   <p>
-                    LatinoMigra es una plataforma digital de información pública, organizada y orientada a apoyar a postulantes latinoamericanos. LatinoMigra no es una agencia de cobro ni sustituye a los consulados, embajadas u organismos oficiales de inmigración.
+                    LatinoMigra es una plataforma digital de información pública, organizada y
+                    orientada a apoyar a postulantes latinoamericanos. LatinoMigra no es una agencia
+                    de cobro ni sustituye a los consulados, embajadas u organismos oficiales de
+                    inmigración.
                   </p>
                   <p className="font-semibold text-primary dark:text-sky-300">
                     2. Verificación de Requisitos
                   </p>
                   <p>
-                    Todos los requisitos de visados, fondos económicos (como el IPREM o la Sperrkonto) y convocatorias de becas son revisados periódicamente, pero recomendamos siempre cotejar con las fuentes consulares oficiales de cada país de destino.
+                    Todos los requisitos de visados, fondos económicos (como el IPREM o la
+                    Sperrkonto) y convocatorias de becas son revisados periódicamente, pero
+                    recomendamos siempre cotejar con las fuentes consulares oficiales de cada país
+                    de destino.
                   </p>
                 </>
               )}
@@ -260,10 +310,14 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                     Protección y Privacidad de tus Datos
                   </p>
                   <p>
-                    En LatinoMigra valoramos la privacidad de los migrantes y estudiantes. No vendemos ni compartimos tus datos de contacto con terceros ni agencias con fines de publicidad invasiva.
+                    En LatinoMigra valoramos la privacidad de los migrantes y estudiantes. No
+                    vendemos ni compartimos tus datos de contacto con terceros ni agencias con fines
+                    de publicidad invasiva.
                   </p>
                   <p>
-                    Tus planes guardados y preferencias de simulación se almacenan de manera segura bajo tu perfil de usuario para permitirte sincronizar tus calculadoras y agendas consulares entre dispositivos.
+                    Tus planes guardados y preferencias de simulación se almacenan de manera segura
+                    bajo tu perfil de usuario para permitirte sincronizar tus calculadoras y agendas
+                    consulares entre dispositivos.
                   </p>
                 </>
               )}
@@ -274,13 +328,17 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                     1. Respeto y Empatía Mutua
                   </p>
                   <p>
-                    Todos los miembros de la comunidad se encuentran en procesos migratorios o de estudio que requieren paciencia y apoyo. No se tolera discriminación, desinformación intencional ni venta de servicios no autorizados.
+                    Todos los miembros de la comunidad se encuentran en procesos migratorios o de
+                    estudio que requieren paciencia y apoyo. No se tolera discriminación,
+                    desinformación intencional ni venta de servicios no autorizados.
                   </p>
                   <p className="font-semibold text-primary dark:text-sky-300">
                     2. Búsqueda y Prevención de Preguntas Duplicadas
                   </p>
                   <p>
-                    Antes de publicar una duda, te sugerimos utilizar la barra de búsqueda para verificar si otro compañero ya recibió una respuesta detallada con enlaces y consejos.
+                    Antes de publicar una duda, te sugerimos utilizar la barra de búsqueda para
+                    verificar si otro compañero ya recibió una respuesta detallada con enlaces y
+                    consejos.
                   </p>
                 </>
               )}
@@ -291,14 +349,34 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                     Equipo de LatinoMigra
                   </p>
                   <p>
-                    ¿Tienes dudas sobre una beca, encontraste un enlace consular desactualizado o deseas colaborar con la comunidad?
+                    ¿Tienes dudas sobre una beca, encontraste un enlace consular desactualizado o
+                    deseas colaborar con la comunidad?
                   </p>
                   <div className="p-3 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/50 space-y-1">
-                    <p className="font-bold text-xs text-primary dark:text-sky-300">📧 Correo de soporte:</p>
-                    <a href="mailto:latinomigra@gmail.com" className="text-xs text-secondary font-mono hover:underline">latinomigra@gmail.com</a>
-                    <p className="font-bold text-xs text-primary dark:text-sky-300 pt-1">💡 Sugerencias directas:</p>
+                    <p className="font-bold text-xs text-primary dark:text-sky-300">
+                      📧 Correo de soporte:
+                    </p>
+                    <a
+                      href="mailto:latinomigra@gmail.com"
+                      className="text-xs text-secondary font-mono hover:underline"
+                    >
+                      latinomigra@gmail.com
+                    </a>
+                    <p className="font-bold text-xs text-primary dark:text-sky-300 pt-1">
+                      💡 Sugerencias directas:
+                    </p>
                     <p className="text-xs">
-                      Puedes publicar en la sección de <button onClick={() => { setActiveModal(null); handleNavigate("feedback"); }} className="underline font-bold text-secondary cursor-pointer">Sugerencias Comunitarias</button> para que el equipo priorice nuevas integraciones.
+                      Puedes publicar en la sección de{" "}
+                      <button
+                        onClick={() => {
+                          setActiveModal(null);
+                          handleNavigate("feedback");
+                        }}
+                        className="underline font-bold text-secondary cursor-pointer"
+                      >
+                        Sugerencias Comunitarias
+                      </button>{" "}
+                      para que el equipo priorice nuevas integraciones.
                     </p>
                   </div>
                 </>

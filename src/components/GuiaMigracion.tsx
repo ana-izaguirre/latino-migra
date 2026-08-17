@@ -23,7 +23,7 @@ import {
   Calendar as CalendarIcon,
   ThumbsUp,
   Database,
-  Star
+  Star,
 } from "lucide-react";
 import { NavigationTab, VisaType } from "../types";
 import { Breadcrumbs } from "./Breadcrumbs";
@@ -112,7 +112,8 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
       ``,
       `[ ESTADO DE DOCUMENTOS Y REQUISITOS ]`,
       ...guide.documents.map(
-        (doc) => `[${docState[doc.id] ? "LISTO / OK" : "PENDIENTE"}] ${doc.title}\n   Detalle: ${doc.subtitle}\n`
+        (doc) =>
+          `[${docState[doc.id] ? "LISTO / OK" : "PENDIENTE"}] ${doc.title}\n   Detalle: ${doc.subtitle}\n`
       ),
       ``,
       `=========================================`,
@@ -120,7 +121,7 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
       `"${guide.communityTip.text}"`,
       `— ${guide.communityTip.author}`,
       `=========================================`,
-      `Generado por LatinoMigra - Plataforma de Migración y Becas para Latinoamérica`
+      `Generado por LatinoMigra - Plataforma de Migración y Becas para Latinoamérica`,
     ];
 
     const blob = new Blob([textLines.join("\n")], { type: "text/plain;charset=utf-8" });
@@ -220,7 +221,8 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
               Ruta Migratoria y Cronograma Realista
             </h2>
             <p className="text-xs text-on-surface-variant dark:text-slate-400">
-              Fases indispensables desde la preparación en tu país hasta tus primeros días en destino.
+              Fases indispensables desde la preparación en tu país hasta tus primeros días en
+              destino.
             </p>
           </div>
           <div className="inline-flex items-center gap-2 bg-amber-500/10 text-amber-800 dark:text-amber-300 px-3.5 py-1.5 rounded-full text-xs font-bold self-start sm:self-auto">
@@ -256,7 +258,9 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
                   {isActive && <Sparkles className="w-4 h-4 text-primary dark:text-sky-400" />}
                 </div>
                 <h4 className="font-bold text-sm text-primary dark:text-sky-300">{step.title}</h4>
-                <p className="text-xs text-on-surface-variant dark:text-slate-400 mt-1 leading-relaxed">{step.desc}</p>
+                <p className="text-xs text-on-surface-variant dark:text-slate-400 mt-1 leading-relaxed">
+                  {step.desc}
+                </p>
               </button>
             );
           })}
@@ -423,7 +427,9 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
                           : "bg-surface hover:bg-surface-container text-on-surface-variant dark:bg-slate-900 dark:text-slate-300 border-outline-variant/40 dark:border-slate-800"
                       }`}
                     >
-                      <ThumbsUp className={`w-3.5 h-3.5 ${userVotedVisas[visa.id] ? "fill-current" : ""}`} />
+                      <ThumbsUp
+                        className={`w-3.5 h-3.5 ${userVotedVisas[visa.id] ? "fill-current" : ""}`}
+                      />
                       <span>{visaVotes[visa.id]?.helpfulVotes || 18} útiles</span>
                     </button>
                   </div>
@@ -506,7 +512,9 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
               <Sparkles className="w-4 h-4 text-amber-500" />
               <span>Consejo Real de la Comunidad</span>
             </div>
-            <h4 className="font-bold text-sm text-primary dark:text-sky-300">{guide.communityTip.title}</h4>
+            <h4 className="font-bold text-sm text-primary dark:text-sky-300">
+              {guide.communityTip.title}
+            </h4>
             <p className="text-xs text-on-surface-variant dark:text-slate-300 leading-relaxed italic">
               "{guide.communityTip.text}"
             </p>
@@ -535,7 +543,8 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
               <span>Documentación Clave Requerida ({guide.country})</span>
             </h3>
             <p className="text-xs text-on-surface-variant dark:text-slate-400 mt-0.5">
-              Marca las casillas conforme reúnas cada documento para tu cita consular o trámites de llegada.
+              Marca las casillas conforme reúnas cada documento para tu cita consular o trámites de
+              llegada.
             </p>
           </div>
 
@@ -578,7 +587,9 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
                   >
                     {doc.title}
                   </h4>
-                  <p className="text-xs text-on-surface-variant dark:text-slate-400 leading-relaxed">{doc.subtitle}</p>
+                  <p className="text-xs text-on-surface-variant dark:text-slate-400 leading-relaxed">
+                    {doc.subtitle}
+                  </p>
                 </div>
               </div>
             );
@@ -596,15 +607,19 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
                 <span>Protocolo de Protección & Prevención de Fraudes</span>
               </div>
               <h3 className="font-headline-md text-xl md:text-2xl font-bold text-rose-950 dark:text-rose-200">
-                Guía Anti-Estafas Oficial para {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].country} {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].flag}
+                Guía Anti-Estafas Oficial para {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].country}{" "}
+                {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].flag}
               </h3>
               <p className="text-xs text-rose-900/80 dark:text-rose-300/80 max-w-2xl leading-relaxed">
-                Estafas más frecuentes reportadas por migrantes y estudiantes en este país, cómo detectarlas y canales directos de denuncia oficial.
+                Estafas más frecuentes reportadas por migrantes y estudiantes en este país, cómo
+                detectarlas y canales directos de denuncia oficial.
               </p>
             </div>
 
             <div className="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-rose-200 dark:border-rose-900/50 text-xs space-y-1 self-start sm:self-auto">
-              <div className="font-bold text-rose-900 dark:text-rose-200">🚨 Teléfono de Emergencia / Denuncia:</div>
+              <div className="font-bold text-rose-900 dark:text-rose-200">
+                🚨 Teléfono de Emergencia / Denuncia:
+              </div>
               <div className="font-mono font-bold text-rose-600 dark:text-rose-400">
                 {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].emergencyPhone}
               </div>
@@ -624,7 +639,10 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
           <div className="p-4 bg-white/80 dark:bg-slate-900/80 rounded-2xl border border-rose-200 dark:border-slate-800 text-xs space-y-1.5">
             <h4 className="font-bold text-primary dark:text-sky-300 flex items-center gap-2">
               <Building className="w-4 h-4 text-secondary" />
-              <span>Reglas de Oro para Alquiler Seguro en {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].country}:</span>
+              <span>
+                Reglas de Oro para Alquiler Seguro en{" "}
+                {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].country}:
+              </span>
             </h4>
             <p className="text-on-surface-variant dark:text-slate-300 leading-relaxed">
               {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].officialRentalPortalInfo}
@@ -644,7 +662,9 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
                 </div>
 
                 <div className="space-y-1 text-xs">
-                  <div className="font-bold text-on-surface dark:text-slate-200">Señal de Alerta:</div>
+                  <div className="font-bold text-on-surface dark:text-slate-200">
+                    Señal de Alerta:
+                  </div>
                   <p className="text-on-surface-variant dark:text-slate-400 leading-relaxed italic">
                     "{scam.warningSign}"
                   </p>

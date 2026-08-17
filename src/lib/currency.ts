@@ -124,11 +124,7 @@ export const SUPPORTED_CURRENCIES: Record<string, CurrencyInfo> = {
 /**
  * Converts an amount from one currency to another using the EUR base rate.
  */
-export function convertCurrency(
-  amount: number,
-  fromCode: string,
-  toCode: string
-): number {
+export function convertCurrency(amount: number, fromCode: string, toCode: string): number {
   if (isNaN(amount) || amount <= 0) return 0;
   if (fromCode === toCode) return amount;
 
@@ -151,7 +147,7 @@ export function formatCurrencyAmount(amount: number, currencyCode: string): stri
 
   // Formatting decimals: no decimals for currencies with large numbers (COP, ARS, CLP)
   const isLargeUnit = ["COP", "ARS", "CLP", "CRC"].includes(currencyCode);
-  
+
   const formattedNumber = new Intl.NumberFormat("es-ES", {
     minimumFractionDigits: isLargeUnit ? 0 : 2,
     maximumFractionDigits: isLargeUnit ? 0 : 2,
