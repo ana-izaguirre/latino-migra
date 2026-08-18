@@ -37,6 +37,45 @@ describe("TopNavBar Component", () => {
     expect(screen.getByText(/Planificador/i)).toBeInTheDocument();
   });
 
+  /**
+   * Regression for #19. "Panel de Control" is gated on isAdmin(currentUser), which
+   * used to return true for any user carrying role === "admin" — a value the
+   * user could set on themselves from the auth modal.
+   */
+  describe("admin navigation entry", () => {
+    const signedIn = (overrides: Partial<GoogleUser> = {}): GoogleUser => ({
+      id: "usr-1",
+      name: "Carlos Mendoza",
+      email: "carlos@example.com",
+      avatar: "https://example.com/avatar.jpg",
+      countryOfOrigin: "Colombia",
+      signedInAt: "13 ago 2026",
+      ...overrides,
+    });
+
+    const openToolsMenu = () =>
+      fireEvent.click(screen.getByRole("button", { name: /Herramientas/i }));
+
+    it("is hidden from a signed-in user with no admin entry", () => {
+      render(<TopNavBar {...defaultProps} currentUser={signedIn()} />);
+      openToolsMenu();
+      expect(screen.queryByText("Panel de Control")).not.toBeInTheDocument();
+    });
+
+    it("is hidden from a user carrying an injected admin role", () => {
+      const escalated = { ...signedIn(), role: "admin" } as GoogleUser;
+      render(<TopNavBar {...defaultProps} currentUser={escalated} />);
+      openToolsMenu();
+      expect(screen.queryByText("Panel de Control")).not.toBeInTheDocument();
+    });
+
+    it("is shown when the admins collection granted the flag", () => {
+      render(<TopNavBar {...defaultProps} currentUser={signedIn({ isAdmin: true })} />);
+      openToolsMenu();
+      expect(screen.getByText("Panel de Control")).toBeInTheDocument();
+    });
+  });
+
   it("calls setActiveTab when a navigation item or logo is clicked", () => {
     render(<TopNavBar {...defaultProps} />);
 

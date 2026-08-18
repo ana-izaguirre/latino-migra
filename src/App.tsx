@@ -18,7 +18,7 @@ import { ScrollTopBottomButton } from "./components/ScrollTopBottomButton";
 import { Footer } from "./components/Footer";
 import { AuthModal } from "./components/AuthModal";
 import { NotificationSettingsModal } from "./components/NotificationSettingsModal";
-import { subscribeToAuthState, getUserProfile, signOutUser } from "./lib/firebase";
+import { subscribeToAuthState, getUserProfile, isUserAdmin, signOutUser } from "./lib/firebase";
 import { isAdmin } from "./lib/authUtils";
 
 export default function App() {
@@ -51,7 +51,10 @@ export default function App() {
     const unsubscribe = subscribeToAuthState(async (fbUser) => {
       if (fbUser) {
         try {
-          const profile = await getUserProfile(fbUser.uid);
+          const [profile, admin] = await Promise.all([
+            getUserProfile(fbUser.uid),
+            isUserAdmin(fbUser.uid),
+          ]);
           const userData: GoogleUser = {
             id: fbUser.uid,
             name: fbUser.displayName || profile?.displayName || "Usuario LatinoMigra",
@@ -61,17 +64,14 @@ export default function App() {
               profile?.photoURL ||
               "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
             countryOfOrigin: profile?.countryOfOrigin || "Colombia",
-            role: profile?.role || "user",
+            // Never `profile?.role`: that document is writable by its owner.
+            isAdmin: admin,
             signedInAt: new Date().toLocaleDateString("es-ES", {
               day: "numeric",
               month: "short",
               year: "numeric",
             }),
           };
-          // Auto-verify admin role
-          if (isAdmin(userData)) {
-            userData.role = "admin";
-          }
           setCurrentUser(userData);
         } catch (e) {
           console.error("Error fetching user profile from Firestore:", e);
@@ -84,6 +84,16 @@ export default function App() {
 
     return () => unsubscribe();
   }, []);
+
+  // Leave the admin tab as soon as the user is not an administrator: on sign
+  // out, or when an admin entry is revoked while the panel is open. The render
+  // below is guarded too, so the panel never paints for an unauthorised user
+  // in the frame before this runs.
+  useEffect(() => {
+    if (activeTab === "admin" && !isAdmin(currentUser)) {
+      setActiveTab("home");
+    }
+  }, [activeTab, currentUser]);
 
   // Apply dark mode class to HTML element
   useEffect(() => {
@@ -221,7 +231,7 @@ export default function App() {
           </main>
         )}
 
-        {activeTab === "admin" && (
+        {activeTab === "admin" && isAdmin(currentUser) && (
           <main className="animate-fade-in">
             <AdminDashboard currentUser={currentUser} setActiveTab={setActiveTab} />
           </main>

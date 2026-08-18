@@ -34,8 +34,9 @@ the table below is the only record of the intended shape.
 
 | Collection | Read | Write | Written by |
 |---|---|---|---|
-| `scholarships` | public | admin only (verified email on token) | Browser, admin UI |
-| `users/{uid}` | owner | owner — **including `role`** | Browser, on sign-in |
+| `scholarships` | public | admin only (entry in `admins`) | Browser, admin UI |
+| `admins/{uid}` | own entry only | **no rule — every client write denied** | Firebase console only |
+| `users/{uid}` | owner | owner, six named fields only | Browser, on sign-in |
 | `savedScholarships` | owner | owner | Browser |
 | `userNotes` | owner | owner | Browser |
 | `migrationPlans/{uid}` | owner | owner | Browser |
@@ -58,9 +59,17 @@ Owner-scoped collections then check
 and `request.resource.data.userId == request.auth.uid` on create. That pattern is
 correct and consistently applied.
 
-`isAdmin()` checks `request.auth.token.email_verified == true` and the lowercased
-token email against a four-address allowlist. It is kept in sync manually with
-`ADMIN_EMAILS` in `src/lib/authUtils.ts`.
+`isAdmin()` checks whether `admins/{request.auth.uid}` exists. Because that
+collection declares no write rule, the catch-all denies every client write and
+an administrator can only be added from the Firebase console.
+
+This replaced a four-address email allowlist that was duplicated in
+`src/lib/authUtils.ts` and shipped in the client bundle (#19).
+
+`users/{uid}` splits `create` and `update` so each can name the fields it
+accepts — `uid`, `displayName`, `email`, `photoURL`, `countryOfOrigin`,
+`updatedAt`. `allow write` previously accepted any field, including `role`,
+which `App.tsx` read back as an authorization decision.
 
 ### `visa_guide_votes` — undeclared path
 
@@ -139,6 +148,6 @@ re-throws. The logged object includes `authInfo.userId` **and
 | Corruption | Non-atomic catalogue seeding; Gemini output written without schema validation. |
 | Duplication | Bookmark toggle without transaction or deterministic ID. |
 | Race conditions | No transactions or batches anywhere in the data layer. |
-| Unauthorized access | Unauthenticated `create` on three collections; self-writable `role` field. |
+| Unauthorized access | Unauthenticated `create` on three collections. The self-writable `role` field was closed in #19. |
 | Unbounded growth | Anonymous document creation is reachable through the public Firebase config, bypassing the Express rate limiter entirely. |
 | Counter manipulation | `hasOnly(['likes'])` constrains which keys change, not their values, and does not require authentication. |

@@ -11,18 +11,17 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Administrators, kept in sync with ADMIN_EMAILS in src/lib/authUtils.ts.
-    // The client-side check there is for showing UI only; this is the one that
-    // actually protects the data.
+    // Administrators are the documents present in /admins, keyed by uid. That
+    // collection has no write rule, so the catch-all denies every client write
+    // and entries can only be added from the Firebase console.
+    //
+    // This replaces a hardcoded list of four addresses that was duplicated in
+    // src/lib/authUtils.ts and had to be kept in sync by hand -- and which,
+    // being in the client bundle, published the admin accounts to anyone who
+    // read the JavaScript.
     function isAdmin() {
       return isSignedIn()
-             && request.auth.token.email_verified == true
-             && request.auth.token.email.lower() in [
-                  'ana.izaguirrematamoros@gmail.com',
-                  'latinomigra@gmail.com',
-                  'admin@latinomigra.com',
-                  'ana.izaguirre@gmail.com'
-                ];
+             && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
     // Default deny catch-all
@@ -38,9 +37,29 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // User profile: owner can read/write
+    // Administrator registry: a user may check their own entry so the interface
+    // knows whether to offer the admin panel. Deliberately no write rule --
+    // the catch-all denies creates, updates and deletes from every client.
+    match /admins/{userId} {
+      allow read: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // User profile: owner can read and write, but only the fields the app
+    // actually writes. `allow write` used to accept any field, including
+    // `role`, which the client then read back as an authorisation decision --
+    // so a user could grant themselves the admin interface permanently.
     match /users/{userId} {
-      allow read, write: if isSignedIn() && request.auth.uid == userId;
+      allow read, delete: if isSignedIn() && request.auth.uid == userId;
+      allow create: if isSignedIn()
+                    && request.auth.uid == userId
+                    && request.resource.data.keys().hasOnly(
+                         ['uid', 'displayName', 'email', 'photoURL',
+                          'countryOfOrigin', 'updatedAt']);
+      allow update: if isSignedIn()
+                    && request.auth.uid == userId
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+                         ['uid', 'displayName', 'email', 'photoURL',
+                          'countryOfOrigin', 'updatedAt']);
     }
     
     // Saved Scholarships: user can access their own bookmarks

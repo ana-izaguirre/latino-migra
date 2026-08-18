@@ -197,6 +197,29 @@ export async function getUserProfile(userId: string) {
   }
 }
 
+/**
+ * Whether the signed-in user is an administrator.
+ *
+ * Authority lives in `admins/{uid}`, a collection with a read-own rule and no
+ * write rule at all, so the catch-all denies every client write: entries can
+ * only be added from the Firebase console. This is the single source of truth
+ * for both the interface and `isAdmin()` in `firestore.rules`.
+ *
+ * Fails closed. A denied or failed read returns false rather than assuming
+ * privilege, and `handleFirestoreError` logs it so the failure is visible
+ * instead of silently downgrading an administrator to a normal user.
+ */
+export async function isUserAdmin(userId: string): Promise<boolean> {
+  const path = `admins/${userId}`;
+  try {
+    const snap = await getDoc(doc(db, "admins", userId));
+    return snap.exists();
+  } catch (err) {
+    handleFirestoreError(err, OperationType.GET, path);
+    return false;
+  }
+}
+
 // Sign Out Helper
 export async function signOutUser() {
   if (!auth) return;
