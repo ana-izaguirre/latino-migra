@@ -1,18 +1,22 @@
 #!/usr/bin/env bash
 #
-# Creates the "Product Engineering" GitHub Project (Projects V2) and its fields,
-# then adds every open issue to it.
+# Creates the "Product Engineering" GitHub Project, its fields, adds every open
+# issue and sets all field values. One command, no manual data entry.
 #
-# WHY THIS IS A SCRIPT AND NOT AUTOMATED
-# Projects V2 is a GraphQL-only API. The Claude Code session that produced the
-# audit had GraphQL disabled, so it could create issues and labels (REST) but
-# not the Project. Run this once from a machine with the gh CLI.
+# WHY THIS IS A SCRIPT
+# Projects V2 is a GraphQL-only API. The Claude Code web session that produced
+# the audit can use REST (issues, labels, PRs) but not GraphQL, so it can create
+# issues but cannot touch Projects at all — not creating them, not adding items,
+# not setting field values. Run this once from a machine with the gh CLI.
 #
 # REQUIREMENTS
 #   gh auth login --scopes project,repo
+#   jq
 #
 # USAGE
 #   ./scripts/setup-github-project.sh
+#
+# The field values come from docs/project-fields.md. Keep them in sync.
 #
 set -euo pipefail
 
@@ -21,62 +25,125 @@ REPO="latino-migra"
 PROJECT_TITLE="Product Engineering"
 
 command -v gh >/dev/null || { echo "gh CLI not found"; exit 1; }
-gh auth status >/dev/null || { echo "run: gh auth login --scopes project,repo"; exit 1; }
+command -v jq >/dev/null || { echo "jq not found"; exit 1; }
+gh auth status >/dev/null 2>&1 || { echo "run: gh auth login --scopes project,repo"; exit 1; }
+
+# --- issue -> field values ----------------------------------------------------
+# issue|Priority|Type|Risk|Effort|Area|AI Strategy|AI Tool|AI Autonomy|Verification
+read -r -d '' ROWS <<'DATA' || true
+18|P0 - Critical|Security|Critical|S|Database|Manual|Other|Human Only|Human
+19|P0 - Critical|Security|Critical|M|Security|AI-Assisted|Claude Code|Suggest|Multiple
+20|P0 - Critical|Security|Critical|M|Database|AI-Assisted|Claude Code|Suggest|Integration Test
+21|P0 - Critical|Technical Debt|High|L|Architecture|AI-Assisted|Claude Code|Implement + Test|CI
+16|P0 - Critical|Security|Critical|S|Security|Manual|Other|Human Only|Human
+22|P1 - High|Bug|High|L|Backend|AI-Assisted|Claude Code|Suggest|Integration Test
+23|P1 - High|Bug|High|S|Database|AI-Assisted|Claude Code|Implement + Test|Integration Test
+24|P1 - High|Bug|Medium|XS|Database|AI-Assisted|Claude Code|Implement + Test|Multiple
+25|P1 - High|Improvement|Medium|S|Frontend|Agentic|Claude Code|Implement + Test|Multiple
+26|P1 - High|Accessibility|Medium|M|Accessibility|Agentic|Claude Code|Implement + Test|Accessibility Test
+27|P1 - High|Technical Debt|Medium|XS|DevOps|AI-Assisted|Claude Code|Implement|CI
+28|P1 - High|Testing|Medium|S|Testing|AI-Assisted|Claude Code|Implement + Test|E2E
+29|P1 - High|Observability|Medium|M|Observability|AI-Assisted|Claude Code|Implement + Test|CI
+6|P1 - High|Testing|Medium|M|QA|Agentic|Claude Code|Implement + Test|CI
+30|P2 - Medium|Security|Medium|XS|Security|AI-Assisted|Claude Code|Implement + Test|Unit Test
+31|P2 - Medium|Improvement|Low|S|Frontend|AI-Assisted|GitHub Copilot|Implement|Human
+4|P2 - Medium|Bug|Medium|M|AI|AI-Assisted|Claude Code|Implement + Test|Multiple
+7|P2 - Medium|UX|Low|S|UX|AI-Assisted|Claude Code|Implement + Test|E2E
+8|P2 - Medium|Bug|Low|XS|UX|AI-Assisted|Claude Code|Implement + Test|E2E
+9|P2 - Medium|Accessibility|Medium|M|Accessibility|Agentic|Claude Code|Implement + Test|Accessibility Test
+10|P2 - Medium|Performance|Medium|L|Performance|AI-Assisted|Claude Code|Implement + Test|Performance Test
+12|P2 - Medium|UX|Medium|L|UX|AI-Assisted|Claude Code|Implement + Test|Multiple
+13|P2 - Medium|Technical Debt|Medium|XL|Architecture|AI-Assisted|Claude Code|Implement + Test|CI
+3|P3 - Low|Feature|Medium|XL|AI|AI-Assisted|Google AI Studio|Suggest|Human
+5|P3 - Low|Feature|High|L|Product|AI-Assisted|Claude Code|Suggest|Multiple
+11|P3 - Low|Technical Debt|Low|XS|DevOps|Manual|Other|Human Only|Human
+14|P3 - Low|Testing|Low|L|Testing|Agentic|Claude Code|Implement + Test|CI
+DATA
 
 echo "==> Creating project '${PROJECT_TITLE}'"
-PROJECT_NUMBER=$(gh project create --owner "${OWNER}" --title "${PROJECT_TITLE}" --format json | jq -r '.number')
+PROJECT_JSON=$(gh project create --owner "${OWNER}" --title "${PROJECT_TITLE}" --format json)
+PROJECT_NUMBER=$(jq -r '.number' <<<"${PROJECT_JSON}")
+PROJECT_ID=$(jq -r '.id' <<<"${PROJECT_JSON}")
 echo "    project #${PROJECT_NUMBER}"
 
-# --- single-select fields -----------------------------------------------------
-# gh project field-create replaces the default "Status" options only if you
-# delete and recreate it in the UI; the Status values below are set manually.
+# --- replace the built-in Status options --------------------------------------
+# The default Status field ships with Todo/In Progress/Done and its options
+# cannot be edited via the CLI, so it is replaced with one carrying the
+# workflow this project actually uses.
+echo "==> Replacing the default Status field"
+DEFAULT_STATUS_ID=$(gh project field-list "${PROJECT_NUMBER}" --owner "${OWNER}" --format json \
+  | jq -r '.fields[] | select(.name=="Status") | .id')
+[ -n "${DEFAULT_STATUS_ID}" ] && gh project field-delete --id "${DEFAULT_STATUS_ID}" >/dev/null
 
 add_field() {
-  local name="$1"; shift
-  local options="$1"; shift
-  echo "==> Field: ${name}"
+  echo "==> Field: $1"
   gh project field-create "${PROJECT_NUMBER}" --owner "${OWNER}" \
-    --name "${name}" --data-type SINGLE_SELECT \
-    --single-select-options "${options}" >/dev/null
+    --name "$1" --data-type SINGLE_SELECT --single-select-options "$2" >/dev/null
 }
 
-add_field "Priority" "P0 - Critical,P1 - High,P2 - Medium,P3 - Low"
-add_field "Type"     "Bug,Feature,Improvement,Technical Debt,Security,Performance,Accessibility,UX,Observability,Testing,Documentation"
-add_field "Risk"     "Critical,High,Medium,Low"
-add_field "Effort"   "XS,S,M,L,XL"
-add_field "Area"     "Product,Architecture,Frontend,Backend,Database,Security,Testing,QA,Accessibility,UX,Performance,Observability,DevOps,AI"
-
-# --- AI development fields ----------------------------------------------------
+add_field "Status"       "Backlog,Ready,In Progress,AI Review,Human Review,Blocked,Done"
+add_field "Priority"     "P0 - Critical,P1 - High,P2 - Medium,P3 - Low"
+add_field "Type"         "Bug,Feature,Improvement,Technical Debt,Security,Performance,Accessibility,UX,Observability,Testing,Documentation"
+add_field "Risk"         "Critical,High,Medium,Low"
+add_field "Effort"       "XS,S,M,L,XL"
+add_field "Area"         "Product,Architecture,Frontend,Backend,Database,Security,Testing,QA,Accessibility,UX,Performance,Observability,DevOps,AI"
 add_field "AI Strategy"  "Manual,AI-Assisted,Agentic"
 add_field "AI Tool"      "Claude Code,GitHub Copilot,Google AI Studio,ChatGPT,OpenCode,Other"
 add_field "AI Autonomy"  "Human Only,Suggest,Implement,Implement + Test,Implement + Test + Review"
 add_field "Verification" "Human,Unit Test,Integration Test,E2E,CI,Security Scan,Performance Test,Accessibility Test,Multiple"
 
-# --- add every open issue -----------------------------------------------------
-echo "==> Adding open issues"
-gh issue list --repo "${OWNER}/${REPO}" --state open --limit 100 --json number \
-  --jq '.[].number' | while read -r n; do
-    gh project item-add "${PROJECT_NUMBER}" --owner "${OWNER}" \
-      --url "https://github.com/${OWNER}/${REPO}/issues/${n}" >/dev/null
-    echo "    added #${n}"
-done
+# --- cache field and option ids ----------------------------------------------
+FIELDS_JSON=$(gh project field-list "${PROJECT_NUMBER}" --owner "${OWNER}" --format json)
+
+field_id()  { jq -r --arg n "$1" '.fields[] | select(.name==$n) | .id' <<<"${FIELDS_JSON}"; }
+option_id() {
+  jq -r --arg n "$1" --arg o "$2" \
+    '.fields[] | select(.name==$n) | .options[] | select(.name==$o) | .id' <<<"${FIELDS_JSON}"
+}
+
+set_field() { # item_id field_name option_name
+  local fid oid
+  fid=$(field_id "$2"); oid=$(option_id "$2" "$3")
+  if [ -z "${fid}" ] || [ -z "${oid}" ]; then
+    echo "    !! could not resolve $2 = $3" >&2
+    return 0
+  fi
+  gh project item-edit --id "$1" --project-id "${PROJECT_ID}" \
+    --field-id "${fid}" --single-select-option-id "${oid}" >/dev/null
+}
+
+# --- add issues and set their values -----------------------------------------
+echo "==> Adding issues and setting field values"
+while IFS='|' read -r num priority type risk effort area strategy tool autonomy verification; do
+  [ -z "${num:-}" ] && continue
+  ITEM_ID=$(gh project item-add "${PROJECT_NUMBER}" --owner "${OWNER}" \
+    --url "https://github.com/${OWNER}/${REPO}/issues/${num}" --format json | jq -r '.id')
+
+  set_field "${ITEM_ID}" "Status"       "Backlog"
+  set_field "${ITEM_ID}" "Priority"     "${priority}"
+  set_field "${ITEM_ID}" "Type"         "${type}"
+  set_field "${ITEM_ID}" "Risk"         "${risk}"
+  set_field "${ITEM_ID}" "Effort"       "${effort}"
+  set_field "${ITEM_ID}" "Area"         "${area}"
+  set_field "${ITEM_ID}" "AI Strategy"  "${strategy}"
+  set_field "${ITEM_ID}" "AI Tool"      "${tool}"
+  set_field "${ITEM_ID}" "AI Autonomy"  "${autonomy}"
+  set_field "${ITEM_ID}" "Verification" "${verification}"
+
+  echo "    #${num} → ${priority} / ${area} / ${autonomy}"
+done <<<"${ROWS}"
 
 cat <<EOF
 
-Done. Remaining manual steps in the GitHub UI:
+Done. 27 issues added, all fields set, everything in Backlog.
 
-1. Status field — replace the default options with:
-     Backlog, Ready, In Progress, AI Review, Human Review, Blocked, Done
-   Set every audit issue to Backlog.
+Views must be created in the UI (the CLI cannot create them):
 
-2. Field values per issue — see docs/project-fields.md
-
-3. Views:
-     Main Board          board, grouped by Status
-     Production Readiness table, filter: label:P0-critical,P1-high
-     Security & Data Risk table, filter: label:security,database
-     AI Work Queue        table, filter: AI Strategy != Manual
-     Priority View        table, sorted by Priority, grouped by Area
+  Main Board            board,  group by Status
+  Production Readiness  table,  filter: Priority:"P0 - Critical","P1 - High"
+  Security & Data Risk  table,  filter: Area:Security,Database
+  AI Work Queue         table,  filter: -"AI Strategy":Manual
+  Priority View         table,  sort by Priority, group by Area
 
 Project: https://github.com/users/${OWNER}/projects/${PROJECT_NUMBER}
 EOF

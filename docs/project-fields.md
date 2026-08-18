@@ -4,8 +4,13 @@ Field values for every issue in the **Product Engineering** project, derived fro
 the engineering audit.
 
 Projects V2 is a GraphQL-only API, and the session that produced the audit had
-GraphQL disabled. `scripts/setup-github-project.sh` creates the project and its
-fields; this table is the source for filling in the values.
+GraphQL disabled — it can create issues and labels over REST but cannot create a
+project, add items to one, or set field values.
+
+`scripts/setup-github-project.sh` does all of that in one run: it creates the
+project, replaces the default Status options, creates the nine remaining fields,
+adds all 27 open issues and sets every field value. This table is the source of
+truth for the values encoded in that script; keep the two in sync.
 
 Until the project exists, priority is encoded as repository labels
 (`P0-critical`, `P1-high`, `P2-medium`, `P3-low`) so the information is not lost.
