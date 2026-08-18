@@ -65,7 +65,8 @@ collections, admin-only scholarship writes, size limits on user-generated text.
 | Item | Status |
 |---|---|
 | `.env` | Not tracked by git |
-| Real API keys in source | None found |
+| Real API keys in the working tree | None found |
+| Real API keys in git history | One leaked Google API key — see #16 |
 | Firebase config in bundle | Yes — public by design for web SDKs |
 | Fallback project ID in source | `refined-coral-0zp2g` hardcoded in `src/lib/firebase.ts` as a default |
 | Admin emails in bundle | Yes — four addresses in `src/lib/authUtils.ts` |
@@ -75,6 +76,11 @@ collections, admin-only scholarship writes, size limits on user-generated text.
 
 The hardcoded fallback project ID is not a secret, but it does mean a developer
 without `.env` silently connects to a real Firebase project.
+
+This audit read the working tree, not the history. GitHub Secret Scanning
+later flagged a Google API key committed in an earlier revision: removing a
+key from `HEAD` does not remove it from the objects git still holds, so the
+only remediation is rotation at the provider. Tracked in #16.
 
 The admin allowlist in the bundle is not a credential, but it is a target list
 for phishing aimed at the accounts that can modify the catalogue.
