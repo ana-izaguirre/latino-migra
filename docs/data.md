@@ -29,8 +29,8 @@ All six are eagerly imported and ship in the initial bundle.
 
 ## Firestore collections
 
-`firebase-blueprint.json` documents entity shapes but nothing enforces it.
-Documents are whatever the client writes.
+Nothing enforces a document shape. Documents are whatever the client writes;
+the table below is the only record of the intended shape.
 
 | Collection | Read | Write | Written by |
 |---|---|---|---|

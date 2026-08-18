@@ -45,13 +45,27 @@ input.
 
 ## Merge gates
 
-Documented in `CONTRIBUTING.md`. CI blocks a merge when `format:check`, `lint`,
-`test:coverage` or `e2e-tests` fails.
+CI blocks a merge to `main` when any of these fails:
+
+| Check | What it verifies |
+|---|---|
+| `format:check` | Prettier |
+| `lint` | ESLint (0 errors) + `tsc --noEmit` |
+| `test:coverage` | Tests and coverage thresholds |
+| `e2e-tests` | Playwright on desktop and mobile |
 
 Branch protection itself is **not configured in the repository** — it must be
-enabled in GitHub settings. `CONTRIBUTING.md` records the intended ruleset and
-notes that "Require approvals" should stay off while a single person maintains
-the project.
+enabled under **Settings → Branches → Add branch ruleset** on `main`:
+
+- Require a pull request before merging
+- Require status checks to pass — select `Fast Unit Tests & Typecheck` and
+  `End-to-End Tests`
+- Require branches to be up to date before merging
+- Block force pushes
+
+"Require approvals" stays **off** while a single person maintains the project;
+enabling it would lock the maintainer out of their own repository. The
+protection that matters here is that the checks pass, not that someone approves.
 
 ## Deployment
 

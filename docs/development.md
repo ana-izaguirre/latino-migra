@@ -5,8 +5,7 @@ Local setup, environment and tooling as they exist today.
 ## Requirements
 
 - Node.js 22 (the version CI uses)
-- npm — note that `bun.lock` is also tracked, so a contributor using Bun would
-  resolve a different dependency tree
+- npm — `package-lock.json` is the only lockfile
 
 ## Setup
 
@@ -24,7 +23,7 @@ npm run dev             # tsx server.ts — Express + Vite middleware on :3000
 
 ## Environment variables
 
-`.env.example` documents 9 variables; the code reads 14.
+`.env.example` documents 8 variables; the code reads 14.
 
 ### Documented and used
 
@@ -49,12 +48,6 @@ npm run dev             # tsx server.ts — Express + Vite middleware on :3000
 | `PORT` | `server.ts` — defaults to 3000 |
 | `NODE_ENV` | `server.ts` — selects the Vite or static branch |
 | `VERCEL` | `server.ts` — skips `app.listen` when set |
-
-### Documented but obsolete
-
-| Variable | Note |
-|---|---|
-| `APP_URL` | Described as injected by AI Studio at Cloud Run runtime. The project deploys to Vercel; nothing reads it |
 
 `firebase-applet-config.json` is also supported as a local config source via
 `import.meta.glob` in `src/lib/firebase.ts`, and is gitignored.

@@ -64,18 +64,16 @@ key.
 `GOOGLE_MAPS_PLATFORM_KEY` is inlined at build time by `vite.config.ts` through
 `define`, so it is baked into the bundle.
 
-## The unused Dockerfile
+## Removed: the Cloud Run Dockerfile
 
-A multi-stage `Dockerfile` builds the frontend and the esbuild server bundle,
-installs production dependencies and runs `npm start` on port 3000. It is a
-Cloud Run configuration from an earlier deployment — the git history includes
-`fix:remove Cloud Run badge from README`.
-
-**Vercel does not use it.** Two deployment paths therefore coexist in the
-repository with nothing indicating which is authoritative.
+A multi-stage `Dockerfile` from an earlier Cloud Run deployment used to sit
+alongside `vercel.json`, so two deployment paths coexisted with nothing
+indicating which was authoritative. Vercel never built it, and it was deleted.
 
 `server.ts` retains the corresponding static-serving branch for
-`NODE_ENV=production`, which is what `npm start` exercises locally.
+`NODE_ENV=production`, which is what `npm start` exercises locally. Restoring a
+container build means writing a new `Dockerfile` against the project as it
+stands, not resurrecting that one.
 
 ## Scheduled work
 

@@ -1,6 +1,0 @@
-{
-  "name": "LatinoMigra",
-  "description": "Plataforma de becas, guías migratorias paso a paso y asistente de IA para estudiantes y profesionales latinoamericanos.",
-  "requestFramePermissions": ["geolocation"],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

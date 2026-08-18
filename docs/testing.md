@@ -121,9 +121,18 @@ carries a stricter per-file budget (95 % statements).
 
 Coverage excludes config, scripts, test helpers and `main.tsx`.
 
-The rationale for not setting a high global target is recorded in
-`CONTRIBUTING.md`: the codebase is ~11,900 lines of components against ~1,550 of
-pure logic, so a 95 % global threshold would mostly measure whether JSX renders.
+A high global target is deliberately not set. The codebase is ~11,900 lines of
+components against ~1,550 of pure logic, so a 95 % global threshold would mostly
+measure whether JSX renders — thousands of lines of tests buying false
+confidence and slowing every change. What works instead:
+
+1. **High coverage where it counts.** `src/lib` is pure, verifiable logic.
+2. **A global ratchet.** Coverage cannot fall, and rises with every PR that adds
+   tests.
+3. **Patch coverage.** New code arrives covered, enforced per PR without having
+   to fix the whole backlog first.
+
+Reasonable medium-term target: 70 % globally, `src/lib` above 90 % (#14).
 
 ## What is only testable manually
 

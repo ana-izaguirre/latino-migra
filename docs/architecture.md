@@ -39,7 +39,6 @@ Approximately 19,400 lines of TypeScript across 88 tracked files.
 │   └── test/                Vitest setup, provider helper, server-side tests
 ├── tests/e2e/               Playwright: desktop journeys, mobile layout, consistency
 ├── firestore.rules          The only enforced data access control
-├── firebase-blueprint.json  Entity descriptions — documentation only, nothing enforces it
 └── .github/workflows/       ci.yml, update-scholarships.yml
 ```
 
@@ -161,9 +160,8 @@ These are inferred from the code. Some are deliberate, some appear incidental.
    process serves only `/api/*`; the HTML and assets come from the CDN.
 5. **No browser storage.** Nothing is written to `localStorage` or
    `sessionStorage`; a test enforces this. Preferences reset on reload.
-6. **Two deployment targets in the repo.** `vercel.json` + `api/index.ts` for
-   Vercel, and an unused multi-stage `Dockerfile` from an earlier Cloud Run
-   deployment.
+6. **One deployment target.** `vercel.json` + `api/index.ts`. The Cloud Run
+   `Dockerfile` from the earlier deployment has been removed.
 7. **Email allowlist for admin.** `authUtils.ts` holds four addresses; the
    Firestore rule checks the verified email on the token.
 
@@ -200,10 +198,10 @@ declares `aria-modal`, none trap focus.
 against 86 `t()` calls. This already produced five tests asserting fallback
 strings that never render in production.
 
-**Dead and misplaced dependencies.** `motion` (804 KB) is installed with zero
-imports. `ConversorMonedas.tsx` (256 lines) is never imported. `vite`,
-`@vitejs/plugin-react` and `@tailwindcss/vite` sit in `dependencies` rather than
-`devDependencies`, and `vite` is listed in both.
+**Misplaced dependencies.** `@vitejs/plugin-react` and `@tailwindcss/vite` sit
+in `dependencies` rather than `devDependencies`, so they are installed in
+production. The unused `motion` package, the duplicate `vite` entry and the
+never-imported `ConversorMonedas.tsx` have been removed.
 
 **Two chat implementations.** `ChatIA` calls Gemini through `/api/chat`.
 `FloatingChatWidget` answers from a hardcoded `if/else` over keywords. The same
