@@ -30,12 +30,11 @@ and 48 KB of visa guides for seven countries.
 
 ## Dependency weight
 
-- `motion` is installed (804 KB in `node_modules`) with **zero imports** in the
-  source.
-- `vite`, `@vitejs/plugin-react` and `@tailwindcss/vite` are listed in
+- `motion` (804 KB, zero imports) has been removed, as has the duplicate `vite`
+  entry in `dependencies`.
+- `@vitejs/plugin-react` and `@tailwindcss/vite` are still listed in
   `dependencies` rather than `devDependencies`, so they are installed in
   production and pulled into the serverless function's dependency resolution.
-  `vite` appears in both `dependencies` and `devDependencies`.
 
 ## Rendering
 

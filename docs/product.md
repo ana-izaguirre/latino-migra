@@ -135,7 +135,6 @@ Nothing is written to `localStorage` or `sessionStorage`; a test enforces this.
 | Floating chat assistant | Answers from five hardcoded keyword branches; anything else gets a generic reply. Not connected to Gemini. |
 | Google Analytics | `public/analytics.js` ships with the placeholder `G-MEASUREMENT_ID`. No data is collected. |
 | Push notifications | `NotificationSettingsModal` requests browser permission and shows a confirmation, but no push subscription is registered and no service worker exists. |
-| `ConversorMonedas.tsx` | 256-line currency converter component, never imported. |
 
 ## Edge cases worth knowing
 
