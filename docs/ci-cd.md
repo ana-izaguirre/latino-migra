@@ -1,0 +1,96 @@
+# CI/CD
+
+## Workflows
+
+Two workflows in `.github/workflows/`.
+
+### `ci.yml` — "CI / Unit & E2E Tests"
+
+Triggers: push to `main`/`master`, pull requests to those branches, and manual
+dispatch with a `full_e2e` input.
+
+**Job `unit-tests`** (5 min timeout, `contents: read` + `pull-requests: write`):
+1. `npm ci || npm install`
+2. `npm run format:check` — Prettier
+3. `npm run lint` — ESLint then `tsc --noEmit`
+4. `npm run test:coverage` — fails when thresholds are not met
+5. Renders the coverage table into the job summary via
+   `scripts/coverage-summary.mjs`
+6. Posts the same table as a sticky pull request comment, updating the existing
+   one rather than adding a new comment per push
+7. Uploads the HTML coverage report (7-day retention)
+
+**Job `e2e-tests`** (10 min timeout, needs `unit-tests`):
+1. `npm ci || npm install`
+2. `npx playwright install chromium --with-deps`
+3. `npm run build`
+4. `npm run test:e2e`
+5. Uploads the Playwright report (7-day retention)
+
+### `update-scholarships.yml` — "Scholarship Sync (Cron Job)"
+
+Triggers: Sundays at 04:00 UTC, plus manual dispatch with an `academic_year`
+input.
+
+1. Verifies `secrets.CRON_SECRET` and `vars.APP_BASE_URL` are set, failing with
+   an annotation if not.
+2. `POST {APP_BASE_URL}/api/cron/sync-scholarships` with the secret and academic
+   year, with retries and a 300 s cap.
+3. Parses `updatedCount` from the response and writes it to the job summary.
+4. Warns when the sync returns zero scholarships.
+
+> The endpoint it calls returns the generated data but does not persist it (see
+> [data.md](./data.md)). The workflow reports success while the catalogue is
+> unchanged.
+
+## Merge gates
+
+Documented in `CONTRIBUTING.md`. CI blocks a merge when `format:check`, `lint`,
+`test:coverage` or `e2e-tests` fails.
+
+Branch protection itself is **not configured in the repository** — it must be
+enabled in GitHub settings. `CONTRIBUTING.md` records the intended ruleset and
+notes that "Require approvals" should stay off while a single person maintains
+the project.
+
+## Deployment
+
+Not in the repository. Vercel deploys from its git integration:
+
+- Production on pushes to the default branch.
+- A preview deployment per pull request.
+
+`vercel.json` controls the build (`vite build` → `dist`), security headers, and
+routing: `/api/*` to the serverless function, everything except `/api/` and
+`/_vercel/` to `index.html`.
+
+## Secrets and variables
+
+| Name | Type | Used by |
+|---|---|---|
+| `CRON_SECRET` | secret | `update-scholarships.yml` |
+| `APP_BASE_URL` | variable | `update-scholarships.yml` |
+| `GITHUB_TOKEN` | automatic | coverage PR comment |
+
+Gemini and Firebase credentials are configured in Vercel, not in GitHub Actions.
+
+## Pipeline risks
+
+**`npm ci || npm install`** — the fallback turns a lockfile mismatch, which is a
+real signal, into a silent install of a different dependency tree. CI can pass
+green against dependencies nobody tested and that are not what deploys.
+
+**No `concurrency` group** — successive pushes to the same pull request run
+redundant jobs that compete for runners.
+
+**Playwright browsers are not cached** — `npx playwright install` re-downloads
+Chromium on every run.
+
+**E2E do not run against production configuration** — `npm run start` leaves
+`NODE_ENV` unset, so the server serves through Vite rather than `dist/`.
+
+**Two lockfiles** — `package-lock.json` and `bun.lock` are both tracked. CI uses
+npm; a contributor using Bun would resolve a different tree.
+
+**No CodeQL workflow in the repository.** Code scanning runs through GitHub's
+default setup, so its configuration is not versioned alongside the code.
