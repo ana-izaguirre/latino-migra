@@ -16,6 +16,10 @@
 # USAGE
 #   ./scripts/setup-github-project.sh
 #
+# NOT IDEMPOTENT. Every run creates a new Project. If a run fails part way
+# through, delete the half-built Project before retrying:
+#   gh project delete <number> --owner ana-izaguirre
+#
 # The field values come from docs/project-fields.md. Keep them in sync.
 #
 set -euo pipefail
@@ -66,14 +70,37 @@ PROJECT_NUMBER=$(jq -r '.number' <<<"${PROJECT_JSON}")
 PROJECT_ID=$(jq -r '.id' <<<"${PROJECT_JSON}")
 echo "    project #${PROJECT_NUMBER}"
 
-# --- replace the built-in Status options --------------------------------------
-# The default Status field ships with Todo/In Progress/Done and its options
-# cannot be edited via the CLI, so it is replaced with one carrying the
-# workflow this project actually uses.
-echo "==> Replacing the default Status field"
-DEFAULT_STATUS_ID=$(gh project field-list "${PROJECT_NUMBER}" --owner "${OWNER}" --format json \
+# --- rewrite the built-in Status options --------------------------------------
+# The default Status field ships with Todo/In Progress/Done. It cannot be
+# deleted -- the API rejects deleteProjectV2Field with "Only custom fields can
+# be deleted" -- and `gh project` exposes no way to edit its options. The
+# GraphQL mutation updateProjectV2Field does, so the option set is replaced
+# through the API directly.
+#
+# The mutation REPLACES the option list rather than adding to it. That is safe
+# here only because this runs before any item is added; on a populated board it
+# would clear the status of every item whose option disappeared.
+echo "==> Rewriting the built-in Status options"
+STATUS_FIELD_ID=$(gh project field-list "${PROJECT_NUMBER}" --owner "${OWNER}" --format json \
   | jq -r '.fields[] | select(.name=="Status") | .id')
-[ -n "${DEFAULT_STATUS_ID}" ] && gh project field-delete --id "${DEFAULT_STATUS_ID}" >/dev/null
+[ -n "${STATUS_FIELD_ID}" ] || { echo "could not find the Status field" >&2; exit 1; }
+
+jq -n --arg field "${STATUS_FIELD_ID}" '
+  {
+    query: "mutation($field: ID!, $options: [ProjectV2SingleSelectFieldOptionInput!]!) { updateProjectV2Field(input: {fieldId: $field, singleSelectOptions: $options}) { projectV2Field { ... on ProjectV2SingleSelectField { id } } } }",
+    variables: {
+      field: $field,
+      options: [
+        { name: "Backlog",      color: "GRAY",   description: "Not scheduled yet" },
+        { name: "Ready",        color: "BLUE",   description: "Scoped and ready to start" },
+        { name: "In Progress",  color: "YELLOW", description: "Being worked on" },
+        { name: "AI Review",    color: "PURPLE", description: "Awaiting agent self-review" },
+        { name: "Human Review", color: "ORANGE", description: "Awaiting human review" },
+        { name: "Blocked",      color: "RED",    description: "Waiting on something external" },
+        { name: "Done",         color: "GREEN",  description: "Merged and verified" }
+      ]
+    }
+  }' | gh api graphql --input - >/dev/null
 
 add_field() {
   echo "==> Field: $1"
@@ -81,7 +108,6 @@ add_field() {
     --name "$1" --data-type SINGLE_SELECT --single-select-options "$2" >/dev/null
 }
 
-add_field "Status"       "Backlog,Ready,In Progress,AI Review,Human Review,Blocked,Done"
 add_field "Priority"     "P0 - Critical,P1 - High,P2 - Medium,P3 - Low"
 add_field "Type"         "Bug,Feature,Improvement,Technical Debt,Security,Performance,Accessibility,UX,Observability,Testing,Documentation"
 add_field "Risk"         "Critical,High,Medium,Low"
