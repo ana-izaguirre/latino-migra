@@ -23,6 +23,7 @@ Planned work lives in GitHub issues, not here.
 | [ai.md](./ai.md) | Gemini integration, prompts, the two chat surfaces |
 | [development.md](./development.md) | Local setup, environment variables, scripts |
 | [deployment.md](./deployment.md) | How the app reaches production |
+| [project-fields.md](./project-fields.md) | GitHub Project field values per issue |
 
 ## Conventions
 
