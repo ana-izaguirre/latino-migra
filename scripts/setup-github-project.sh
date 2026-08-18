@@ -16,9 +16,12 @@
 # USAGE
 #   ./scripts/setup-github-project.sh
 #
-# NOT IDEMPOTENT. Every run creates a new Project. If a run fails part way
-# through, delete the half-built Project before retrying:
-#   gh project delete <number> --owner ana-izaguirre
+# RESUMING A FAILED RUN
+# Without PROJECT_NUMBER the script creates a new Project every time. To carry
+# on inside the one a failed run left behind, pass its number:
+#   PROJECT_NUMBER=4 ./scripts/setup-github-project.sh
+# Fields that already exist are skipped and re-adding an issue returns the item
+# that is already there, so a resumed run only does what is still missing.
 #
 # The field values come from docs/project-fields.md. Keep them in sync.
 #
@@ -64,11 +67,17 @@ read -r -d '' ROWS <<'DATA' || true
 14|P3 - Low|Testing|Low|L|Testing|Agentic|Claude Code|Implement + Test|CI
 DATA
 
-echo "==> Creating project '${PROJECT_TITLE}'"
-PROJECT_JSON=$(gh project create --owner "${OWNER}" --title "${PROJECT_TITLE}" --format json)
-PROJECT_NUMBER=$(jq -r '.number' <<<"${PROJECT_JSON}")
-PROJECT_ID=$(jq -r '.id' <<<"${PROJECT_JSON}")
-echo "    project #${PROJECT_NUMBER}"
+if [ -n "${PROJECT_NUMBER:-}" ]; then
+  echo "==> Reusing project #${PROJECT_NUMBER}"
+  PROJECT_ID=$(gh project view "${PROJECT_NUMBER}" --owner "${OWNER}" --format json | jq -r '.id')
+  [ -n "${PROJECT_ID}" ] || { echo "project #${PROJECT_NUMBER} not found" >&2; exit 1; }
+else
+  echo "==> Creating project '${PROJECT_TITLE}'"
+  PROJECT_JSON=$(gh project create --owner "${OWNER}" --title "${PROJECT_TITLE}" --format json)
+  PROJECT_NUMBER=$(jq -r '.number' <<<"${PROJECT_JSON}")
+  PROJECT_ID=$(jq -r '.id' <<<"${PROJECT_JSON}")
+  echo "    project #${PROJECT_NUMBER}"
+fi
 
 # --- rewrite the built-in Status options --------------------------------------
 # The default Status field ships with Todo/In Progress/Done. It cannot be
@@ -103,13 +112,20 @@ jq -n --arg field "${STATUS_FIELD_ID}" '
   }' | gh api graphql --input - >/dev/null
 
 add_field() {
+  if gh project field-list "${PROJECT_NUMBER}" --owner "${OWNER}" --format json \
+    | jq -e --arg n "$1" '.fields[] | select(.name==$n)' >/dev/null; then
+    echo "==> Field: $1 (already exists, skipping)"
+    return 0
+  fi
   echo "==> Field: $1"
   gh project field-create "${PROJECT_NUMBER}" --owner "${OWNER}" \
     --name "$1" --data-type SINGLE_SELECT --single-select-options "$2" >/dev/null
 }
 
 add_field "Priority"     "P0 - Critical,P1 - High,P2 - Medium,P3 - Low"
-add_field "Type"         "Bug,Feature,Improvement,Technical Debt,Security,Performance,Accessibility,UX,Observability,Testing,Documentation"
+# Not "Type": Projects reserves that name for its own issue-type field, and
+# createProjectV2Field rejects it with "Name cannot have a reserved value".
+add_field "Work Type"    "Bug,Feature,Improvement,Technical Debt,Security,Performance,Accessibility,UX,Observability,Testing,Documentation"
 add_field "Risk"         "Critical,High,Medium,Low"
 add_field "Effort"       "XS,S,M,L,XL"
 add_field "Area"         "Product,Architecture,Frontend,Backend,Database,Security,Testing,QA,Accessibility,UX,Performance,Observability,DevOps,AI"
@@ -147,7 +163,7 @@ while IFS='|' read -r num priority type risk effort area strategy tool autonomy 
 
   set_field "${ITEM_ID}" "Status"       "Backlog"
   set_field "${ITEM_ID}" "Priority"     "${priority}"
-  set_field "${ITEM_ID}" "Type"         "${type}"
+  set_field "${ITEM_ID}" "Work Type"    "${type}"
   set_field "${ITEM_ID}" "Risk"         "${risk}"
   set_field "${ITEM_ID}" "Effort"       "${effort}"
   set_field "${ITEM_ID}" "Area"         "${area}"

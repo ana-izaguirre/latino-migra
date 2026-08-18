@@ -8,9 +8,14 @@ GraphQL disabled — it can create issues and labels over REST but cannot create
 project, add items to one, or set field values.
 
 `scripts/setup-github-project.sh` does all of that in one run: it creates the
-project, replaces the default Status options, creates the nine remaining fields,
-adds all 27 open issues and sets every field value. This table is the source of
-truth for the values encoded in that script; keep the two in sync.
+project, rewrites the built-in Status options, creates the nine remaining
+fields, adds all 27 open issues and sets every field value. This table is the
+source of truth for the values encoded in that script; keep the two in sync.
+
+The field is called **Work Type**, not Type: Projects reserves `Type` for its
+own issue-type field and rejects a custom field by that name. `Status` is
+reserved too, but it already exists — the script rewrites its options in place
+rather than creating it.
 
 Until the project exists, priority is encoded as repository labels
 (`P0-critical`, `P1-high`, `P2-medium`, `P3-low`) so the information is not lost.
@@ -22,7 +27,7 @@ existing.
 
 ## New issues from the audit
 
-| Issue | Priority | Type | Risk | Effort | Area | AI Strategy | AI Tool | AI Autonomy | Verification |
+| Issue | Priority | Work Type | Risk | Effort | Area | AI Strategy | AI Tool | AI Autonomy | Verification |
 |---|---|---|---|---|---|---|---|---|---|
 | #18 Backup and restore strategy | P0 | Security | Critical | S | Database | Manual | — | Human Only | Human |
 | #19 Remove role self-assignment | P0 | Security | Critical | M | Security | AI-Assisted | Claude Code | Suggest | Multiple |
@@ -41,7 +46,7 @@ existing.
 
 ## Pre-existing issues
 
-| Issue | Priority | Type | Risk | Effort | Area | AI Strategy | AI Tool | AI Autonomy | Verification |
+| Issue | Priority | Work Type | Risk | Effort | Area | AI Strategy | AI Tool | AI Autonomy | Verification |
 |---|---|---|---|---|---|---|---|---|---|
 | #16 Rotate leaked API key | P0 | Security | Critical | S | Security | Manual | — | Human Only | Human |
 | #6 QA strategy | P1 | Testing | Medium | M | QA | Agentic | Claude Code | Implement + Test | CI |
