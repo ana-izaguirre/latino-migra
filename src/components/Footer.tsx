@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { NavigationTab } from "../types";
 import { useLanguage } from "../lib/i18n";
+import { useBodyScrollLock } from "../lib/useBodyScrollLock";
 
 interface FooterProps {
   setActiveTab: (tab: NavigationTab) => void;
@@ -32,6 +33,8 @@ type ModalType = "terms" | "privacy" | "guidelines" | "contact" | null;
 export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
   const { language, t } = useLanguage();
   const [activeModal, setActiveModal] = useState<ModalType>(null);
+
+  useBodyScrollLock(activeModal !== null);
 
   const handleNavigate = (tab: NavigationTab) => {
     setActiveTab(tab);
@@ -249,7 +252,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
 
       {/* Interactive Information Modals */}
       {activeModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 lm-overlay">
           <div className="bg-surface-container-lowest dark:bg-slate-800 rounded-3xl max-w-xl w-full p-6 md:p-8 space-y-4 shadow-2xl border border-outline-variant/40 dark:border-slate-700 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between border-b border-outline-variant/30 dark:border-slate-700 pb-3">
               <h3 className="font-headline-sm text-lg md:text-xl font-bold text-primary dark:text-sky-300 flex items-center gap-2">

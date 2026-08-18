@@ -67,6 +67,12 @@ languages; scholarships carry required metadata; guides exist for ES, DE, CA.
 **Country context** (`PreferencesContext.test.tsx`) — propagation between
 consumers, code/name mapping, no storage writes. 100 % covered.
 
+**Scroll behaviour** (`useBodyScrollLock.test.tsx`, `mobile.spec.ts`) — the body
+is pinned while an overlay is open and the reading position restored on close,
+including when the overlay unmounts without its state flipping first; the page
+scrolls on every screen; the top bar stays stuck; a modal overlay has a scroll
+container so a tall panel stays reachable.
+
 **Admin authorization** (`authUtils.test.ts`, `isUserAdmin.test.ts`,
 `AuthModal.test.tsx`, `TopNavBar.test.tsx`) — `isAdmin()` ignores a `role` field
 injected onto the user object and an address that used to be on the allowlist;

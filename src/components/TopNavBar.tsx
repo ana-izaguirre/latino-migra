@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Globe,
   Search,
@@ -31,6 +31,7 @@ import { useLanguage } from "../lib/i18n";
 import { useCurrency } from "../lib/CurrencyContext";
 import { getSafeImageUrl } from "../lib/sanitize";
 import { isAdmin } from "../lib/authUtils";
+import { useBodyScrollLock } from "../lib/useBodyScrollLock";
 
 interface TopNavBarProps {
   activeTab: NavigationTab;
@@ -111,52 +112,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Prevent background scroll when mobile drawer is open. The scroll position
-  // is restored on close so iOS does not jump the page back to the top.
-  //
-  // useLayoutEffect, not useEffect: the drawer is a full-screen fixed overlay,
-  // and by the time a passive effect runs the browser has already painted it
-  // and clamped the scroll position to 0 — so the position being saved was
-  // always 0 and dismissing the drawer sent the user back to the top.
-  useLayoutEffect(() => {
-    if (!mobileMenuOpen) return;
-
-    const scrollY = window.scrollY;
-    const { body } = document;
-    const previous = {
-      position: body.style.position,
-      top: body.style.top,
-      width: body.style.width,
-      overflow: body.style.overflow,
-    };
-
-    body.style.position = "fixed";
-    body.style.top = `-${scrollY}px`;
-    body.style.width = "100%";
-    body.style.overflow = "hidden";
-
-    return () => {
-      body.style.position = previous.position;
-      body.style.top = previous.top;
-      body.style.width = previous.width;
-      body.style.overflow = previous.overflow;
-      // Navigating from the drawer should land at the top of the new screen;
-      // merely dismissing it should return to where the user was reading.
-      const target = resetScrollOnCloseRef.current ? 0 : scrollY;
-      resetScrollOnCloseRef.current = false;
-
-      // Fixing the body collapses the document to viewport height, so the
-      // scrollable range is 0 until layout is recalculated. Read a layout
-      // property to force that reflow, otherwise the scroll below is clamped
-      // to 0 and the user is thrown back to the top of the page.
-      void document.body.offsetHeight;
-
-      // "instant" rather than "auto": the page sets `scroll-behavior: smooth`,
-      // and "auto" defers to that, which would animate the restore and leave
-      // the user watching the page glide back to where they already were.
-      window.scrollTo({ top: target, behavior: "instant" });
-    };
-  }, [mobileMenuOpen]);
+  useBodyScrollLock(mobileMenuOpen, resetScrollOnCloseRef);
 
   // Close the drawer with the Escape key
   useEffect(() => {

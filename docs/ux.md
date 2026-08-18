@@ -73,6 +73,19 @@ Recently addressed and verified by tests:
   primary call to action, and clears the bottom bar.
 - Range sliders have a visible, draggable thumb. They previously used
   `appearance-none` with no thumb styling, leaving them invisible.
+- The page scrolls while a modal is open, and stops moving underneath it. Every
+  overlay is `fixed inset-0`; nothing froze the document beneath, so a swipe
+  scrolled the page while the panel stayed put and the screen read as stuck.
+  `useBodyScrollLock` (`src/lib/`) pins the body and restores the reading
+  position on close — the same mechanism the drawer already used, now shared by
+  all ten overlays.
+- Overlays carry `.lm-overlay`, which gives them a scroll container. Flex
+  centring clipped a panel taller than the viewport at both ends with no way to
+  reach the overflow; `align-items: flex-start` plus auto margins centres it
+  only while it fits.
+- The root uses `overflow-x: clip` rather than `hidden`. `hidden` makes the
+  element a scroll container, which breaks `position: sticky` inside it and
+  disables momentum scrolling on iOS.
 - Dismissing the drawer restores the reading position instead of jumping to the
   top.
 
