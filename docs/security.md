@@ -14,31 +14,46 @@ from `users/{uid}`.
 
 ## Authorization
 
-Two independent checks that do **not** agree:
+Both checks read the same source:
 
 | Layer | Check | Trusts |
 |---|---|---|
-| Client (`authUtils.ts`) | `user.role === "admin"` **or** email in allowlist | A field the user can write |
-| Firestore rules | `request.auth.token.email_verified` + token email in allowlist | The identity provider |
+| Client (`authUtils.ts`) | `user.isAdmin`, resolved once at sign-in from `admins/{uid}` | A collection no client can write |
+| Firestore rules | `exists(/databases/$(database)/documents/admins/$(request.auth.uid))` | The same collection |
 
-The server-side rule is sound. The client-side check is not.
+`admins` has a read-own rule and **no write rule at all**, so the deny-all
+catch-all rejects every create, update and delete from every client. Entries are
+added from the Firebase console.
 
-### Privilege escalation (present)
+### Privilege escalation (fixed in #19)
 
-`src/components/AuthModal.tsx` renders two buttons to any signed-in user:
+`AuthModal` used to render "👤 Persona Normal" / "🔑 Administrador" buttons to
+any signed-in user, the second calling
+`onSignIn({ ...currentUser, role: "admin" })`. `isAdmin()` short-circuited on
+`user.role === "admin"`, so that unlocked the admin tab and every admin-only
+control.
 
-```tsx
-onClick={() => { onSignIn({ ...currentUser, role: "admin" }); }}
-```
+Three things were wrong at once, and all three are closed:
 
-Because `isAdmin()` short-circuits on `user.role === "admin"`, this unlocks the
-admin tab and admin-only UI. Because `firestore.rules` allows
-`users/{uid}` to be written by its owner, and `App.tsx` reads
-`role: profile?.role` back from that document, the elevation survives sign-out.
+1. The selector existed. It is gone; a component test asserts no control changes
+   the role.
+2. `isAdmin()` trusted a client-supplied field. It now reads only the flag
+   derived from `admins/{uid}`.
+3. `users/{uid}` accepted any field, so `role: "admin"` written directly with
+   the SDK persisted and `App.tsx` read it back. The rule now allows only the
+   six fields the app writes, and `App.tsx` no longer reads `role` at all.
 
-What it grants: the admin dashboard and its controls. What it does **not** grant:
-scholarship writes, which the email-based rule still blocks. The data layer
-holds; the application authorization layer does not.
+A fourth path made it worse: the demo fallback in `AuthModal` signed a fake user
+in as a real administrator's address whenever the Google popup failed, which the
+email allowlist then accepted. The identity is now generic and the allowlist is
+gone.
+
+Data writes were never exposed — the scholarship rule validated the verified
+email on the token, not the `role` field.
+
+**Not covered by tests.** The `users` and `admins` rules have no automated
+verification: the project has no Firestore emulator (`firebase.json`,
+`@firebase/rules-unit-testing`). See `docs/testing.md`.
 
 ## Data access control
 
@@ -69,7 +84,7 @@ collections, admin-only scholarship writes, size limits on user-generated text.
 | Real API keys in git history | One leaked Google API key — see #16 |
 | Firebase config in bundle | Yes — public by design for web SDKs |
 | Fallback project ID in source | `refined-coral-0zp2g` hardcoded in `src/lib/firebase.ts` as a default |
-| Admin emails in bundle | Yes — four addresses in `src/lib/authUtils.ts` |
+| Admin emails in bundle | No — replaced by the `admins` collection in #19 |
 | `GEMINI_API_KEY` | Server-side only, never sent to the client |
 | `CRON_SECRET` | Server-side; fails closed when unset |
 | Google Maps key | Client-side; referrer restrictions not documented |
@@ -82,8 +97,10 @@ later flagged a Google API key committed in an earlier revision: removing a
 key from `HEAD` does not remove it from the objects git still holds, so the
 only remediation is rotation at the provider. Tracked in #16.
 
-The admin allowlist in the bundle is not a credential, but it is a target list
-for phishing aimed at the accounts that can modify the catalogue.
+The admin allowlist used to ship in the bundle — not a credential, but a target
+list for phishing aimed at the accounts that can modify the catalogue. It was
+removed in #19; administrator identities are no longer discoverable from the
+client.
 
 ## API hardening
 

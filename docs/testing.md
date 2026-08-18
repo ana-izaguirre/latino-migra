@@ -67,12 +67,19 @@ languages; scholarships carry required metadata; guides exist for ES, DE, CA.
 **Country context** (`PreferencesContext.test.tsx`) — propagation between
 consumers, code/name mapping, no storage writes. 100 % covered.
 
+**Admin authorization** (`authUtils.test.ts`, `isUserAdmin.test.ts`,
+`AuthModal.test.tsx`, `TopNavBar.test.tsx`) — `isAdmin()` ignores a `role` field
+injected onto the user object and an address that used to be on the allowlist;
+`isUserAdmin()` fails closed and logs when the `admins` read is denied; the auth
+modal offers no control that changes a role; the admin navigation entry appears
+only for a user the `admins` collection granted. Regression cover for #19.
+
 ## What is not covered
 
 | Gap | Why it matters |
 |---|---|
-| Firestore rules | The three most serious data findings are all rule defects, and no test touches the rules. Requires the Firestore emulator. |
-| Admin authorization | The role-elevation path would pass every current test. |
+| Firestore rules | The most serious data findings are rule defects, and no test touches the rules. There is no `firebase.json` and no `@firebase/rules-unit-testing`, so the emulator would have to be set up first. This blocks verifying the `admins` and `users` rules added in #19, and issues #20, #22, #23 and #24. |
+| Signed-in E2E | The Playwright suite never authenticates, so "a signed-in non-administrator cannot reach the admin panel" is asserted at component level only. |
 | `currency.ts` (5.6 % covered) | Pure logic affecting every amount the user sees. |
 | `sanitize.ts` (50 %) | A security function, half tested. |
 | `/api/chat` failure modes | No coverage of Gemini errors, timeouts or malformed responses. |

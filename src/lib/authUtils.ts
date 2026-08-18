@@ -1,23 +1,15 @@
 import { GoogleUser } from "../types";
 
 /**
- * List of authorized administrator emails
- */
-export const ADMIN_EMAILS: string[] = [
-  "ana.izaguirrematamoros@gmail.com",
-  "latinomigra@gmail.com",
-  "admin@latinomigra.com",
-  "ana.izaguirre@gmail.com",
-];
-
-/**
- * Checks if a given user has Administrator privileges
+ * Whether a user holds administrator privileges.
+ *
+ * The flag is set once at sign-in from the `admins/{uid}` document, which no
+ * client can write — see `isUserAdmin` in `src/lib/firebase.ts` and the
+ * `admins` rule in `firestore.rules`. This function deliberately consults
+ * nothing else: it previously short-circuited on `user.role === "admin"`, and
+ * because `users/{uid}` is writable by its owner, that let any signed-in user
+ * grant themselves the admin interface.
  */
 export function isAdmin(user: GoogleUser | null | undefined): boolean {
-  if (!user) return false;
-  if (user.role === "admin") return true;
-  if (!user.email) return false;
-
-  const normalizedEmail = user.email.trim().toLowerCase();
-  return ADMIN_EMAILS.some((adminEmail) => adminEmail.toLowerCase() === normalizedEmail);
+  return user?.isAdmin === true;
 }

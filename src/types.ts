@@ -35,7 +35,12 @@ export interface GoogleUser {
   avatar: string;
   countryOfOrigin?: string;
   signedInAt: string;
-  role?: "admin" | "user";
+  /**
+   * Derived from the `admins/{uid}` document at sign-in. Never read from the
+   * user's own profile: `users/{uid}` is client-writable, so a role stored
+   * there is a role the user can grant themselves.
+   */
+  isAdmin?: boolean;
 }
 
 export interface MigrationPlan {

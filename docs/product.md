@@ -73,29 +73,29 @@ Two entry points that behave differently:
 
 ### 5. Sign in
 `AuthModal` → Google popup → profile written to `users/{uid}` → `App.tsx` reads
-it back and derives `role`.
+it back, and separately reads `admins/{uid}` to decide whether the account is an
+administrator.
 
 ## Roles and permissions
 
 Two roles: `user` and `admin`.
 
-`isAdmin()` in `src/lib/authUtils.ts` returns true when **either**:
-1. `user.role === "admin"`, or
-2. the user's email is in the four-address allowlist.
+An account is an administrator when a document with its uid exists in the
+`admins` collection. Nothing else grants it. The interface reads that document
+once at sign-in (`isUserAdmin()` in `src/lib/firebase.ts`) and `isAdmin()` in
+`src/lib/authUtils.ts` reports the resolved flag; `firestore.rules` checks the
+same collection with `exists()`. One source of truth for both layers.
 
-`firestore.rules` uses a different and independent check: the verified email on
-the auth token against the same four addresses. The `role` field is **not**
-consulted server-side.
+Administrators are added and removed from the Firebase console. There is no
+in-app path — `admins` has no write rule, so the catch-all denies every client
+write.
 
 What admin unlocks in the UI: the `admin` tab, the database sync button in
-`BecasExplorer`, and admin-only controls in the dashboard.
+`BecasExplorer`, and admin-only controls in the dashboard. The `admin` tab is
+guarded at render and an effect returns a user who loses the role to `home`.
 
-> **Known issue.** `AuthModal.tsx` renders "👤 Persona Normal" / "🔑 Administrador"
-> buttons to any signed-in user. The second calls
-> `onSignIn({ ...currentUser, role: "admin" })`. Because `users/{uid}` is
-> writable by its owner and `App.tsx` reads `role` from it, the elevation
-> persists across sessions. Firestore data writes remain protected by the
-> email-based rule; the UI authorization layer does not.
+> Until #19 this was a self-service role: `AuthModal` offered a button that set
+> `role: "admin"` on the current user, and `isAdmin()` believed it.
 
 ## Important states
 
