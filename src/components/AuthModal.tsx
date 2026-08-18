@@ -13,6 +13,7 @@ import {
 import { GoogleUser } from "../types";
 import { signInWithGoogle, isUserAdmin, signOutUser } from "../lib/firebase";
 import { getSafeImageUrl } from "../lib/sanitize";
+import { useBodyScrollLock } from "../lib/useBodyScrollLock";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -32,6 +33,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [selectedCountry, setSelectedCountry] = useState<string>("Colombia");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | null>(null);
+
+  useBodyScrollLock(isOpen);
 
   if (!isOpen) return null;
 
@@ -92,7 +95,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in lm-overlay">
       <div className="bg-surface-container-lowest dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 md:p-8 space-y-6 shadow-2xl border border-outline-variant/40 dark:border-slate-800 relative">
         {/* Close Button */}
         <button

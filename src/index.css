@@ -36,7 +36,12 @@
 
 html,
 body {
-  overflow-x: hidden;
+  /* `clip`, not `hidden`. `overflow-x: hidden` makes the element a scroll
+     container, and a scroll container on the root breaks `position: sticky`
+     inside it and disables momentum scrolling on iOS -- the page reads as
+     frozen under the finger. `clip` suppresses the same horizontal overflow
+     without creating that container. */
+  overflow-x: clip;
   max-width: 100%;
   scroll-behavior: smooth;
 }
@@ -46,6 +51,31 @@ body {
   overscroll-behavior-y: none;
   /* Never let a stray wide child stretch the layout viewport */
   min-width: 0;
+}
+
+/* Modal overlays.
+
+   Ten overlays in this app are `fixed inset-0 flex items-center justify-center`
+   with no scroll container. A panel taller than the viewport is then centred
+   and clipped at BOTH ends, with no way to reach what overflows: the modal
+   cannot scroll, and swiping scrolls the page behind it while the fixed panel
+   stays put. On a phone that reads as the screen being stuck.
+
+   `align-items: flex-start` plus `margin-block: auto` on the panel keeps it
+   centred when it fits and lets it scroll when it does not -- flex centring
+   alone clips the overflow unreachably. */
+.lm-overlay {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  align-items: flex-start;
+}
+
+.lm-overlay > * {
+  margin-block: auto;
+  /* Never taller than the viewport, so the panel's own scroller can take over
+     on very small screens. */
+  max-height: none;
 }
 
 /* Any element that opts into scrolling gets momentum + contained overscroll,

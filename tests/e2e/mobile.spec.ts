@@ -170,3 +170,93 @@ test.describe("Mobile ergonomics", () => {
     expect(chat!.y + chat!.height).toBeLessThanOrEqual(nav!.y + 1);
   });
 });
+
+/**
+ * The page could not be scrolled while a modal was open: every overlay is
+ * `fixed inset-0` and nothing froze the document underneath, so a swipe moved
+ * the page while the panel stayed put — the screen read as stuck. Overlays also
+ * had no scroll container, leaving a panel taller than the viewport unreachable.
+ */
+test.describe("Mobile scrolling", () => {
+  test("scrolls the page on every screen", async ({ page }) => {
+    await page.goto("/");
+
+    for (const tab of ALL_TABS) {
+      await gotoTabMobile(page, tab);
+      await page.evaluate(() => (document.documentElement.style.scrollBehavior = "auto"));
+
+      const range = await page.evaluate(
+        () => document.documentElement.scrollHeight - document.documentElement.clientHeight
+      );
+      if (range < 200) continue; // Short screen, nothing to scroll.
+
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.evaluate(() => window.scrollBy(0, 400));
+      expect(await page.evaluate(() => Math.round(window.scrollY)), tab).toBeGreaterThan(0);
+    }
+  });
+
+  test("keeps the top bar stuck while scrolling", async ({ page }) => {
+    await page.goto("/");
+    await page.evaluate(() => {
+      document.documentElement.style.scrollBehavior = "auto";
+      window.scrollTo(0, 900);
+    });
+
+    // `overflow-x: hidden` on the root makes it a scroll container, which
+    // silently breaks `position: sticky` inside it. `clip` does not.
+    const navTop = await page.evaluate(
+      () => document.querySelector("nav")?.getBoundingClientRect().top ?? -1
+    );
+    expect(Math.round(navTop)).toBe(0);
+  });
+
+  test("freezes the page behind an open modal and restores the position", async ({ page }) => {
+    await page.goto("/");
+    await page.evaluate(() => {
+      document.documentElement.style.scrollBehavior = "auto";
+      window.scrollTo(0, 400);
+    });
+    const before = await page.evaluate(() => Math.round(window.scrollY));
+    expect(before).toBeGreaterThan(0);
+
+    await page.locator("#login-profile-btn").dispatchEvent("click");
+    await expect(page.locator(".lm-overlay")).toBeVisible();
+
+    expect(await page.evaluate(() => getComputedStyle(document.body).position)).toBe("fixed");
+    await page.evaluate(() => window.scrollBy(0, 600));
+    expect(await page.evaluate(() => Math.round(window.scrollY))).toBe(0);
+
+    await page.locator('[aria-label="Cerrar modal"]').dispatchEvent("click");
+    await expect(page.locator(".lm-overlay")).toHaveCount(0);
+
+    expect(await page.evaluate(() => getComputedStyle(document.body).position)).toBe("static");
+    expect(await page.evaluate(() => Math.round(window.scrollY))).toBe(before);
+  });
+
+  test("gives modal overlays a scroll container so a tall panel stays reachable", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.locator("#login-profile-btn").dispatchEvent("click");
+
+    const overlay = page.locator(".lm-overlay");
+    await expect(overlay).toBeVisible();
+
+    const style = await overlay.evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { overflowY: cs.overflowY, alignItems: cs.alignItems };
+    });
+
+    // Flex centring clips an overflowing panel at both ends with no way to
+    // reach it; flex-start plus auto margins centres it only while it fits.
+    expect(style.overflowY).toBe("auto");
+    expect(style.alignItems).toBe("flex-start");
+
+    const panel = await overlay.locator("> *").first().boundingBox();
+    const vh = page.viewportSize()?.height ?? 0;
+    expect(panel).not.toBeNull();
+    expect(panel!.y).toBeGreaterThanOrEqual(0);
+    expect(panel!.y + panel!.height).toBeLessThanOrEqual(vh + 1);
+  });
+});

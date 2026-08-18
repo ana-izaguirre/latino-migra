@@ -18,6 +18,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { FeedbackSuggestion, GoogleUser } from "../types";
+import { useBodyScrollLock } from "../lib/useBodyScrollLock";
 import {
   fetchFeedbackSuggestions,
   createFeedbackSuggestion,
@@ -115,6 +116,8 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({ currentUser, onOpenAut
   const [selectedCategory, setSelectedCategory] = useState<string>("todas");
   const [searchFilter, setSearchFilter] = useState<string>("");
   const [showNewModal, setShowNewModal] = useState<boolean>(false);
+
+  useBodyScrollLock(showNewModal);
   const [newTitle, setNewTitle] = useState<string>("");
   const [newDesc, setNewDesc] = useState<string>("");
   const [newCat, setNewCat] = useState<FeedbackSuggestion["category"]>("feature");
@@ -382,7 +385,7 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({ currentUser, onOpenAut
 
       {/* Propose Idea Modal */}
       {showNewModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in lm-overlay">
           <div className="bg-surface dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 md:p-8 border border-outline-variant/60 dark:border-slate-800 shadow-2xl relative">
             <button
               onClick={() => setShowNewModal(false)}

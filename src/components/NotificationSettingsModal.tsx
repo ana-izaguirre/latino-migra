@@ -17,6 +17,7 @@ import { GoogleUser, UserAlertPreferences } from "../types";
 import { useLanguage } from "../lib/i18n";
 import { saveUserAlertPreferences, getUserAlertPreferences } from "../lib/firebase";
 import { usePreferences } from "../lib/PreferencesContext";
+import { useBodyScrollLock } from "../lib/useBodyScrollLock";
 
 interface NotificationSettingsModalProps {
   isOpen: boolean;
@@ -78,6 +79,8 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
       }
     }
   }, [isOpen]);
+
+  useBodyScrollLock(isOpen);
 
   if (!isOpen) return null;
 
@@ -167,7 +170,7 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs overflow-y-auto lm-overlay">
       <div className="bg-surface-container-lowest dark:bg-slate-900 rounded-3xl max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-outline-variant/50 dark:border-slate-800 p-5 sm:p-7 space-y-5 relative animate-in fade-in zoom-in-95">
         {/* Close button */}
         <button

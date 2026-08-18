@@ -24,6 +24,7 @@ import {
 import { ForumPost, NavigationTab, GoogleUser } from "../types";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { isAdmin } from "../lib/authUtils";
+import { useBodyScrollLock } from "../lib/useBodyScrollLock";
 import { useLanguage } from "../lib/i18n";
 import {
   fetchCommunityPosts,
@@ -116,6 +117,8 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
   const [selectedCategory, setSelectedCategory] = useState<string>("Todas");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [showNewPostModal, setShowNewPostModal] = useState<boolean>(false);
+
+  useBodyScrollLock(showNewPostModal);
   const [expandedRepliesPostId, setExpandedRepliesPostId] = useState<string | null>(null);
   const [replyInput, setReplyInput] = useState<string>("");
 
@@ -799,7 +802,7 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
 
       {/* New Post Modal with Real-time Duplicate Detection */}
       {showNewPostModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 lm-overlay">
           <div className="bg-surface-container-lowest dark:bg-slate-800 rounded-3xl max-w-2xl w-full p-6 md:p-8 space-y-5 shadow-2xl border border-outline-variant/40 dark:border-slate-700 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-outline-variant/30 dark:border-slate-700 pb-3">
               <div>

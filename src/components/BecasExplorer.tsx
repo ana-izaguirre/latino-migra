@@ -45,6 +45,7 @@ import {
   getUserMigrationPlan,
 } from "../lib/firebase";
 import { usePreferences } from "../lib/PreferencesContext";
+import { useBodyScrollLock } from "../lib/useBodyScrollLock";
 
 interface BecasExplorerProps {
   searchQuery: string;
@@ -164,6 +165,8 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
   const [selectedScholarship, setSelectedScholarship] = useState<Scholarship | null>(null);
   const [showSuggestModal, setShowSuggestModal] = useState<boolean>(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
+
+  useBodyScrollLock(selectedScholarship !== null || mobileFiltersOpen || showSuggestModal);
   const [suggestForm, setSuggestForm] = useState({
     university: "",
     country: "España",
@@ -1639,7 +1642,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
 
       {/* Suggest Official Scholarship Modal */}
       {showSuggestModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto lm-overlay">
           <div className="bg-surface-container-lowest dark:bg-slate-800 rounded-3xl max-w-lg w-full shadow-2xl border border-outline-variant/40 dark:border-slate-700 p-6 md:p-8 space-y-6 relative">
             <button
               onClick={() => setShowSuggestModal(false)}
@@ -1778,7 +1781,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
 
       {/* Scholarship Details Modal */}
       {selectedScholarship && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto lm-overlay">
           <div className="bg-surface-container-lowest dark:bg-slate-800 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-outline-variant/40 dark:border-slate-700 p-6 md:p-8 space-y-6 relative animate-in fade-in zoom-in-95 duration-200">
             <button
               type="button"

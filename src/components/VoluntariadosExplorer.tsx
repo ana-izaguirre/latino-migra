@@ -21,6 +21,7 @@ import { NavigationTab, GoogleUser } from "../types";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { VOLUNTEERING_PROGRAMS_DATA, VolunteeringProgram } from "../data/volunteeringData";
 import { useLanguage } from "../lib/i18n";
+import { useBodyScrollLock } from "../lib/useBodyScrollLock";
 import { CalendarAgendaButton } from "./CalendarAgendaButton";
 
 interface VoluntariadosExplorerProps {
@@ -38,6 +39,8 @@ export const VoluntariadosExplorer: React.FC<VoluntariadosExplorerProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
   const [searchFilter, setSearchFilter] = useState<string>("");
   const [selectedProgram, setSelectedProgram] = useState<VolunteeringProgram | null>(null);
+
+  useBodyScrollLock(selectedProgram !== null);
 
   const categories = [
     "Todos",
@@ -243,7 +246,7 @@ Sé que este programa NO es para migrar de forma permanente, pero me gustaría s
 
       {/* Modal: Full Program Requirements */}
       {selectedProgram && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 lm-overlay">
           <div className="bg-surface-container-lowest dark:bg-slate-900 max-w-2xl w-full rounded-3xl p-6 md:p-8 border border-outline-variant/40 dark:border-slate-800 max-h-[90vh] overflow-y-auto space-y-6 shadow-2xl">
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1">

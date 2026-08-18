@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { ChatMessage, ChatConversation, Scholarship } from "../types";
 import { useLanguage } from "../lib/i18n";
+import { useBodyScrollLock } from "../lib/useBodyScrollLock";
 import { useCurrency } from "../lib/CurrencyContext";
 import { formatCurrency } from "../lib/currency";
 
@@ -96,6 +97,8 @@ export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContex
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
   const [showProfileDiagnosisModal, setShowProfileDiagnosisModal] = useState<boolean>(false);
+
+  useBodyScrollLock(showProfileDiagnosisModal);
 
   // Profile Diagnosis Form state
   const [diagCareer, setDiagCareer] = useState<string>("Ingeniería de Software / IT");
@@ -573,7 +576,7 @@ Estructura tu diagnóstico con:
 
       {/* Profile Diagnosis Modal (Career + Age + Family + Goal Form) */}
       {showProfileDiagnosisModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 lm-overlay">
           <div className="bg-surface-container-lowest dark:bg-slate-800 rounded-3xl max-w-xl w-full p-6 md:p-8 space-y-5 shadow-2xl border border-outline-variant/40 dark:border-slate-700 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-outline-variant/30 dark:border-slate-700 pb-3">
               <div className="flex items-center gap-2.5">
