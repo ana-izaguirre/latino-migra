@@ -89,27 +89,56 @@ fi
 # The mutation REPLACES the option list rather than adding to it. That is safe
 # here only because this runs before any item is added; on a populated board it
 # would clear the status of every item whose option disappeared.
-echo "==> Rewriting the built-in Status options"
-STATUS_FIELD_ID=$(gh project field-list "${PROJECT_NUMBER}" --owner "${OWNER}" --format json \
-  | jq -r '.fields[] | select(.name=="Status") | .id')
+STATUS_FIELDS_JSON=$(gh project field-list "${PROJECT_NUMBER}" --owner "${OWNER}" --format json)
+STATUS_FIELD_ID=$(jq -r '.fields[] | select(.name=="Status") | .id' <<<"${STATUS_FIELDS_JSON}")
 [ -n "${STATUS_FIELD_ID}" ] || { echo "could not find the Status field" >&2; exit 1; }
 
-jq -n --arg field "${STATUS_FIELD_ID}" '
-  {
-    query: "mutation($field: ID!, $options: [ProjectV2SingleSelectFieldOptionInput!]!) { updateProjectV2Field(input: {fieldId: $field, singleSelectOptions: $options}) { projectV2Field { ... on ProjectV2SingleSelectField { id } } } }",
-    variables: {
-      field: $field,
-      options: [
-        { name: "Backlog",      color: "GRAY",   description: "Not scheduled yet" },
-        { name: "Ready",        color: "BLUE",   description: "Scoped and ready to start" },
-        { name: "In Progress",  color: "YELLOW", description: "Being worked on" },
-        { name: "AI Review",    color: "PURPLE", description: "Awaiting agent self-review" },
-        { name: "Human Review", color: "ORANGE", description: "Awaiting human review" },
-        { name: "Blocked",      color: "RED",    description: "Waiting on something external" },
-        { name: "Done",         color: "GREEN",  description: "Merged and verified" }
-      ]
-    }
-  }' | gh api graphql --input - >/dev/null
+STATUS_OPTIONS=$(jq -c '[.fields[] | select(.name=="Status") | .options[]?.name]' <<<"${STATUS_FIELDS_JSON}")
+ITEM_COUNT=$(gh project view "${PROJECT_NUMBER}" --owner "${OWNER}" --format json | jq -r '.items.totalCount // 0')
+WANTED_STATUS='["Backlog","Ready","In Progress","AI Review","Human Review","Blocked","Done"]'
+
+# `updateProjectV2Field` replaces the option list rather than extending it, so
+# rewriting a board that already has items would clear the status of every item
+# whose option disappeared. Only touch Status when that cannot happen.
+if [ "$(jq -n --argjson have "${STATUS_OPTIONS}" --argjson want "${WANTED_STATUS}" \
+  '(($want - $have) | length) == 0')" = "true" ]; then
+  MANAGE_STATUS=true
+  echo "==> Status already carries the workflow options"
+elif [ "${ITEM_COUNT}" = "0" ]; then
+  MANAGE_STATUS=true
+  echo "==> Rewriting the built-in Status options"
+  jq -n --arg field "${STATUS_FIELD_ID}" --argjson want "${WANTED_STATUS}" '
+    {
+      query: "mutation($field: ID!, $options: [ProjectV2SingleSelectFieldOptionInput!]!) { updateProjectV2Field(input: {fieldId: $field, singleSelectOptions: $options}) { projectV2Field { ... on ProjectV2SingleSelectField { id } } } }",
+      variables: {
+        field: $field,
+        options: [
+          { name: "Backlog",      color: "GRAY",   description: "Not scheduled yet" },
+          { name: "Ready",        color: "BLUE",   description: "Scoped and ready to start" },
+          { name: "In Progress",  color: "YELLOW", description: "Being worked on" },
+          { name: "AI Review",    color: "PURPLE", description: "Awaiting agent self-review" },
+          { name: "Human Review", color: "ORANGE", description: "Awaiting human review" },
+          { name: "Blocked",      color: "RED",    description: "Waiting on something external" },
+          { name: "Done",         color: "GREEN",  description: "Merged and verified" }
+        ]
+      }
+    }' | gh api graphql --input - >/dev/null
+else
+  MANAGE_STATUS=false
+  cat >&2 <<WARN
+==> Status left untouched
+
+    Project #${PROJECT_NUMBER} already has ${ITEM_COUNT} item(s), and its Status
+    field is missing some of the workflow options. Rewriting the option list
+    would clear the status of any item using an option that disappeared, so
+    this run will not set Status on anything.
+
+    Add the missing options by hand (Project settings -> Status), then re-run:
+      $(jq -r --argjson have "${STATUS_OPTIONS}" --argjson want "${WANTED_STATUS}" \
+        -n '($want - $have) | join(", ")')
+
+WARN
+fi
 
 add_field() {
   if gh project field-list "${PROJECT_NUMBER}" --owner "${OWNER}" --format json \
@@ -161,7 +190,9 @@ while IFS='|' read -r num priority type risk effort area strategy tool autonomy 
   ITEM_ID=$(gh project item-add "${PROJECT_NUMBER}" --owner "${OWNER}" \
     --url "https://github.com/${OWNER}/${REPO}/issues/${num}" --format json | jq -r '.id')
 
-  set_field "${ITEM_ID}" "Status"       "Backlog"
+  if [ "${MANAGE_STATUS}" = "true" ]; then
+    set_field "${ITEM_ID}" "Status" "Backlog"
+  fi
   set_field "${ITEM_ID}" "Priority"     "${priority}"
   set_field "${ITEM_ID}" "Work Type"    "${type}"
   set_field "${ITEM_ID}" "Risk"         "${risk}"
@@ -177,7 +208,9 @@ done <<<"${ROWS}"
 
 cat <<EOF
 
-Done. 27 issues added, all fields set, everything in Backlog.
+Done. 27 issues added, all fields set.
+Status: ${MANAGE_STATUS} (false means the option list was left alone -- see the
+warning above; set Status by hand or re-run once the options exist).
 
 Views must be created in the UI (the CLI cannot create them):
 
