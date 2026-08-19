@@ -5,7 +5,6 @@ import {
   RefreshCw,
   Users,
   GraduationCap,
-  Sparkles,
   CheckCircle2,
   AlertTriangle,
   Server,
@@ -14,10 +13,6 @@ import {
   Layers,
   ArrowRight,
   TrendingUp,
-  Sliders,
-  Award,
-  BookOpen,
-  Info,
 } from "lucide-react";
 import { GoogleUser, NavigationTab, Scholarship } from "../types";
 import { SCHOLARSHIPS_DATA } from "../data/scholarships";
@@ -25,7 +20,6 @@ import {
   fetchScholarshipsFromDB,
   seedScholarshipsToDB,
   triggerScholarshipSync,
-  db,
 } from "../lib/firebase";
 
 interface AdminDashboardProps {
