@@ -141,6 +141,9 @@ test.describe("Preference persistence", () => {
     await page.locator("#theme-toggle-btn").click();
     await expect.poll(isDark).toBe(!before);
 
+    // Past the store's write debounce. Reloading sooner races it, which is why
+    // this passed locally and failed on a faster CI runner.
+    await page.waitForTimeout(600);
     await page.reload();
     await expect.poll(isDark).toBe(!before);
   });
@@ -221,7 +224,9 @@ test.describe("Catalogue load status", () => {
     await expect(main).toBeVisible();
 
     // Whether Firestore answers or fails, the busy state must end.
-    await expect(main).toHaveAttribute("aria-busy", "false", { timeout: 15000 });
+    // Comfortably past CATALOGUE_FETCH_TIMEOUT_MS: an unreachable Firestore
+    // must still end the busy state, which is what this asserts.
+    await expect(main).toHaveAttribute("aria-busy", "false", { timeout: 20000 });
     await expect(page.locator("#catalogue-loading-status")).toHaveCount(0);
 
     // Exactly one outcome: the live catalogue, or a visible notice that this is

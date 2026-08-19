@@ -196,6 +196,23 @@ describe("BecasExplorer Component", () => {
       await waitFor(() => expect(screen.getByText(/No pudimos cargar/i)).toBeInTheDocument());
     });
 
+    it("gives up when the fetch never settles", async () => {
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      vi.spyOn(firebase, "fetchScholarshipsFromDB").mockReturnValue(new Promise(() => {}));
+
+      render(<BecasExplorer {...defaultProps} />);
+      expect(screen.getByText(/Actualizando convocatorias/i)).toBeInTheDocument();
+
+      // An unreachable Firestore leaves the promise pending forever. Without a
+      // timeout the notice sits there for the rest of the session, which on a
+      // phone with a dead connection is the common case.
+      await vi.advanceTimersByTimeAsync(9000);
+      await waitFor(() => expect(screen.getByText(/No pudimos cargar/i)).toBeInTheDocument());
+
+      vi.useRealTimers();
+    });
+
     it("says the same when the collection is empty", async () => {
       vi.spyOn(firebase, "fetchScholarshipsFromDB").mockResolvedValue([] as never);
 

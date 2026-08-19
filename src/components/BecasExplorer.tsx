@@ -57,6 +57,9 @@ interface BecasExplorerProps {
   onOpenAuthModal?: () => void;
 }
 
+/** Long enough for a slow connection, short enough to not look frozen. */
+const CATALOGUE_FETCH_TIMEOUT_MS = 8000;
+
 export const BecasExplorer: React.FC<BecasExplorerProps> = ({
   searchQuery,
   setSearchQuery,
@@ -112,9 +115,24 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
   // Load scholarships from Firestore on mount
   useEffect(() => {
     let isMounted = true;
+
+    /**
+     * Firestore can hang rather than fail — an unreachable backend leaves the
+     * promise pending forever, and "Actualizando convocatorias…" would sit on
+     * screen for the rest of the session. On a phone with a dead connection
+     * that is the common case, not the rare one.
+     */
+    const withTimeout = <T,>(promise: Promise<T>, ms: number) =>
+      Promise.race([
+        promise,
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("scholarship fetch timed out")), ms)
+        ),
+      ]);
+
     async function loadDB() {
       try {
-        const dbItems = await fetchScholarshipsFromDB();
+        const dbItems = await withTimeout(fetchScholarshipsFromDB(), CATALOGUE_FETCH_TIMEOUT_MS);
         if (!isMounted) return;
         if (dbItems && dbItems.length > 0) {
           setScholarshipsList(dbItems as Scholarship[]);
