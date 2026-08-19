@@ -40,7 +40,7 @@ the table below is the only record of the intended shape.
 | `savedScholarships` | owner | owner | Browser |
 | `userNotes` | owner | owner | Browser |
 | `migrationPlans/{uid}` | owner | owner | Browser |
-| `userPreferences` | owner | owner | Browser |
+| `userPreferences` | owner | owner | Browser — alert settings, plus a `display` key for theme, language, currency and both countries |
 | `forumPosts` | public | **`create` unauthenticated** | Browser |
 | `forumPosts/{id}/replies` | public | **`create` unauthenticated** | Browser |
 | `feedbackSuggestions` | public | **`create` unauthenticated** | Browser |

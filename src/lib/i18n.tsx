@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { getPreferences, setPreference, subscribeToPreferences } from "./preferencesStore";
 
 export type Language = "es" | "en";
 
@@ -195,11 +196,13 @@ const LanguageContext = createContext<LanguageContextType>({
 });
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // In-memory only: the app deliberately persists no preferences to storage.
-  const [language, setLanguageState] = useState<Language>("es");
+  const [language, setLanguageState] = useState<Language>(() => getPreferences().language ?? "es");
+
+  useEffect(() => subscribeToPreferences((prefs) => setLanguageState(prefs.language ?? "es")), []);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
+    setPreference("language", lang);
   };
 
   const t = (key: string, fallback?: string): string => {

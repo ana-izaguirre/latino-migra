@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { getPreferences, setPreference, subscribeToPreferences } from "./preferencesStore";
 import {
   SUPPORTED_CURRENCIES,
   CurrencyInfo,
@@ -25,12 +26,24 @@ const CurrencyContext = createContext<CurrencyContextType>({
 });
 
 export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // In-memory only: the app deliberately persists no preferences to storage.
-  const [currency, setCurrencyState] = useState<string>("EUR");
+  const [currency, setCurrencyState] = useState<string>(() => {
+    const stored = getPreferences().currency;
+    return stored && SUPPORTED_CURRENCIES[stored] ? stored : "EUR";
+  });
+
+  useEffect(
+    () =>
+      subscribeToPreferences((prefs) => {
+        const next = prefs.currency;
+        setCurrencyState(next && SUPPORTED_CURRENCIES[next] ? next : "EUR");
+      }),
+    []
+  );
 
   const setCurrency = (code: string) => {
     if (SUPPORTED_CURRENCIES[code]) {
       setCurrencyState(code);
+      setPreference("currency", code);
     }
   };
 

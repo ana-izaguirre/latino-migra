@@ -1,4 +1,4 @@
-import { vi } from "vitest";
+import { vi, beforeEach } from "vitest";
 
 // Server-side suites opt into the node environment, where none of the DOM
 // setup below applies (and would throw). Everything DOM-specific is guarded.
@@ -72,3 +72,17 @@ vi.mock("firebase/firestore", () => ({
     return () => {};
   }),
 }));
+
+/**
+ * `preferencesStore` keeps its snapshot in module state, so without this a
+ * preference set in one test leaks into the next — a stored country would
+ * silently beat the one a test seeds through props, and the failure looks like
+ * a component bug rather than shared state.
+ */
+beforeEach(async () => {
+  if (!hasDom) return;
+  document.cookie = "lm_prefs=; Path=/; Max-Age=0";
+  const store = await import("../lib/preferencesStore");
+  store.detachUser();
+  store.initPreferences();
+});

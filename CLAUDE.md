@@ -55,9 +55,15 @@ the sources above, say so rather than choosing one.
 
 These are project-specific. A reasonable default would break them.
 
-1. **Nothing is written to `localStorage` or `sessionStorage`.** State is
-   in-memory; Firestore persists for signed-in users.
-   `src/test/noBrowserStorage.test.ts` fails if this is reintroduced.
+1. **A signed-in user gets no browser storage at all.** Their preferences live
+   in `userPreferences/{uid}` in Firestore. Anonymous visitors are the single
+   exception: the `lm_prefs` cookie holds five display preferences — theme,
+   language, currency, and the two countries — and nothing else. No identifier,
+   nothing personal. Signing in migrates the cookie into Firestore and deletes
+   it. `localStorage` and `sessionStorage` remain forbidden for everyone, and
+   `src/test/noBrowserStorage.test.ts` fails if either is reintroduced. All of
+   it goes through `src/lib/preferencesStore.ts`; nothing else touches
+   `document.cookie`.
 
 2. **UI copy is Spanish. Development artefacts are English.** Commit messages,
    PR titles and bodies, Issues, code comments and documentation: English. Text

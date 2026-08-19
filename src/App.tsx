@@ -19,13 +19,21 @@ import { Footer } from "./components/Footer";
 import { AuthModal } from "./components/AuthModal";
 import { NotificationSettingsModal } from "./components/NotificationSettingsModal";
 import { subscribeToAuthState, getUserProfile, isUserAdmin, signOutUser } from "./lib/firebase";
+import {
+  attachUser,
+  detachUser,
+  getPreferences,
+  setPreference,
+  subscribeToPreferences,
+} from "./lib/preferencesStore";
 import { isAdmin } from "./lib/authUtils";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavigationTab>("home");
-  // Seeded from the OS preference only. Nothing is persisted to storage, so a
-  // reload returns to whatever the device is set to.
+  // A stored choice wins; otherwise follow the operating system.
   const [theme, setTheme] = useState<ThemeMode>(() => {
+    const stored = getPreferences().theme;
+    if (stored) return stored;
     try {
       return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
         ? "dark"
@@ -73,10 +81,13 @@ export default function App() {
             }),
           };
           setCurrentUser(userData);
+          // Moves anything the cookie holds into the account and clears it.
+          await attachUser(fbUser.uid);
         } catch (e) {
           console.error("Error fetching user profile from Firestore:", e);
         }
       } else {
+        detachUser();
         // Only clear if not in temporary preview state
         setCurrentUser((prev) => (prev?.id.startsWith("google-user-") ? prev : null));
       }
@@ -89,6 +100,14 @@ export default function App() {
   // out, or when an admin entry is revoked while the panel is open. The render
   // below is guarded too, so the panel never paints for an unauthorised user
   // in the frame before this runs.
+  useEffect(
+    () =>
+      subscribeToPreferences((prefs) => {
+        if (prefs.theme) setTheme(prefs.theme);
+      }),
+    []
+  );
+
   useEffect(() => {
     if (activeTab === "admin" && !isAdmin(currentUser)) {
       setActiveTab("home");
@@ -108,7 +127,12 @@ export default function App() {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === "light" ? "dark" : "light"));
+    // Computed outside the updater: `setPreference` notifies subscribers
+    // synchronously, and running that inside a state updater fires a side
+    // effect during render.
+    const next = theme === "light" ? "dark" : "light";
+    setTheme(next);
+    setPreference("theme", next);
   };
 
   const handleSignIn = (user: GoogleUser) => {

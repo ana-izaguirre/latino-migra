@@ -21,6 +21,7 @@ import {
   LayoutGrid,
   ChevronDown,
   Settings,
+  Trash2,
 } from "lucide-react";
 import { NavigationTab, ThemeMode, GoogleUser } from "../types";
 import { useLanguage } from "../lib/i18n";
@@ -28,6 +29,7 @@ import { useCurrency } from "../lib/CurrencyContext";
 import { getSafeImageUrl } from "../lib/sanitize";
 import { isAdmin } from "../lib/authUtils";
 import { useBodyScrollLock } from "../lib/useBodyScrollLock";
+import { clearPreferences } from "../lib/preferencesStore";
 
 interface TopNavBarProps {
   activeTab: NavigationTab;
@@ -62,6 +64,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
   const { language, setLanguage, t } = useLanguage();
   const { currency, setCurrency, availableCurrencies } = useCurrency();
   const [langToast, setLangToast] = useState<string | null>(null);
+  const [prefsToast, setPrefsToast] = useState<string | null>(null);
   const [toolsMenuOpen, setToolsMenuOpen] = useState(false);
   const [prefsMenuOpen, setPrefsMenuOpen] = useState(false);
   const resetScrollOnCloseRef = useRef(false);
@@ -188,6 +191,13 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
     },
   ];
 
+  const handleClearPreferences = async () => {
+    await clearPreferences();
+    setPrefsMenuOpen(false);
+    setPrefsToast(language === "en" ? "Preferences cleared" : "Preferencias borradas");
+    setTimeout(() => setPrefsToast(null), 2500);
+  };
+
   const userIsAdmin = isAdmin(currentUser);
   const navItems = allNavItems.filter((item) => !item.adminOnly || userIsAdmin);
   const primaryNavItems = navItems.filter((item) => item.primary);
@@ -222,6 +232,19 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
         <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-slate-900/90 dark:bg-slate-100/95 text-white dark:text-slate-900 px-4 py-2 rounded-full text-xs font-bold shadow-xl border border-white/20 dark:border-slate-700 z-50 animate-in fade-in slide-in-from-top-2 duration-150 pointer-events-none flex items-center gap-2">
           <Languages className="w-4 h-4 text-secondary dark:text-teal-600" />
           <span>{langToast}</span>
+        </div>
+      )}
+
+      {/* Clearing preferences is silent otherwise: the menu closes and nothing
+          visibly changes until the next reload. */}
+      {prefsToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="absolute top-16 left-1/2 -translate-x-1/2 bg-slate-900/90 dark:bg-slate-100/95 text-white dark:text-slate-900 px-4 py-2 rounded-full text-xs font-bold shadow-xl border border-white/20 dark:border-slate-700 z-50 animate-in fade-in slide-in-from-top-2 duration-150 pointer-events-none flex items-center gap-2"
+        >
+          <Trash2 className="w-4 h-4 text-secondary dark:text-teal-600" />
+          <span>{prefsToast}</span>
         </div>
       )}
 
@@ -467,6 +490,20 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
                         ? "Dark"
                         : "Oscuro"}
                   </span>
+                </button>
+
+                {/* Every preference the app remembers, in one control. Required
+                    by GDPR-adjacent good practice and by plain fairness: what
+                    can be stored must be erasable. */}
+                <button
+                  type="button"
+                  role="menuitem"
+                  id="clear-preferences-btn"
+                  onClick={handleClearPreferences}
+                  className="tap-target w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-bold border border-outline-variant/60 dark:border-slate-700 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-800 transition-all cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {language === "en" ? "Clear my preferences" : "Borrar mis preferencias"}
                 </button>
               </div>
             )}

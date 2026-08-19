@@ -80,6 +80,7 @@ collections, admin-only scholarship writes, size limits on user-generated text.
 | Item | Status |
 |---|---|
 | `.env` | Not tracked by git |
+| `lm_prefs` cookie | Anonymous visitors only. Five display preferences, `SameSite=Lax`, `Secure`, one year. No identifier, nothing personal, so no consent banner is required |
 | Real API keys in the working tree | None found |
 | Real API keys in git history | One leaked Google API key — see #16 |
 | Firebase config in bundle | Yes — public by design for web SDKs |

@@ -6,7 +6,11 @@ import App from "./App.tsx";
 import { LanguageProvider } from "./lib/i18n.tsx";
 import { CurrencyProvider } from "./lib/CurrencyContext.tsx";
 import { PreferencesProvider } from "./lib/PreferencesContext.tsx";
+import { initPreferences } from "./lib/preferencesStore.ts";
 import "./index.css";
+
+// Before the first render, so the stored theme and language are what paints.
+initPreferences();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

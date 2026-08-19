@@ -73,6 +73,11 @@ Recently addressed and verified by tests:
   primary call to action, and clears the bottom bar.
 - Range sliders have a visible, draggable thumb. They previously used
   `appearance-none` with no thumb styling, leaving them invisible.
+- Theme, language, currency and both country choices survive a reload.
+  Anonymous visitors keep them in the `lm_prefs` cookie; signed-in users keep
+  them in Firestore and nothing in the browser, so they follow the account to
+  another device. Signing in migrates the cookie and deletes it. A **Clear my
+  preferences** control in the preferences menu empties both.
 - Modal close buttons sit in the top-right corner. `.btn-tactile` in
   `index.css` set `position: relative` and, being unlayered, beat Tailwind's
   `.absolute` at equal specificity — both close buttons rendered in static flow
