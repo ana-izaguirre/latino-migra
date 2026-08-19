@@ -126,6 +126,31 @@ Understand → Inspect → Plan → Confirm scope → Implement
 
 ---
 
+## Keeping the board current
+
+The Project's Status field is the record of what is happening. Move it as you
+go, not afterwards.
+
+| When | Set the label |
+|---|---|
+| You start work on an Issue | `status:in-progress` |
+| You name the Issue you intend to take next | `status:ready` |
+| You finish and are self-reviewing the diff | `status:ai-review` |
+
+**Set the label, not the field.** Projects V2 is a GraphQL-only API and this
+session has REST access only — it can label an Issue but cannot edit the board.
+`.github/workflows/project-status.yml` watches for `status:*` labels and moves
+the card. One label per Issue: remove the previous one when you add the next.
+
+Backlog, Human Review, Blocked and Done are not set this way. The Project's own
+workflows already handle Backlog on arrival and Done on close or merge, and the
+remaining two are a human's call.
+
+If the workflow has not been configured yet, say so in the report and give the
+label you would have set, rather than leaving the board silently stale.
+
+---
+
 ## Working from a GitHub Issue
 
 Issues are the unit of work. The GitHub Project carries fields you must respect:
