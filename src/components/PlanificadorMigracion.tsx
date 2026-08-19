@@ -7,34 +7,24 @@ import {
   Laptop,
   Users,
   Sun,
-  CloudSnow,
-  Trees,
   DollarSign,
   AlertTriangle,
   CheckCircle2,
-  HelpCircle,
   Building,
   ShieldCheck,
   Plane,
-  HeartHandshake,
   Baby,
   Hotel,
   Train,
   CreditCard,
-  PhoneCall,
   Sparkles,
   ArrowRight,
-  Printer,
-  Download,
-  Info,
   Calculator,
   CheckCheck,
   ListChecks,
   RotateCcw,
   Trophy,
   Target,
-  FileCheck,
-  ArrowUpRight,
   Bus,
   Bike,
 } from "lucide-react";
@@ -1790,7 +1780,7 @@ export const PlanificadorMigracion: React.FC<PlanificadorMigracionProps> = ({
 
         {/* Steps List */}
         <div className="space-y-3.5">
-          {filteredSteps.map((step, index) => {
+          {filteredSteps.map((step) => {
             const isCompleted = completedSteps.includes(step.id);
             return (
               <div

@@ -4,34 +4,24 @@ import {
   Clock,
   CheckCircle2,
   Circle,
-  FileText,
   DollarSign,
   Download,
   Bot,
-  MessageSquare,
   Sparkles,
   ChevronRight,
   ShieldCheck,
   Building,
-  UserCheck,
   ExternalLink,
   Briefcase,
-  GraduationCap,
-  Languages,
-  Laptop,
   Check,
-  Calendar as CalendarIcon,
   ThumbsUp,
-  Database,
-  Star,
 } from "lucide-react";
-import { NavigationTab, VisaType } from "../types";
+import { NavigationTab } from "../types";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { MIGRATION_GUIDES_DATA } from "../data/migrationGuides";
 import { COUNTRY_ANTI_SCAM_DATA } from "../data/antiScamData";
 import { CalendarAgendaButton } from "./CalendarAgendaButton";
 import { fetchVisaGuideVotes, voteVisaHelpful, VisaVotesData } from "../lib/firebase";
-import { useLanguage } from "../lib/i18n";
 import { usePreferences } from "../lib/PreferencesContext";
 
 interface GuiaMigracionProps {
@@ -43,7 +33,6 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
   setActiveTab,
   onAskAIAboutGuide,
 }) => {
-  const { language } = useLanguage();
   // Country selection is shared app-wide, so opening a guide for Alemania also
   // moves the planner, calculator, consular map and alerts to Alemania.
   const { destinationCountryCode, setDestinationCountryByCode } = usePreferences();

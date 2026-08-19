@@ -7,9 +7,7 @@ import {
   ArrowRight,
   Sparkles,
   CheckCircle2,
-  MapPin,
   Calculator,
-  ThumbsUp,
 } from "lucide-react";
 import { NavigationTab, GoogleUser } from "../types";
 import { getSafeImageUrl } from "../lib/sanitize";

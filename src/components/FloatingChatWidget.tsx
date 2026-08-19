@@ -1,17 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import {
-  MessageSquare,
-  Bot,
-  X,
-  Send,
-  Sparkles,
-  Maximize2,
-  Minimize2,
-  RefreshCw,
-  HelpCircle,
-  ShieldCheck,
-  ChevronUp,
-} from "lucide-react";
+import { Bot, X, Send, Maximize2 } from "lucide-react";
 import { ChatMessage, GoogleUser } from "../types";
 
 interface FloatingChatWidgetProps {

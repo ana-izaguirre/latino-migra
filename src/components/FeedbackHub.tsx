@@ -5,9 +5,7 @@ import {
   Filter,
   CheckCircle2,
   Clock,
-  Sparkles,
   Search,
-  Send,
   HelpCircle,
   Lightbulb,
   GraduationCap,
@@ -15,7 +13,6 @@ import {
   Bug,
   Heart,
   X,
-  Loader2,
 } from "lucide-react";
 import { FeedbackSuggestion, GoogleUser } from "../types";
 import { useBodyScrollLock } from "../lib/useBodyScrollLock";
@@ -97,7 +94,6 @@ const INITIAL_SUGGESTIONS: FeedbackSuggestion[] = [
 
 export const FeedbackHub: React.FC<FeedbackHubProps> = ({ currentUser, onOpenAuthModal }) => {
   const [suggestions, setSuggestions] = useState<FeedbackSuggestion[]>(INITIAL_SUGGESTIONS);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Fetch feedback from Firestore
   useEffect(() => {
@@ -155,7 +151,7 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({ currentUser, onOpenAut
 
     try {
       await upvoteFeedbackSuggestion(id, delta);
-    } catch (e) {
+    } catch {
       console.info("Upvoted in session state");
     }
   };

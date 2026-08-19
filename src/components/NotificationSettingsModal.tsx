@@ -1,18 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Bell,
-  X,
-  CheckCircle2,
-  Calendar,
-  ShieldCheck,
-  Mail,
-  Smartphone,
-  Globe,
-  Sliders,
-  Send,
-  Sparkles,
-  Info,
-} from "lucide-react";
+import { Bell, X, CheckCircle2, Calendar, ShieldCheck, Mail, Smartphone } from "lucide-react";
 import { GoogleUser, UserAlertPreferences } from "../types";
 import { useLanguage } from "../lib/i18n";
 import { saveUserAlertPreferences, getUserAlertPreferences } from "../lib/firebase";

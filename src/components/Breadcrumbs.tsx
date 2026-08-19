@@ -16,7 +16,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   subPageTitle,
   className = "",
 }) => {
-  const { language, t } = useLanguage();
+  const { language } = useLanguage();
 
   if (activeTab === "home") return null;
 

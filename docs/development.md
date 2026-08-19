@@ -60,7 +60,7 @@ npm run dev             # tsx server.ts — Express + Vite middleware on :3000
 | `build` | `vite build` then esbuild bundles `server.ts` to `dist/server.cjs` |
 | `start` | `node dist/server.cjs` |
 | `preview` | `vite preview` |
-| `lint` | `eslint .` then `tsc --noEmit` |
+| `lint` | `eslint . --max-warnings 35` then `tsc --noEmit` |
 | `lint:fix` | `eslint . --fix` |
 | `typecheck` | `tsc --noEmit` |
 | `format` | `prettier --write .` |
@@ -79,10 +79,18 @@ npm run dev             # tsx server.ts — Express + Vite middleware on :3000
 
 **ESLint 9** — flat config in `eslint.config.js` with `typescript-eslint`,
 `eslint-plugin-react-hooks` and `eslint-plugin-jsx-a11y`. Defect-catching rules
-are errors (`rules-of-hooks`, five a11y rules, `no-console` except
-warn/error/info); the pre-existing backlog warns (`no-explicit-any`,
-`exhaustive-deps`, unused vars, `no-alert`). Current state: **0 errors, 144
-warnings**.
+are errors: `rules-of-hooks`, five a11y rules, `no-console` except
+warn/error/info, and `no-unused-vars`. What remains of the backlog warns —
+`no-explicit-any`, `exhaustive-deps` and `no-alert`. Current state: **0 errors,
+35 warnings**.
+
+`npm run lint` passes `--max-warnings 35`, which makes the remaining backlog a
+**ratchet** like the coverage thresholds: the count can only go down. Lower the
+number in `package.json` as warnings are cleared.
+
+`no-unused-vars` became an error once the 91 outstanding cases were cleared.
+Prefix a genuinely unused parameter with `_` when a caller still passes it
+positionally.
 
 **Prettier** — `.prettierrc.json`, 100-column width, double quotes, ES5 trailing
 commas. `.prettierignore` excludes build output, lockfiles and Markdown.

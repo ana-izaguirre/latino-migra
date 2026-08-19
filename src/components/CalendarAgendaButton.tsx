@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Calendar as CalendarIcon, ChevronDown, Check, Download, ExternalLink } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronDown, Download, ExternalLink } from "lucide-react";
 import {
   generateGoogleCalendarUrl,
   generateOutlookCalendarUrl,
@@ -21,7 +21,6 @@ export const CalendarAgendaButton: React.FC<CalendarAgendaButtonProps> = ({
   className = "",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

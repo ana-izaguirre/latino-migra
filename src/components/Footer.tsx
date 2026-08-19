@@ -3,7 +3,6 @@ import {
   Globe,
   Heart,
   ShieldCheck,
-  ExternalLink,
   HelpCircle,
   FileText,
   Lock,

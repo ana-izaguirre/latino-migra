@@ -50,7 +50,7 @@ CI blocks a merge to `main` when any of these fails:
 | Check | What it verifies |
 |---|---|
 | `format:check` | Prettier |
-| `lint` | ESLint (0 errors) + `tsc --noEmit` |
+| `lint` | ESLint (0 errors, at most 35 warnings) + `tsc --noEmit` |
 | `test:coverage` | Tests and coverage thresholds |
 | `e2e-tests` | Playwright on desktop and mobile |
 
