@@ -28,6 +28,8 @@ import {
   SlidersHorizontal,
   RefreshCw,
   BookOpen,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { Scholarship, NavigationTab, GoogleUser } from "../types";
 import { Breadcrumbs } from "./Breadcrumbs";
@@ -96,17 +98,35 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
   // guests. Nothing is written to browser storage.
   const [favorites, setFavorites] = useState<string[]>([]);
 
+  /**
+   * How the Firestore catalogue load is going.
+   *
+   * The list starts populated with the bundled dataset, so there is never a
+   * blank screen to fill with a skeleton — the problem was the opposite. Cards
+   * were silently replaced when Firestore answered, and a failure showed
+   * nothing at all: the bundled data stood in for the live catalogue with no
+   * way to tell the difference.
+   */
+  const [catalogueStatus, setCatalogueStatus] = useState<"loading" | "live" | "bundled">("loading");
+
   // Load scholarships from Firestore on mount
   useEffect(() => {
     let isMounted = true;
     async function loadDB() {
       try {
         const dbItems = await fetchScholarshipsFromDB();
-        if (isMounted && dbItems && dbItems.length > 0) {
+        if (!isMounted) return;
+        if (dbItems && dbItems.length > 0) {
           setScholarshipsList(dbItems as Scholarship[]);
+          setCatalogueStatus("live");
+        } else {
+          // An empty collection is not an error, but it does mean what is on
+          // screen is the bundled copy rather than the live catalogue.
+          setCatalogueStatus("bundled");
         }
       } catch (e) {
         console.warn("Using fallback scholarship dataset:", e);
+        if (isMounted) setCatalogueStatus("bundled");
       }
     }
     loadDB();
@@ -1178,7 +1198,34 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
             ref={mainListRef}
             id="scholarships-main-section"
             className="lg:col-span-9 space-y-6"
+            aria-busy={catalogueStatus === "loading"}
           >
+            {/* Where the list on screen came from. The bundled dataset renders
+                immediately, so without this the live catalogue arrives and
+                silently swaps the cards, and a failed load looks identical to a
+                successful one. */}
+            <div role="status" aria-live="polite" className="min-h-[1.5rem]">
+              {catalogueStatus === "loading" && (
+                <p
+                  id="catalogue-loading-status"
+                  className="flex items-center gap-2 text-xs text-on-surface-variant dark:text-slate-400"
+                >
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+                  Actualizando convocatorias…
+                </p>
+              )}
+              {catalogueStatus === "bundled" && (
+                <p
+                  id="catalogue-bundled-status"
+                  className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400"
+                >
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                  No pudimos cargar las convocatorias más recientes. Estás viendo la lista incluida
+                  en la aplicación, que puede estar desactualizada.
+                </p>
+              )}
+            </div>
+
             {/* List Toolbar: Counters, Items Per Page & Display Mode */}
             <div className="bg-surface-container-lowest dark:bg-slate-800 p-4 rounded-2xl border border-outline-variant/40 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3 text-xs md:text-sm text-on-surface-variant dark:text-slate-300">
@@ -1777,14 +1824,21 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
       {selectedScholarship && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto lm-overlay">
           <div className="bg-surface-container-lowest dark:bg-slate-800 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-outline-variant/40 dark:border-slate-700 p-6 md:p-8 space-y-6 relative animate-in fade-in zoom-in-95 duration-200">
-            <button
-              type="button"
-              onClick={() => setSelectedScholarship(null)}
-              aria-label="Cerrar modal"
-              className="btn-tactile absolute top-4 right-4 p-2 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700 rounded-full transition-all"
-            >
-              <X className="w-6 h-6" />
-            </button>
+            {/* Sticky, not absolute: this panel scrolls internally, so an
+                absolutely positioned button scrolls away with the content and
+                the only way out of a long scholarship is to scroll back up.
+                The zero-height wrapper keeps it out of the flow, so the layout
+                is unchanged. */}
+            <div className="sticky top-0 z-10 flex h-0 justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedScholarship(null)}
+                aria-label="Cerrar modal"
+                className="btn-tactile p-2 text-on-surface-variant dark:text-slate-300 bg-surface-container-lowest/90 dark:bg-slate-800/90 backdrop-blur-xs hover:bg-surface-container dark:hover:bg-slate-700 rounded-full transition-all"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
 
             <div className="space-y-2 pr-8">
               <div className="flex flex-wrap items-center gap-2">

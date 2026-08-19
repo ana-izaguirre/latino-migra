@@ -78,11 +78,23 @@ Recently addressed and verified by tests:
   them in Firestore and nothing in the browser, so they follow the account to
   another device. Signing in migrates the cookie and deletes it. A **Clear my
   preferences** control in the preferences menu empties both.
+- The scholarship catalogue says where its list came from. The bundled dataset
+  renders immediately and Firestore replaces it, which used to happen silently —
+  and a failed load was indistinguishable from a successful one. A polite live
+  region now reports "Actualizando convocatorias…" while the fetch is in flight
+  and, if it fails or returns nothing, says the list on screen is the bundled
+  copy and may be out of date.
 - Modal close buttons sit in the top-right corner. `.btn-tactile` in
   `index.css` set `position: relative` and, being unlayered, beat Tailwind's
   `.absolute` at equal specificity — both close buttons rendered in static flow
   at the top-left of their panel. The rule now lives in `@layer components`, so
   a utility on the same element wins.
+- The close button stays in the corner while a long panel scrolls. The
+  scholarship detail panel caps itself at 90vh and scrolls internally, so an
+  absolutely positioned button scrolled away with the content and the only way
+  out of a long entry was to scroll back up. It is sticky now. `.lm-overlay`
+  also no longer forces `max-height: none` onto the panel, which had been
+  overriding that 90vh cap.
 - The page scrolls while a modal is open, and stops moving underneath it. Every
   overlay is `fixed inset-0`; nothing froze the document beneath, so a swipe
   scrolled the page while the panel stayed put and the screen read as stuck.

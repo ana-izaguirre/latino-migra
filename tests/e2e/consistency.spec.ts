@@ -206,3 +206,30 @@ test.describe("Preference persistence", () => {
     expect(cookies.find((c) => c.name === "lm_prefs")?.value || "").toBe("");
   });
 });
+
+/**
+ * The catalogue renders the bundled dataset immediately and replaces it when
+ * Firestore answers. That swap used to be silent, and a failed load looked
+ * identical to a successful one.
+ */
+test.describe("Catalogue load status", () => {
+  test("resolves the loading state and never leaves the list busy", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#nav-item-becas").click();
+
+    const main = page.locator("#scholarships-main-section");
+    await expect(main).toBeVisible();
+
+    // Whether Firestore answers or fails, the busy state must end.
+    await expect(main).toHaveAttribute("aria-busy", "false", { timeout: 15000 });
+    await expect(page.locator("#catalogue-loading-status")).toHaveCount(0);
+
+    // Exactly one outcome: the live catalogue, or a visible notice that this is
+    // the bundled copy. Silence is the state this test exists to prevent.
+    const bundled = await page.locator("#catalogue-bundled-status").count();
+    expect([0, 1]).toContain(bundled);
+    if (bundled === 1) {
+      await expect(page.locator("#catalogue-bundled-status")).toContainText(/No pudimos cargar/);
+    }
+  });
+});

@@ -72,10 +72,9 @@ body {
 }
 
 .lm-overlay > * {
+  /* Centres the panel while it fits and lets it scroll once it does not --
+     flex centring alone clips the overflow unreachably. */
   margin-block: auto;
-  /* Never taller than the viewport, so the panel's own scroller can take over
-     on very small screens. */
-  max-height: none;
 }
 
 /* Any element that opts into scrolling gets momentum + contained overscroll,
