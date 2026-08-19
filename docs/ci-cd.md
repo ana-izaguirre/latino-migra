@@ -43,6 +43,26 @@ input.
 > [data.md](./data.md)). The workflow reports success while the catalogue is
 > unchanged.
 
+## Project board sync
+
+`.github/workflows/project-status.yml` fires when a `status:*` label is added to
+an Issue and moves that card's Status field on the Project.
+
+It exists because Projects V2 is a GraphQL-only API and the AI session doing the
+work has REST access only: it can label an Issue but cannot edit the board. The
+label is the interface between the two.
+
+`status:in-progress` → In Progress, `status:ready` → Ready,
+`status:ai-review` → AI Review. The mapping is mechanical — the label suffix is
+title-cased with dashes turned into spaces — so a new Status option needs no
+change here beyond the option existing on the Project.
+
+**Requires the `PROJECT_TOKEN` secret**: a fine-grained PAT with read/write on
+Projects. The built-in `GITHUB_TOKEN` cannot write to Projects V2 at all, which
+is a platform limitation rather than a permission that can be widened in the
+workflow. Without the secret the job fails loudly rather than skipping, so a
+stale board is visible instead of silent.
+
 ## Merge gates
 
 CI blocks a merge to `main` when any of these fails:

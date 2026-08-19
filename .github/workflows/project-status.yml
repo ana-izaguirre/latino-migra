@@ -1,0 +1,64 @@
+name: Sync project status
+
+# The Projects V2 API is GraphQL-only, and the Claude Code session that does the
+# work has REST access only: it can label an issue but cannot touch the board.
+# So the agent sets a `status:*` label and this workflow moves the card.
+#
+# ONE-TIME SETUP
+#   Create a fine-grained PAT with read/write on Projects, and save it as the
+#   repository secret PROJECT_TOKEN. The built-in GITHUB_TOKEN cannot write to
+#   Projects V2 — that is a platform limitation, not a scope you can widen here.
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    if: startsWith(github.event.label.name, 'status:')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Move the card to the labelled status
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          PROJECT_TITLE: Product Engineering Latino Migra
+          OWNER: ${{ github.repository_owner }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          LABEL: ${{ github.event.label.name }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "PROJECT_TOKEN is not configured — see the header of this file." >&2
+            exit 1
+          fi
+
+          # status:in-progress -> "In Progress"
+          STATUS=$(printf '%s' "${LABEL#status:}" | tr '-' ' ' \
+            | awk '{ for (i = 1; i <= NF; i++) $i = toupper(substr($i,1,1)) substr($i,2) } 1')
+          echo "Target status: ${STATUS}"
+
+          NUMBER=$(gh project list --owner "${OWNER}" --format json \
+            | jq -r --arg t "${PROJECT_TITLE}" '.projects[] | select(.title==$t) | .number')
+          [ -n "${NUMBER}" ] || { echo "Project '${PROJECT_TITLE}' not found" >&2; exit 1; }
+
+          PROJECT_ID=$(gh project view "${NUMBER}" --owner "${OWNER}" --format json | jq -r '.id')
+
+          FIELDS=$(gh project field-list "${NUMBER}" --owner "${OWNER}" --format json)
+          FIELD_ID=$(jq -r '.fields[] | select(.name=="Status") | .id' <<<"${FIELDS}")
+          OPTION_ID=$(jq -r --arg s "${STATUS}" \
+            '.fields[] | select(.name=="Status") | .options[] | select(.name==$s) | .id' <<<"${FIELDS}")
+          [ -n "${OPTION_ID}" ] || { echo "Status option '${STATUS}' does not exist" >&2; exit 1; }
+
+          # item-add returns the existing item when the issue is already on the
+          # board, so this is safe to run every time.
+          ITEM_ID=$(gh project item-add "${NUMBER}" --owner "${OWNER}" \
+            --url "${ISSUE_URL}" --format json | jq -r '.id')
+
+          gh project item-edit --id "${ITEM_ID}" --project-id "${PROJECT_ID}" \
+            --field-id "${FIELD_ID}" --single-select-option-id "${OPTION_ID}"
+
+          echo "Moved ${ISSUE_URL} to ${STATUS}"
