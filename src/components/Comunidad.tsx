@@ -301,15 +301,16 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
     return words.some((word) => postTitleLower.includes(word) || postContentLower.includes(word));
   });
 
-  const filteredPosts = posts.filter((p) => {
-    const matchesCategory = selectedCategory === "Todas" || p.category === selectedCategory;
-    const matchesSearch =
+  // Category is filtered by the query now, so re-checking it here would only
+  // hide posts the server already decided belong. Search stays client-side:
+  // Firestore cannot do substring matching, and the box searches four fields.
+  const filteredPosts = posts.filter(
+    (p) =>
       p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.country.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+      p.country.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault();

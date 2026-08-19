@@ -124,9 +124,16 @@ The codebase contains **zero `runTransaction` and zero `writeBatch`**.
 - 8 `getDocs` calls; 5 have no `limit()`.
 - The high-traffic ones are bounded: `fetchScholarshipsFromDB` at 100,
   `fetchCommunityPostsPaginated` by `fetchLimit`.
-- Only `fetchCommunityPostsPaginated` combines `orderBy` with pagination.
-- No `firestore.indexes.json` exists, so any future composite query will fail
-  first in production.
+- Only `fetchCommunityPostsPaginated` combines `orderBy` with pagination, and
+  it is the one composite query in the codebase: `where("category", "==", …)`
+  plus `orderBy("createdAt", "desc")`.
+- **Requires the composite index `(category ASC, createdAt DESC)` on
+  `forumPosts`.** Firestore rejects the query without it, so selecting any
+  category other than "Todas" fails until the index exists on the target
+  database — which is the named `ai-studio-latinomigra-…` one, not `(default)`.
+- No `firestore.indexes.json` exists, so indexes are created by hand in the
+  console and nothing in the repository records which ones production needs.
+  That is the gap this query just walked into.
 
 ## Connections and pooling
 

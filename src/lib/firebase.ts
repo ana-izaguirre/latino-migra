@@ -516,34 +516,39 @@ export interface PaginatedForumResult {
   hasMore: boolean;
 }
 
+/** The category chip that means "do not filter". */
+export const ALL_CATEGORIES = "Todas";
+
 /**
- * NOTE: `_category` is accepted and never applied. `Comunidad.tsx` passes the
- * selected category on every call, so the community filter currently returns
- * the same posts whatever the user picks. Filtering it needs a composite index
- * on (category, createdAt desc), which has to be created in the Firebase
- * console — hence the underscore rather than a silent fix here.
+ * A page of forum posts, filtered by category in the query rather than after
+ * the fact.
+ *
+ * The category used to be accepted and ignored, with `Comunidad.tsx` filtering
+ * the fetched page client-side. That returned the six most recent posts
+ * overall and then removed the ones that did not match, so a category with
+ * posts could look empty and "load more" paged through the whole forum instead
+ * of the category.
+ *
+ * Filtering here requires the composite index (category ASC, createdAt DESC)
+ * on `forumPosts`; without it Firestore rejects the query.
  */
 export async function fetchCommunityPostsPaginated(
   pageSize = 6,
   lastDoc: QueryDocumentSnapshot<DocumentData> | null = null,
-  _category = "Todas"
+  category: string = ALL_CATEGORIES
 ): Promise<PaginatedForumResult> {
   const path = "forumPosts";
   try {
-    let q;
     // We fetch pageSize + 1 to know if there's a next page without an extra count query
     const fetchLimit = pageSize + 1;
 
-    if (lastDoc) {
-      q = query(
-        collection(db, path),
-        orderBy("createdAt", "desc"),
-        startAfter(lastDoc),
-        limit(fetchLimit)
-      );
-    } else {
-      q = query(collection(db, path), orderBy("createdAt", "desc"), limit(fetchLimit));
-    }
+    const constraints = [
+      ...(category && category !== ALL_CATEGORIES ? [where("category", "==", category)] : []),
+      orderBy("createdAt", "desc"),
+      ...(lastDoc ? [startAfter(lastDoc)] : []),
+      limit(fetchLimit),
+    ];
+    const q = query(collection(db, path), ...constraints);
 
     const snapshot = await getDocs(q);
     if (snapshot.empty) {
