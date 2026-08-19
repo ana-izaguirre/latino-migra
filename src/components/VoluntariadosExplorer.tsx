@@ -3,26 +3,18 @@ import {
   HeartHandshake,
   AlertTriangle,
   Globe2,
-  Calendar,
   DollarSign,
-  ShieldCheck,
   CheckCircle2,
   ExternalLink,
   Bot,
   Sparkles,
   Search,
-  Filter,
-  Info,
-  Layers,
-  MapPin,
-  Clock,
 } from "lucide-react";
 import { NavigationTab, GoogleUser } from "../types";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { VOLUNTEERING_PROGRAMS_DATA, VolunteeringProgram } from "../data/volunteeringData";
 import { useLanguage } from "../lib/i18n";
 import { useBodyScrollLock } from "../lib/useBodyScrollLock";
-import { CalendarAgendaButton } from "./CalendarAgendaButton";
 
 interface VoluntariadosExplorerProps {
   setActiveTab: (tab: NavigationTab) => void;
@@ -33,9 +25,8 @@ interface VoluntariadosExplorerProps {
 export const VoluntariadosExplorer: React.FC<VoluntariadosExplorerProps> = ({
   setActiveTab,
   onAskAIWithCustomPrompt,
-  currentUser,
 }) => {
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
   const [searchFilter, setSearchFilter] = useState<string>("");
   const [selectedProgram, setSelectedProgram] = useState<VolunteeringProgram | null>(null);

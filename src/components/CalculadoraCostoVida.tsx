@@ -1,8 +1,6 @@
 import React, { useState, useMemo } from "react";
 import {
   Calculator,
-  DollarSign,
-  TrendingUp,
   Globe,
   Users,
   Home,
@@ -11,12 +9,10 @@ import {
   HeartPulse,
   Smartphone,
   Coffee,
-  Sparkles,
   ArrowRight,
   ShieldCheck,
   AlertTriangle,
   Download,
-  Bot,
 } from "lucide-react";
 import { NavigationTab, GoogleUser } from "../types";
 import { Breadcrumbs } from "./Breadcrumbs";
@@ -353,11 +349,7 @@ const FX_RATES_FROM_USD: Record<string, { rate: number; name: string; symbol: st
   AUD: { rate: 1.52, name: "Dólar Australiano (AUD)", symbol: "$ AUD" },
 };
 
-export const CalculadoraCostoVida: React.FC<CalculadoraCostoVidaProps> = ({
-  setActiveTab,
-  currentUser,
-  onAskAIAboutBudget,
-}) => {
+export const CalculadoraCostoVida: React.FC<CalculadoraCostoVidaProps> = ({ setActiveTab }) => {
   const [selectedCityKey, setSelectedCityKey] = useState<string>("madrid-es");
   const [targetCurrency, setTargetCurrency] = useState<string>("COP");
   const [lifestyle, setLifestyle] = useState<"estudiante" | "profesional" | "familia">(

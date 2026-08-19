@@ -27,7 +27,6 @@ import {
   Layers,
   SlidersHorizontal,
   RefreshCw,
-  Database,
   BookOpen,
 } from "lucide-react";
 import { Scholarship, NavigationTab, GoogleUser } from "../types";
@@ -62,11 +61,9 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
   setActiveTab,
   onAskAIAboutScholarship,
   currentUser,
-  onOpenAuthModal,
 }) => {
   // Dynamic scholarships state loaded from Firestore with fallback to static dataset
   const [scholarshipsList, setScholarshipsList] = useState<Scholarship[]>(SCHOLARSHIPS_DATA);
-  const [isLoadingDB, setIsLoadingDB] = useState<boolean>(false);
   const [isSyncingAI, setIsSyncingAI] = useState<boolean>(false);
   const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
 
@@ -103,7 +100,6 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
   useEffect(() => {
     let isMounted = true;
     async function loadDB() {
-      setIsLoadingDB(true);
       try {
         const dbItems = await fetchScholarshipsFromDB();
         if (isMounted && dbItems && dbItems.length > 0) {
@@ -111,8 +107,6 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
         }
       } catch (e) {
         console.warn("Using fallback scholarship dataset:", e);
-      } finally {
-        if (isMounted) setIsLoadingDB(false);
       }
     }
     loadDB();

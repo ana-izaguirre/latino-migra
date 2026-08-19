@@ -9,7 +9,7 @@
     "start": "node dist/server.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "eslint . && tsc --noEmit",
+    "lint": "eslint . --max-warnings 35 && tsc --noEmit",
     "test": "vitest run",
     "test:unit": "vitest run",
     "test:watch": "vitest",

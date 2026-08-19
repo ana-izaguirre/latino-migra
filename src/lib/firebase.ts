@@ -23,7 +23,6 @@ import {
   updateDoc,
   deleteDoc,
   increment,
-  onSnapshot,
   QueryDocumentSnapshot,
   DocumentData,
 } from "firebase/firestore";
@@ -473,10 +472,17 @@ export interface PaginatedForumResult {
   hasMore: boolean;
 }
 
+/**
+ * NOTE: `_category` is accepted and never applied. `Comunidad.tsx` passes the
+ * selected category on every call, so the community filter currently returns
+ * the same posts whatever the user picks. Filtering it needs a composite index
+ * on (category, createdAt desc), which has to be created in the Firebase
+ * console — hence the underscore rather than a silent fix here.
+ */
 export async function fetchCommunityPostsPaginated(
   pageSize = 6,
   lastDoc: QueryDocumentSnapshot<DocumentData> | null = null,
-  category = "Todas"
+  _category = "Todas"
 ): Promise<PaginatedForumResult> {
   const path = "forumPosts";
   try {

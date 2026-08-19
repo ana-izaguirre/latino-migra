@@ -260,3 +260,69 @@ test.describe("Mobile scrolling", () => {
     expect(panel!.y + panel!.height).toBeLessThanOrEqual(vh + 1);
   });
 });
+
+/**
+ * Custom classes in `index.css` sit after Tailwind in the stylesheet, so at
+ * equal specificity they beat the utilities. `.btn-tactile { position:
+ * relative }` silently overrode `.absolute` on both modal close buttons, which
+ * dropped them into static flow at the top-left of the panel instead of pinning
+ * them to the top-right corner.
+ */
+test.describe("Mobile modal chrome", () => {
+  test("pins the modal close button to the top-right corner", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#login-profile-btn").dispatchEvent("click");
+
+    const close = page.locator('[aria-label="Cerrar modal"]');
+    await expect(close).toBeVisible();
+
+    const geometry = await close.evaluate((el) => {
+      const panel = el.closest("div") as HTMLElement;
+      const b = el.getBoundingClientRect();
+      const p = panel.getBoundingClientRect();
+      return {
+        position: getComputedStyle(el).position,
+        fromRight: p.right - b.right,
+        fromTop: b.top - p.top,
+      };
+    });
+
+    expect(geometry.position).toBe("absolute");
+    // `top-4 right-4` is 16px, plus sub-pixel rounding.
+    expect(geometry.fromRight).toBeLessThan(24);
+    expect(geometry.fromTop).toBeLessThan(24);
+  });
+
+  test("no element is overridden by a custom class it declares a utility against", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.locator("#login-profile-btn").dispatchEvent("click");
+    await expect(page.locator(".lm-overlay")).toBeVisible();
+
+    const collisions = await page.evaluate(() => {
+      const expected: Record<string, [string, string]> = {
+        absolute: ["position", "absolute"],
+        fixed: ["position", "fixed"],
+        sticky: ["position", "sticky"],
+        flex: ["display", "flex"],
+        hidden: ["display", "none"],
+      };
+      const found: string[] = [];
+      for (const el of Array.from(document.querySelectorAll("*"))) {
+        const classes = (el.className || "").toString().split(/\s+/);
+        const style = getComputedStyle(el);
+        for (const c of classes) {
+          const rule = expected[c];
+          if (!rule) continue;
+          if (style[rule[0] as never] !== rule[1]) {
+            found.push(`${el.tagName.toLowerCase()}.${c}: ${rule[0]}=${style[rule[0] as never]}`);
+          }
+        }
+      }
+      return Array.from(new Set(found));
+    });
+
+    expect(collisions, collisions.join(" | ")).toEqual([]);
+  });
+});

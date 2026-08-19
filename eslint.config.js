@@ -82,13 +82,19 @@ export default tseslint.config(
       "jsx-a11y/aria-role": "error",
       "jsx-a11y/role-has-required-aria-props": "error",
 
-      // Known backlog — warn until the debt is paid down.
-      "react-hooks/exhaustive-deps": "warn",
-      "@typescript-eslint/no-explicit-any": "warn",
+      // Errors: the backlog is paid off, so this now blocks rather than warns.
+      // Dead imports and dead state accumulated to 91 occurrences before anyone
+      // noticed, and clearing them surfaced a real defect — a category argument
+      // that was accepted and never applied.
       "@typescript-eslint/no-unused-vars": [
-        "warn",
+        "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
+
+      // Known backlog — warn until the debt is paid down. `npm run lint` caps
+      // the total, so the count can only go down.
+      "react-hooks/exhaustive-deps": "warn",
+      "@typescript-eslint/no-explicit-any": "warn",
     },
   },
 

@@ -5,17 +5,13 @@ import {
   Share2,
   Plus,
   Search,
-  Filter,
   MapPin,
   Sparkles,
   User,
-  CheckCircle2,
   AlertTriangle,
-  HelpCircle,
   CornerDownRight,
   Send,
   X,
-  ThumbsUp,
   BookmarkCheck,
   Cloud,
   Loader2,
@@ -27,15 +23,12 @@ import { isAdmin } from "../lib/authUtils";
 import { useBodyScrollLock } from "../lib/useBodyScrollLock";
 import { useLanguage } from "../lib/i18n";
 import {
-  fetchCommunityPosts,
   fetchCommunityPostsPaginated,
   createCommunityPost,
   likeCommunityPost,
   fetchPostReplies,
   addPostReply,
   CloudForumPost,
-  CloudForumReply,
-  auth,
 } from "../lib/firebase";
 import { QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 

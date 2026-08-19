@@ -220,11 +220,11 @@ Capacidades y Principios de Respuesta:
       response.text || "No se pudo generar una respuesta. Por favor intenta de nuevo.";
 
     res.json({ text: replyText });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error en /api/chat:", error);
     res.status(500).json({
       error: "Error interno al procesar la consulta con LatinoMigra IA.",
-      details: error.message || String(error),
+      details: error instanceof Error ? error.message : String(error),
     });
   }
 });
@@ -303,13 +303,18 @@ Genera al menos 15 convocatorias oficiales líderes. Asegúrate de que el format
       rawText = rawText.replace(/```\n?/, "").replace(/\n?```$/, "");
     }
 
-    let parsedScholarships: any[] = [];
+    // The model returns free-form JSON, so nothing about the shape is
+    // guaranteed until it is validated. `unknown[]` keeps that honest --
+    // `any[]` would silently allow any property access downstream.
+    let parsedScholarships: unknown[] = [];
     try {
-      const parsed = JSON.parse(rawText);
+      const parsed: unknown = JSON.parse(rawText);
       if (Array.isArray(parsed)) {
         parsedScholarships = parsed;
       } else if (parsed && typeof parsed === "object") {
-        parsedScholarships = parsed.scholarships || parsed.items || [];
+        const wrapper = parsed as { scholarships?: unknown; items?: unknown };
+        const inner = wrapper.scholarships ?? wrapper.items;
+        parsedScholarships = Array.isArray(inner) ? inner : [];
       }
     } catch (parseErr) {
       console.error("JSON parse error from Gemini:", parseErr);
@@ -327,11 +332,11 @@ Genera al menos 15 convocatorias oficiales líderes. Asegúrate de que el format
       data: parsedScholarships,
       message: `¡Sincronización exitosa! Se han verificado y actualizado ${parsedScholarships.length} convocatorias para el ciclo ${academicYear}.`,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error en /api/cron/sync-scholarships:", error);
     res.status(500).json({
       error: "Error interno al ejecutar el cron job de sincronización de becas.",
-      details: error.message || String(error),
+      details: error instanceof Error ? error.message : String(error),
     });
   }
 });

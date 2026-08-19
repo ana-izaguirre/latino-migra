@@ -1,17 +1,7 @@
 import React, { useState } from "react";
-import {
-  X,
-  CheckCircle2,
-  ShieldCheck,
-  Bookmark,
-  Calendar,
-  Sparkles,
-  User,
-  Globe,
-  LogOut,
-} from "lucide-react";
+import { X, ShieldCheck, Bookmark, Calendar, Sparkles, Globe, LogOut } from "lucide-react";
 import { GoogleUser } from "../types";
-import { signInWithGoogle, isUserAdmin, signOutUser } from "../lib/firebase";
+import { signInWithGoogle, isUserAdmin } from "../lib/firebase";
 import { getSafeImageUrl } from "../lib/sanitize";
 import { useBodyScrollLock } from "../lib/useBodyScrollLock";
 
@@ -32,7 +22,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 }) => {
   const [selectedCountry, setSelectedCountry] = useState<string>("Colombia");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [authError, setAuthError] = useState<string | null>(null);
 
   useBodyScrollLock(isOpen);
 
@@ -40,7 +29,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const handleFirebaseGoogleSignIn = async () => {
     setIsLoading(true);
-    setAuthError(null);
     try {
       const { user: fbUser, countryOfOrigin } = await signInWithGoogle(selectedCountry);
       // App.tsx resolves this too, from its auth-state subscription, but the two
@@ -64,7 +52,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       };
       onSignIn(userToSignIn);
       onClose();
-    } catch (err: any) {
+    } catch (err) {
       console.warn(
         "Firebase Auth popup no completado o en modo de prueba, activando acceso rápido:",
         err

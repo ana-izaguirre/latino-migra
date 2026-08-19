@@ -2,18 +2,13 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   Bot,
   Send,
-  Paperclip,
   Sparkles,
   Plus,
   MessageSquare,
-  ThumbsUp,
   Copy,
   Check,
-  AlertCircle,
   ExternalLink,
-  ChevronRight,
   User,
-  Trash2,
   Compass,
   Briefcase,
   GraduationCap,
@@ -34,7 +29,7 @@ interface ChatIAProps {
   scholarshipContext?: Scholarship | null;
 }
 
-export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, scholarshipContext }) => {
+export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt }) => {
   const { language, t } = useLanguage();
   const { currency } = useCurrency();
   const [conversations, setConversations] = useState<ChatConversation[]>([
