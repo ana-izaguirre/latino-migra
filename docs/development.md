@@ -86,7 +86,13 @@ warn/error/info, and `no-unused-vars`. What remains of the backlog warns —
 
 `npm run lint` passes `--max-warnings 35`, which makes the remaining backlog a
 **ratchet** like the coverage thresholds: the count can only go down. Lower the
-number in `package.json` as warnings are cleared.
+number in `package.json` as warnings are cleared — and in `MAX_WARNINGS` in
+`scripts/ci-report.mjs`, which enforces the same budget in CI.
+
+In CI the two run as separate steps through `scripts/ci-report.mjs`, which
+annotates each finding onto the pull request diff and writes a summary table.
+`npm run lint` chains them with `&&`, so locally a lint error still stops the
+typecheck — run `npm run typecheck` to see past it.
 
 `no-unused-vars` became an error once the 91 outstanding cases were cleared.
 Prefix a genuinely unused parameter with `_` when a caller still passes it

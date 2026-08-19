@@ -37,10 +37,26 @@ jobs:
         run: npm ci || npm install
       - name: Check formatting (Prettier)
         run: npm run format:check
-      - name: Lint (ESLint) and typecheck
-        run: npm run lint
+
+      # ESLint and tsc are separate steps, and each runs even when an earlier
+      # one failed. `npm run lint` chains them with `&&`, so a single lint error
+      # used to hide every type error in the branch behind it.
+      #
+      # Both report through scripts/ci-report.mjs, which annotates the findings
+      # onto the pull request diff instead of leaving them in a collapsed log.
+      - name: Lint (ESLint)
+        id: eslint
+        if: ${{ !cancelled() }}
+        run: node scripts/ci-report.mjs eslint
+
+      - name: Typecheck (tsc)
+        id: tsc
+        if: ${{ !cancelled() }}
+        run: node scripts/ci-report.mjs tsc
+
       # Fails the job when coverage drops below the thresholds in vitest.config.ts
       - name: Run Unit Tests with Coverage
+        if: ${{ !cancelled() }}
         run: npm run test:coverage
       - name: Report coverage in the job summary
         if: ${{ !cancelled() }}
