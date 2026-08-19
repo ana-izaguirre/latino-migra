@@ -123,3 +123,86 @@ test.describe("Desktop navigation", () => {
     await expect(page.locator("#theme-toggle-btn")).toBeVisible();
   });
 });
+
+/**
+ * Preferences used to be in-memory only, so every reload reset the theme,
+ * language, currency and both country choices. An anonymous visitor now keeps
+ * them in the `lm_prefs` cookie; a signed-in one keeps them in Firestore and
+ * nothing in the browser.
+ */
+test.describe("Preference persistence", () => {
+  test("keeps the theme across a reload", async ({ page }) => {
+    await page.goto("/");
+
+    const isDark = () => page.evaluate(() => document.documentElement.classList.contains("dark"));
+
+    const before = await isDark();
+    await page.locator("#preferences-menu-btn").click();
+    await page.locator("#theme-toggle-btn").click();
+    await expect.poll(isDark).toBe(!before);
+
+    await page.reload();
+    await expect.poll(isDark).toBe(!before);
+  });
+
+  test("keeps the destination country across a reload", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#nav-item-guia").click();
+    await page
+      .getByRole("button", { name: /Alemania/i })
+      .first()
+      .click();
+
+    await page.waitForTimeout(600); // past the write debounce
+    await page.reload();
+
+    // The planner reads the same context, so the choice must survive there too.
+    await page.locator("#nav-tools-menu-btn").click();
+    await page.locator("#nav-item-planificador").click();
+    await expect(page.locator("#planner-destination-country")).toHaveValue("Alemania");
+  });
+
+  test("stores preferences in a cookie and never in browser storage", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#preferences-menu-btn").click();
+    await page.locator("#theme-toggle-btn").click();
+    await page.waitForTimeout(600); // past the write debounce
+
+    const cookies = await page.context().cookies();
+    const prefs = cookies.find((c) => c.name === "lm_prefs");
+    expect(prefs, "lm_prefs cookie was not written").toBeTruthy();
+
+    // Display choices only: no identifier, nothing personal.
+    expect(Object.keys(JSON.parse(decodeURIComponent(prefs!.value)))).toEqual(
+      expect.arrayContaining(["theme"])
+    );
+    expect(prefs!.sameSite).toBe("Lax");
+
+    const storage = await page.evaluate(() => ({
+      local: Object.keys(localStorage),
+      session: Object.keys(sessionStorage),
+    }));
+    expect(storage.local).toEqual([]);
+    expect(storage.session).toEqual([]);
+  });
+
+  test("clearing preferences restores the defaults", async ({ page }) => {
+    await page.goto("/");
+
+    const isDark = () => page.evaluate(() => document.documentElement.classList.contains("dark"));
+    const before = await isDark();
+
+    await page.locator("#preferences-menu-btn").click();
+    await page.locator("#theme-toggle-btn").click();
+    await expect.poll(isDark).toBe(!before);
+    await page.waitForTimeout(600);
+
+    // The menu is still open from the toggle above; clicking the trigger again
+    // would close it.
+    await page.locator("#clear-preferences-btn").click();
+
+    await expect(page.getByText(/Preferencias borradas|Preferences cleared/)).toBeVisible();
+    const cookies = await page.context().cookies();
+    expect(cookies.find((c) => c.name === "lm_prefs")?.value || "").toBe("");
+  });
+});

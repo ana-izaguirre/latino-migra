@@ -313,6 +313,50 @@ export async function getUserMigrationPlan(userId: string) {
   }
 }
 
+/**
+ * Display preferences for a signed-in user.
+ *
+ * Shares `userPreferences/{uid}` with the alert settings, under a `display`
+ * key so the two cannot collide. See `src/lib/preferencesStore.ts`.
+ */
+export async function getStoredPreferences(userId: string): Promise<unknown> {
+  const path = `userPreferences/${userId}`;
+  try {
+    const snap = await getDoc(doc(db, "userPreferences", userId));
+    return snap.exists() ? (snap.data().display ?? {}) : {};
+  } catch (err) {
+    // Fail closed to defaults rather than blocking the first render.
+    handleFirestoreError(err, OperationType.GET, path);
+    return {};
+  }
+}
+
+export async function saveStoredPreferences(userId: string, display: unknown) {
+  const path = `userPreferences/${userId}`;
+  try {
+    await setDoc(
+      doc(db, "userPreferences", userId),
+      { display, userId, updatedAt: new Date().toISOString() },
+      { merge: true }
+    );
+  } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, path);
+  }
+}
+
+export async function clearStoredPreferences(userId: string) {
+  const path = `userPreferences/${userId}`;
+  try {
+    await setDoc(
+      doc(db, "userPreferences", userId),
+      { display: {}, userId, updatedAt: new Date().toISOString() },
+      { merge: true }
+    );
+  } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, path);
+  }
+}
+
 // Firestore Helper: Save User Alert Preferences
 export async function saveUserAlertPreferences(userId: string, prefs: any) {
   const path = `userPreferences/${userId}`;

@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useMemo, useState } from "react";
+import React, { createContext, useContext, useMemo, useState, useEffect } from "react";
 import { LATIN_AMERICAN_COUNTRIES, DESTINATION_COUNTRIES } from "../data/countriesData";
+import { getPreferences, setPreference, subscribeToPreferences } from "./preferencesStore";
 
 /**
  * Single source of truth for the two country choices the whole app reasons
@@ -10,8 +11,9 @@ import { LATIN_AMERICAN_COUNTRIES, DESTINATION_COUNTRIES } from "../data/countri
  * showing something else. Reading and writing through this context keeps them
  * in step.
  *
- * State is deliberately in-memory only: nothing here is written to
- * localStorage or sessionStorage.
+ * Choices persist through `preferencesStore`: Firestore for a signed-in user,
+ * the `lm_prefs` cookie for an anonymous visitor. Never localStorage or
+ * sessionStorage.
  */
 
 /** Sentinel used by screens whose selects offer an "all countries" option. */
@@ -68,8 +70,31 @@ export const PreferencesProvider: React.FC<PreferencesProviderProps> = ({
   // catalogue silently opening pre-filtered to a single country.
   initialDestinationCountry = ANY_COUNTRY,
 }) => {
-  const [originCountry, setOriginCountry] = useState<string>(initialOriginCountry);
-  const [destinationCountry, setDestinationCountry] = useState<string>(initialDestinationCountry);
+  const [originCountry, setOriginCountryState] = useState<string>(
+    () => getPreferences().originCountry ?? initialOriginCountry
+  );
+  const [destinationCountry, setDestinationCountryState] = useState<string>(
+    () => getPreferences().destinationCountry ?? initialDestinationCountry
+  );
+
+  useEffect(
+    () =>
+      subscribeToPreferences((prefs) => {
+        setOriginCountryState(prefs.originCountry ?? initialOriginCountry);
+        setDestinationCountryState(prefs.destinationCountry ?? initialDestinationCountry);
+      }),
+    [initialOriginCountry, initialDestinationCountry]
+  );
+
+  const setOriginCountry = (country: string) => {
+    setOriginCountryState(country);
+    setPreference("originCountry", country);
+  };
+
+  const setDestinationCountry = (country: string) => {
+    setDestinationCountryState(country);
+    setPreference("destinationCountry", country);
+  };
 
   const value = useMemo<PreferencesContextType>(
     () => ({
