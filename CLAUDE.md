@@ -109,23 +109,33 @@ A pull request answers one question: should this change land? Two unrelated
 changes in one branch force a single yes-or-no on both, so a reviewer who wants
 one and doubts the other has no way to say so.
 
-This has already gone wrong here. A TypeScript fix, a CSS fix and a lint sweep
-each ended up in a pull request opened for something else, because work started
-while the previous one was still open.
+This went wrong four times here — a TypeScript fix, a CSS fix, a lint sweep and
+a CI change each landed in a pull request opened for something else. The cause
+was structural rather than careless: one branch was designated for all the work,
+so every commit made while a pull request was open joined that pull request.
 
-The cause is structural, not carelessness: **one branch is designated for this
-work**, so any commit made while a pull request is open on it lands in that
-pull request. Therefore:
+**Branch per unit of work.** Cut it from the latest `main`, never from another
+working branch:
 
-- Do not start the next Issue while a pull request is open on the branch. Say
-  what you intend to take next and wait for the merge.
-- The exception is a change *to* the open pull request — a review fix, a failing
-  check, a merge conflict.
-- If something urgent appears mid-flight, say so and let the human decide
-  whether to merge first or accept the mixing. Do not decide it silently.
-- When mixing does happen anyway, the pull request description must say so and
-  describe both changes. A body that describes one change while the diff
-  contains two is worse than the mixing itself.
+```bash
+git fetch origin main
+git checkout -b claude/issue-38-forum-category-filter origin/main
+```
+
+Name it `claude/issue-<number>-<slug>` when an Issue exists, and
+`claude/<slug>` when one does not. One branch, one pull request, one question
+for the reviewer.
+
+This means work never has to wait for a merge. Start the next Issue on its own
+branch as soon as the previous pull request is open.
+
+Two things still hold:
+
+- A change *to* an open pull request — a review fix, a failing check, a merge
+  conflict — belongs on that pull request's branch, not a new one.
+- If two changes end up together anyway, the description must say so and
+  describe both. A body that describes one change while the diff contains two
+  is worse than the mixing itself.
 
 ### Trivial changes
 

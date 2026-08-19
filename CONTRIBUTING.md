@@ -25,9 +25,10 @@ repository — see [docs/ci-cd.md](./docs/ci-cd.md).
 
 ## Pull requests
 
-One change per pull request. Two unrelated changes force a reviewer into a
-single yes-or-no on both. See [CLAUDE.md](./CLAUDE.md) for why this is easy to
-get wrong here, and what to do instead.
+One change per pull request, on its own branch cut from the latest `main`:
+`claude/issue-<number>-<slug>`, or `claude/<slug>` when no Issue exists. Two
+unrelated changes force a reviewer into a single yes-or-no on both. See
+[CLAUDE.md](./CLAUDE.md).
 
 ## Style
 
