@@ -141,6 +141,9 @@ test.describe("Preference persistence", () => {
     await page.locator("#theme-toggle-btn").click();
     await expect.poll(isDark).toBe(!before);
 
+    // Past the store's write debounce. Reloading sooner races it, which is why
+    // this passed locally and failed on a faster CI runner.
+    await page.waitForTimeout(600);
     await page.reload();
     await expect.poll(isDark).toBe(!before);
   });
@@ -204,5 +207,34 @@ test.describe("Preference persistence", () => {
     await expect(page.getByText(/Preferencias borradas|Preferences cleared/)).toBeVisible();
     const cookies = await page.context().cookies();
     expect(cookies.find((c) => c.name === "lm_prefs")?.value || "").toBe("");
+  });
+});
+
+/**
+ * The catalogue renders the bundled dataset immediately and replaces it when
+ * Firestore answers. That swap used to be silent, and a failed load looked
+ * identical to a successful one.
+ */
+test.describe("Catalogue load status", () => {
+  test("resolves the loading state and never leaves the list busy", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#nav-item-becas").click();
+
+    const main = page.locator("#scholarships-main-section");
+    await expect(main).toBeVisible();
+
+    // Whether Firestore answers or fails, the busy state must end.
+    // Comfortably past CATALOGUE_FETCH_TIMEOUT_MS: an unreachable Firestore
+    // must still end the busy state, which is what this asserts.
+    await expect(main).toHaveAttribute("aria-busy", "false", { timeout: 20000 });
+    await expect(page.locator("#catalogue-loading-status")).toHaveCount(0);
+
+    // Exactly one outcome: the live catalogue, or a visible notice that this is
+    // the bundled copy. Silence is the state this test exists to prevent.
+    const bundled = await page.locator("#catalogue-bundled-status").count();
+    expect([0, 1]).toContain(bundled);
+    if (bundled === 1) {
+      await expect(page.locator("#catalogue-bundled-status")).toContainText(/No pudimos cargar/);
+    }
   });
 });

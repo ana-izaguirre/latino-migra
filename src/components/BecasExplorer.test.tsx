@@ -1,7 +1,8 @@
-import { describe, it, expect, vi } from "vitest";
-import { screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { renderWithProviders as render } from "../test/renderWithProviders";
 import { BecasExplorer } from "./BecasExplorer";
+import * as firebase from "../lib/firebase";
 
 describe("BecasExplorer Component", () => {
   const defaultProps = {
@@ -146,5 +147,78 @@ describe("BecasExplorer Component", () => {
 
     expect(localStorage.length).toBe(0);
     expect(sessionStorage.length).toBe(0);
+  });
+
+  /**
+   * Regression for #39. The bundled dataset renders immediately, so the
+   * catalogue was never blank — it was silently swapped when Firestore
+   * answered, and a failed load was indistinguishable from a successful one.
+   */
+  describe("catalogue load status", () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it("announces that it is updating while the fetch is in flight", () => {
+      vi.spyOn(firebase, "fetchScholarshipsFromDB").mockReturnValue(new Promise(() => {}));
+
+      render(<BecasExplorer {...defaultProps} />);
+
+      expect(screen.getByText(/Actualizando convocatorias/i)).toBeInTheDocument();
+      expect(screen.getByRole("main")).toHaveAttribute("aria-busy", "true");
+      // The bundled list stays on screen rather than being replaced by a
+      // skeleton: it is real content, and hiding it would be a regression.
+      expect(screen.getByText(/Directorio Oficial de Becas/i)).toBeInTheDocument();
+    });
+
+    it("clears the status once the live catalogue arrives", async () => {
+      vi.spyOn(firebase, "fetchScholarshipsFromDB").mockResolvedValue([
+        { id: "live-1", title: "Beca en vivo", country: "España" },
+      ] as never);
+
+      render(<BecasExplorer {...defaultProps} />);
+
+      await waitFor(() =>
+        expect(screen.queryByText(/Actualizando convocatorias/i)).not.toBeInTheDocument()
+      );
+      expect(screen.queryByText(/No pudimos cargar/i)).not.toBeInTheDocument();
+      expect(screen.getByRole("main")).toHaveAttribute("aria-busy", "false");
+    });
+
+    it("says the list is the bundled one when the fetch fails", async () => {
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+      vi.spyOn(firebase, "fetchScholarshipsFromDB").mockRejectedValue(new Error("offline"));
+
+      render(<BecasExplorer {...defaultProps} />);
+
+      // Visible, not just logged: a silent fallback is how a broken feature
+      // goes unnoticed here.
+      await waitFor(() => expect(screen.getByText(/No pudimos cargar/i)).toBeInTheDocument());
+    });
+
+    it("gives up when the fetch never settles", async () => {
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      vi.spyOn(firebase, "fetchScholarshipsFromDB").mockReturnValue(new Promise(() => {}));
+
+      render(<BecasExplorer {...defaultProps} />);
+      expect(screen.getByText(/Actualizando convocatorias/i)).toBeInTheDocument();
+
+      // An unreachable Firestore leaves the promise pending forever. Without a
+      // timeout the notice sits there for the rest of the session, which on a
+      // phone with a dead connection is the common case.
+      await vi.advanceTimersByTimeAsync(9000);
+      await waitFor(() => expect(screen.getByText(/No pudimos cargar/i)).toBeInTheDocument());
+
+      vi.useRealTimers();
+    });
+
+    it("says the same when the collection is empty", async () => {
+      vi.spyOn(firebase, "fetchScholarshipsFromDB").mockResolvedValue([] as never);
+
+      render(<BecasExplorer {...defaultProps} />);
+
+      await waitFor(() => expect(screen.getByText(/No pudimos cargar/i)).toBeInTheDocument());
+    });
   });
 });
