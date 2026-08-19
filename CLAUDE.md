@@ -87,10 +87,11 @@ These are project-specific. A reasonable default would break them.
    mounting. Page CSP belongs in `vercel.json`. This has already broken the app
    once.
 
-8. **`tsc` does not currently check components.** `@types/react` is not
-   installed, so `React.FC` resolves to `any` and JSX prop checking is off
-   (#21). Until that lands, a passing `npm run lint` is not evidence that props
-   are correct. Verify manually.
+8. **Do not remove `@types/react` or turn off `strict`.** Without those types
+   `React.FC` resolves to `any` and TypeScript silently stops checking JSX
+   props — the checker keeps passing while verifying nothing, which is how a
+   prop mismatch reached production once already.
+   `src/test/typeChecking.test.ts` fails if either is undone.
 
 ---
 
