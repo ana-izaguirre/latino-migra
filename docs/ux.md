@@ -73,6 +73,11 @@ Recently addressed and verified by tests:
   primary call to action, and clears the bottom bar.
 - Range sliders have a visible, draggable thumb. They previously used
   `appearance-none` with no thumb styling, leaving them invisible.
+- Modal close buttons sit in the top-right corner. `.btn-tactile` in
+  `index.css` set `position: relative` and, being unlayered, beat Tailwind's
+  `.absolute` at equal specificity — both close buttons rendered in static flow
+  at the top-left of their panel. The rule now lives in `@layer components`, so
+  a utility on the same element wins.
 - The page scrolls while a modal is open, and stops moving underneath it. Every
   overlay is `fixed inset-0`; nothing froze the document beneath, so a swipe
   scrolled the page while the panel stayed put and the screen read as stuck.

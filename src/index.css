@@ -415,22 +415,32 @@ input[type="submit"]:active {
 }
 
 /* Ripple / Tactile button utility */
-.btn-tactile {
-  position: relative;
-  overflow: hidden;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
-}
+/* In `@layer components`, so a Tailwind utility on the same element wins.
+   Unlayered, `.btn-tactile { position: relative }` sits after the utilities in
+   the stylesheet and beats `.absolute` at equal specificity — every
+   `btn-tactile absolute` close button rendered in static flow at the top-left
+   of its panel instead of pinned to the top-right corner.
 
-.btn-tactile:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.12);
-}
+   `position: relative` itself is load-bearing: buttons like the floating chat
+   trigger position a badge absolutely inside it. */
+@layer components {
+  .btn-tactile {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+  }
 
-.btn-tactile:active {
-  transform: scale(0.95) translateY(1px) !important;
-  filter: brightness(0.9) !important;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  .btn-tactile:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.12);
+  }
+
+  .btn-tactile:active {
+    transform: scale(0.95) translateY(1px) !important;
+    filter: brightness(0.9) !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  }
 }
 
 /* Custom scrollbar for horizontal chips */
