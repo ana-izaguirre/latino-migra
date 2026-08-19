@@ -12,10 +12,9 @@ import {
   FileCheck,
   Bug,
   Heart,
-  X,
 } from "lucide-react";
 import { FeedbackSuggestion, GoogleUser } from "../types";
-import { useBodyScrollLock } from "../lib/useBodyScrollLock";
+import { Modal } from "./ui/Modal";
 import {
   fetchFeedbackSuggestions,
   createFeedbackSuggestion,
@@ -113,7 +112,6 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({ currentUser, onOpenAut
   const [searchFilter, setSearchFilter] = useState<string>("");
   const [showNewModal, setShowNewModal] = useState<boolean>(false);
 
-  useBodyScrollLock(showNewModal);
   const [newTitle, setNewTitle] = useState<string>("");
   const [newDesc, setNewDesc] = useState<string>("");
   const [newCat, setNewCat] = useState<FeedbackSuggestion["category"]>("feature");
@@ -381,101 +379,101 @@ export const FeedbackHub: React.FC<FeedbackHubProps> = ({ currentUser, onOpenAut
 
       {/* Propose Idea Modal */}
       {showNewModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in lm-overlay">
-          <div className="bg-surface dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 md:p-8 border border-outline-variant/60 dark:border-slate-800 shadow-2xl relative">
-            <button
-              onClick={() => setShowNewModal(false)}
-              aria-label="Cerrar modal de sugerencia"
-              className="absolute top-5 right-5 p-2 text-on-surface-variant hover:text-on-surface rounded-full transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-2 text-secondary dark:text-teal-400 text-xs font-bold uppercase mb-1">
-              <Lightbulb className="w-4 h-4" />
-              <span>Proponer Idea o Sugerencia</span>
-            </div>
-            <h2 className="font-headline-sm text-2xl font-bold text-primary dark:text-sky-300 mb-4">
-              ¿Qué te gustaría ver en LatinoMigra?
-            </h2>
-
-            {successNotice ? (
-              <div className="p-6 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl text-center space-y-2">
-                <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
-                <h3 className="font-bold text-emerald-900 dark:text-emerald-200">
-                  ¡Sugerencia Registrada!
-                </h3>
-                <p className="text-xs text-emerald-700 dark:text-emerald-300">
-                  Tu idea ya está visible para que otros miembros de la comunidad puedan votar por
-                  ella.
-                </p>
+        <Modal
+          open={showNewModal}
+          onOpenChange={(next) => {
+            if (!next) setShowNewModal(false);
+          }}
+          title="¿Qué te gustaría ver en LatinoMigra?"
+          size="md"
+          header={
+            <div>
+              <div className="flex items-center gap-2 text-secondary dark:text-teal-400 text-xs font-bold uppercase mb-1">
+                <Lightbulb className="w-4 h-4" />
+                <span>Proponer Idea o Sugerencia</span>
               </div>
-            ) : (
-              <form onSubmit={handleCreateSuggestion} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-on-surface-variant dark:text-slate-400 mb-1">
-                    Categoría
-                  </label>
-                  <select
-                    value={newCat}
-                    onChange={(e) => setNewCat(e.target.value as any)}
-                    className="w-full px-3.5 py-2.5 bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 rounded-xl text-sm outline-none dark:text-slate-100"
-                  >
-                    <option value="feature">💡 Nueva Función o Herramienta</option>
-                    <option value="scholarship">🎓 Sugerir Nueva Beca o Convenio</option>
-                    <option value="visa_update">📝 Actualizar Guía de Visado o Requisito</option>
-                    <option value="bug">🐛 Reportar Error o Corrección</option>
-                    <option value="testimonial">❤️ Compartir Historia / Testimonio</option>
-                  </select>
-                </div>
+              <h2 className="font-headline-sm text-2xl font-bold text-primary dark:text-sky-300 mb-4">
+                ¿Qué te gustaría ver en LatinoMigra?
+              </h2>
+            </div>
+          }
+        >
+          {successNotice ? (
+            <div className="p-6 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl text-center space-y-2">
+              <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
+              <h3 className="font-bold text-emerald-900 dark:text-emerald-200">
+                ¡Sugerencia Registrada!
+              </h3>
+              <p className="text-xs text-emerald-700 dark:text-emerald-300">
+                Tu idea ya está visible para que otros miembros de la comunidad puedan votar por
+                ella.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleCreateSuggestion} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-on-surface-variant dark:text-slate-400 mb-1">
+                  Categoría
+                </label>
+                <select
+                  value={newCat}
+                  onChange={(e) => setNewCat(e.target.value as any)}
+                  className="w-full px-3.5 py-2.5 bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 rounded-xl text-sm outline-none dark:text-slate-100"
+                >
+                  <option value="feature">💡 Nueva Función o Herramienta</option>
+                  <option value="scholarship">🎓 Sugerir Nueva Beca o Convenio</option>
+                  <option value="visa_update">📝 Actualizar Guía de Visado o Requisito</option>
+                  <option value="bug">🐛 Reportar Error o Corrección</option>
+                  <option value="testimonial">❤️ Compartir Historia / Testimonio</option>
+                </select>
+              </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-on-surface-variant dark:text-slate-400 mb-1">
-                    Título de la Idea (Claro y Conciso)
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                    placeholder="Ej: Agregar comparador de alquileres por barrio"
-                    className="w-full px-3.5 py-2.5 bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 rounded-xl text-sm outline-none dark:text-slate-100"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-bold text-on-surface-variant dark:text-slate-400 mb-1">
+                  Título de la Idea (Claro y Conciso)
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder="Ej: Agregar comparador de alquileres por barrio"
+                  className="w-full px-3.5 py-2.5 bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 rounded-xl text-sm outline-none dark:text-slate-100"
+                />
+              </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-on-surface-variant dark:text-slate-400 mb-1">
-                    Detalle o justificación
-                  </label>
-                  <textarea
-                    required
-                    rows={4}
-                    value={newDesc}
-                    onChange={(e) => setNewDesc(e.target.value)}
-                    placeholder="Explica cómo beneficiaría esto a otros viajeros y estudiantes..."
-                    className="w-full px-3.5 py-2.5 bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 rounded-xl text-sm outline-none dark:text-slate-100"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-bold text-on-surface-variant dark:text-slate-400 mb-1">
+                  Detalle o justificación
+                </label>
+                <textarea
+                  required
+                  rows={4}
+                  value={newDesc}
+                  onChange={(e) => setNewDesc(e.target.value)}
+                  placeholder="Explica cómo beneficiaría esto a otros viajeros y estudiantes..."
+                  className="w-full px-3.5 py-2.5 bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 rounded-xl text-sm outline-none dark:text-slate-100"
+                />
+              </div>
 
-                <div className="flex justify-end gap-2 pt-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowNewModal(false)}
-                    className="px-4 py-2 text-xs font-bold rounded-xl text-on-surface-variant dark:text-slate-400 hover:bg-surface-container"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2.5 text-xs font-bold rounded-xl bg-primary dark:bg-sky-600 text-white hover:opacity-90"
-                  >
-                    Publicar Sugerencia
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
+              <div className="flex justify-end gap-2 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowNewModal(false)}
+                  className="px-4 py-2 text-xs font-bold rounded-xl text-on-surface-variant dark:text-slate-400 hover:bg-surface-container"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 text-xs font-bold rounded-xl bg-primary dark:bg-sky-600 text-white hover:opacity-90"
+                >
+                  Publicar Sugerencia
+                </button>
+              </div>
+            </form>
+          )}
+        </Modal>
       )}
     </div>
   );
