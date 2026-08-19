@@ -171,9 +171,6 @@ Listed as facts about the current code.
 
 | Area | Problem |
 |---|---|
-| Type safety | `@types/react` and `@types/react-dom` are **not installed**. `React.FC` resolves to `any`, so JSX prop checking is disabled across ~12,000 lines. `npm run lint` runs `tsc --noEmit` and passes without checking components. |
-| Type safety | `tsconfig.json` does not set `strict`. `strictNullChecks` and `noImplicitAny` are off. |
-| Authorization | `AuthModal.tsx` renders a role selector that lets any signed-in user set `role: "admin"`. `isAdmin()` returns true on that field, and `users/{uid}` is writable by its owner, so the value persists. |
 | Data rules | `forumPosts`, `forumPosts/{id}/replies` and `feedbackSuggestions` allow `create` without authentication. |
 | Data rules | `visa_guide_votes` is read and written by `firebase.ts` but has **no rule declared**, so it falls through to the deny-all catch-all. The feature has never worked against Firestore; the in-memory fallback hides it. |
 | Data integrity | The weekly sync workflow calls an endpoint that returns data and never persists it. The catalogue only updates when an admin opens the app and clicks a button. |

@@ -87,13 +87,16 @@ warnings**.
 **Prettier** — `.prettierrc.json`, 100-column width, double quotes, ES5 trailing
 commas. `.prettierignore` excludes build output, lockfiles and Markdown.
 
-**TypeScript 5.8** — `tsconfig.json` sets no `strict`, so `strictNullChecks` and
-`noImplicitAny` are off. `skipLibCheck` is on.
+**TypeScript 5.8** — `strict` is on, so `strictNullChecks` and `noImplicitAny`
+apply. `skipLibCheck` stays on.
 
-> `@types/react` and `@types/react-dom` are **not installed**. Without them
-> `React.FC` resolves to `any` and JSX prop checking is disabled, so
-> `npm run lint` passes without type-checking components. See
-> [architecture.md](./architecture.md#known-problems).
+`@types/react` and `@types/react-dom` are in `devDependencies`. Without them
+`React.FC` resolves to `any` and TypeScript stops checking JSX props entirely —
+`tsc --noEmit` keeps passing while verifying nothing, which is how a prop
+mismatch reached production once (#21). `src/test/typeChecking.test.ts` guards
+both the packages and the `strict` flag, and compiles a component used with a
+prop it does not accept to prove the checker is live rather than merely
+present.
 
 ## Debugging
 
