@@ -23,6 +23,12 @@ CI blocks the merge to `main` if `format:check`, `lint`, `test:coverage` or the
 Playwright suite fails. Branch protection is configured in GitHub, not in the
 repository — see [docs/ci-cd.md](./docs/ci-cd.md).
 
+## Pull requests
+
+One change per pull request. Two unrelated changes force a reviewer into a
+single yes-or-no on both. See [CLAUDE.md](./CLAUDE.md) for why this is easy to
+get wrong here, and what to do instead.
+
 ## Style
 
 - All user-visible text goes through `t()` from `src/lib/i18n.tsx`.

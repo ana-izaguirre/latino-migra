@@ -103,6 +103,30 @@ These are project-specific. A reasonable default would break them.
 
 ## Workflow
 
+### One change per pull request
+
+A pull request answers one question: should this change land? Two unrelated
+changes in one branch force a single yes-or-no on both, so a reviewer who wants
+one and doubts the other has no way to say so.
+
+This has already gone wrong here. A TypeScript fix, a CSS fix and a lint sweep
+each ended up in a pull request opened for something else, because work started
+while the previous one was still open.
+
+The cause is structural, not carelessness: **one branch is designated for this
+work**, so any commit made while a pull request is open on it lands in that
+pull request. Therefore:
+
+- Do not start the next Issue while a pull request is open on the branch. Say
+  what you intend to take next and wait for the merge.
+- The exception is a change *to* the open pull request — a review fix, a failing
+  check, a merge conflict.
+- If something urgent appears mid-flight, say so and let the human decide
+  whether to merge first or accept the mixing. Do not decide it silently.
+- When mixing does happen anyway, the pull request description must say so and
+  describe both changes. A body that describes one change while the diff
+  contains two is worse than the mixing itself.
+
 ### Trivial changes
 
 A change is trivial when it is a typo, a comment, a single-line fix with an
