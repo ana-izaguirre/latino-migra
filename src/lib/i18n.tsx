@@ -37,22 +37,105 @@ export const TRANSLATIONS: TranslationDictionary = {
   "nav.alerts": { es: "Alertas y Avisos", en: "Alerts & Notices" },
 
   // Hero & General
+  //
+  // The Spanish side mirrors what `HeroLanding` renders today rather than the
+  // other way round: the copy on screen is the live one, and the keys that
+  // preceded it had drifted to a different headline entirely while no
+  // component referenced them.
   "hero.badge": {
-    es: "Plataforma Gratuita para Migrantes y Becarios",
-    en: "Free Platform for Migrants and Scholars",
+    es: "Tu viaje comienza aquí — Plataforma 100% segura",
+    en: "Your journey starts here — a 100% safe platform",
   },
   "hero.title": {
-    es: "Tu futuro en el extranjero comienza con claridad",
-    en: "Your future abroad begins with clarity",
+    es: "Tu futuro no tiene fronteras",
+    en: "Your future has no borders",
   },
   "hero.subtitle": {
-    es: "Descubre becas vigentes, voluntariados internacionales, requisitos oficiales de visados, costo de vida real en tu moneda y conecta con una comunidad de apoyo mutuo.",
-    en: "Discover active scholarships, international volunteering, official visa requirements, real cost of living in your currency, and connect with a mutual support community.",
+    es: "Conectamos a estudiantes y profesionales latinoamericanos con oportunidades globales: becas con financiamiento completo, planes de mudanza con cálculo de presupuesto real, prevención de estafas y soporte consular.",
+    en: "We connect Latin American students and professionals with global opportunities: fully funded scholarships, relocation plans with a real budget, scam prevention and consular support.",
   },
-  "hero.ctaPlan": { es: "Crear mi Plan Migratorio", en: "Build My Migration Plan" },
-  "hero.ctaScholarships": { es: "Explorar Becas Activas", en: "Explore Scholarships" },
-  "hero.ctaVolunteering": { es: "Voluntariados & Intercambios", en: "Volunteering & Exchanges" },
-  "hero.ctaAI": { es: "Evaluar Perfil con IA", en: "Evaluate Profile with AI" },
+  "hero.ctaScholarships": { es: "Buscar Becas", en: "Search Scholarships" },
+  "hero.ctaGuides": { es: "Ver Guías Migratorias", en: "View Migration Guides" },
+  "hero.ctaPlanner": { es: "Planificador 360°", en: "360° Planner" },
+  "hero.trustSources": {
+    es: "Fuentes 100% Oficiales de Ministerios y Universidades",
+    en: "100% official sources from ministries and universities",
+  },
+  "hero.trustGuides": {
+    es: "Guías de Empadronamiento, Alquiler Seguro y Visas",
+    en: "Guides on residency registration, safe renting and visas",
+  },
+  "hero.imageAlt": {
+    es: "Estudiantes latinoamericanos en el extranjero",
+    en: "Latin American students abroad",
+  },
+  "hero.statsLabel": { es: "Oportunidades", en: "Opportunities" },
+  "hero.statsValue": { es: "+5,000 Becas Activas", en: "+5,000 Active Scholarships" },
+
+  // Signed-in welcome banner
+  "hero.greeting": { es: "¡Hola", en: "Hi" },
+  "hero.profileFrom": { es: "Perfil conectado desde", en: "Profile connected from" },
+  "hero.defaultRegion": { es: "América Latina", en: "Latin America" },
+  "hero.routeReady": {
+    es: "Tu ruta migratoria personalizada está lista.",
+    en: "Your personalised migration route is ready.",
+  },
+  "hero.ctaCreatePlan": { es: "Crear Plan de Migración", en: "Create Migration Plan" },
+  "hero.ctaViewScholarships": { es: "Ver Becas", en: "View Scholarships" },
+
+  // Feature cards on the landing page
+  "features.title": {
+    es: "Todo lo que necesitas para dar el gran paso",
+    en: "Everything you need to take the leap",
+  },
+  "features.subtitle": {
+    es: "Herramientas diseñadas por y para la comunidad migrante latinoamericana.",
+    en: "Tools built by and for the Latin American migrant community.",
+  },
+  "features.plannerTitle": { es: "Planificador de Migración", en: "Migration Planner" },
+  "features.plannerDesc": {
+    es: "Calcula presupuesto real, recomendaciones de ciudad por clima/coste, guía antiestafas y checklist con o sin hijos.",
+    en: "Work out a real budget, get city suggestions by climate and cost, read the anti-scam guide and follow a checklist with or without children.",
+  },
+  "features.plannerCta": { es: "Configurar Plan", en: "Set Up Plan" },
+  "features.aiTitle": { es: "Asistente Migratorio IA", en: "AI Migration Assistant" },
+  "features.aiDesc": {
+    es: "Aclara dudas sobre visados, apostillas, cartas de motivación y requerimientos financieros al instante con LatinoMigra IA.",
+    en: "Settle questions about visas, apostilles, motivation letters and financial requirements instantly with LatinoMigra AI.",
+  },
+  "features.aiCta": { es: "Probar Chat IA", en: "Try the AI Chat" },
+  "features.guidesTitle": { es: "Guías Paso a Paso", en: "Step-by-Step Guides" },
+  "features.guidesDesc": {
+    es: "Rutas claras para España, Alemania, EE.UU., Canadá y más. Requisitos legales, costo de vida real y trámites como empadronamiento.",
+    en: "Clear routes for Spain, Germany, the USA, Canada and more: legal requirements, real cost of living and paperwork such as residency registration.",
+  },
+  "features.guidesCta": { es: "Explorar Guías", en: "Explore Guides" },
+  "features.scholarshipsTitle": { es: "Becas por Fechas", en: "Scholarships by Deadline" },
+  "features.scholarshipsDesc": {
+    es: "Filtra por fecha límite de postulación, nivel de cobertura e institución oficial sin intermediarios.",
+    en: "Filter by application deadline, level of funding and issuing institution, with no middlemen.",
+  },
+  "features.scholarshipsCta": { es: "Ver Catálogo", en: "View Directory" },
+
+  // Breadcrumbs
+  "breadcrumb.aria": { es: "Ruta de navegación", en: "Breadcrumbs" },
+  "breadcrumb.home": { es: "Inicio", en: "Home" },
+  "breadcrumb.planificador": { es: "Planificador 360°", en: "360° Planner" },
+  "breadcrumb.calculadora": {
+    es: "Calculadora de Costo de Vida",
+    en: "Cost of Living Calculator",
+  },
+  "breadcrumb.becas": { es: "Catálogo de Becas", en: "Scholarship Directory" },
+  "breadcrumb.voluntariados": {
+    es: "Voluntariados e Intercambios",
+    en: "Volunteering & Exchanges",
+  },
+  "breadcrumb.guia": { es: "Guía de Migración", en: "Migration Guide" },
+  "breadcrumb.mapa": { es: "Mapa y Directorio Consular", en: "Consular Directory & Map" },
+  "breadcrumb.comunidad": { es: "Comunidad y Experiencias", en: "Community & Forum" },
+  "breadcrumb.feedback": { es: "Sugerencias y Mejoras", en: "Feedback & Roadmap" },
+  "breadcrumb.chat": { es: "Asistente IA", en: "AI Assistant" },
+  "breadcrumb.admin": { es: "Panel de Administración", en: "Admin Dashboard" },
 
   // Profile Evaluator Banner
   "evaluator.title": {

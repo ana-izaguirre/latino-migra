@@ -49,7 +49,7 @@ Approximately 19,400 lines of TypeScript across 88 tracked files.
 | Module | Lines | Responsibility |
 |---|---|---|
 | `firebase.ts` | 808 | All Firestore and Auth access. The data layer. |
-| `i18n.tsx` | 218 | `LanguageProvider` + 45 translation keys (`es` / `en`). |
+| `i18n.tsx` | 330 | `LanguageProvider` + 107 translation keys (`es` / `en`). |
 | `currency.ts` | 165 | Conversion and formatting across supported currencies. |
 | `PreferencesContext.tsx` | 88 | Shared origin/destination country, in memory. |
 | `CurrencyContext.tsx` | 60 | Selected currency, in memory. |
@@ -191,9 +191,24 @@ reports 40–80 ms renders when switching country in the guides.
 components, each implemented separately. Two declare `role="dialog"`, one
 declares `aria-modal`, none trap focus.
 
-**Split i18n convention.** 125 inline `language === "en" ? … : …` ternaries
-against 86 `t()` calls. This already produced five tests asserting fallback
-strings that never render in production.
+**Split i18n convention, and copy that never reaches it.** 125 inline
+`language === "en" ? … : …` ternaries remain across seven components
+(`Comunidad` 38, `NotificationSettingsModal` 23, `TopNavBar` 20, `ChatIA` 17,
+`MapaConsulados` 13, `Footer` 12, `ScrollTopBottomButton` 2). This already
+produced five tests asserting fallback strings that never render in production.
+
+The larger gap is copy that goes through neither route. `HeroLanding` had zero
+`t()` calls and rendered its Spanish inline, so switching to English changed the
+navigation and left the landing page untouched — the reported symptom of "the
+content does not change". That screen and `Breadcrumbs` now read from the
+dictionary; the remaining screens still do not, and `BecasExplorer` in
+particular carries 16 `t()` calls across 2,000 lines.
+
+When wiring a screen up, note that the dictionary is not automatically the
+source of truth for the Spanish: the `hero.*` keys had drifted to a different
+headline than the one on screen while no component referenced them. Per
+`CLAUDE.md`, running code wins — align the `es` side to what renders and add
+the `en` side, rather than silently changing the copy.
 
 **Misplaced dependencies.** `@vitejs/plugin-react` and `@tailwindcss/vite` sit
 in `dependencies` rather than `devDependencies`, so they are installed in

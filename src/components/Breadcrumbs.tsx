@@ -16,32 +16,17 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   subPageTitle,
   className = "",
 }) => {
-  const { language } = useLanguage();
+  const { t } = useLanguage();
 
   if (activeTab === "home") return null;
 
-  const tabLabels: Record<NavigationTab, { es: string; en: string }> = {
-    home: { es: "Inicio", en: "Home" },
-    planificador: { es: "Planificador 360°", en: "360° Planner" },
-    calculadora: { es: "Calculadora de Costo de Vida", en: "Cost of Living Calculator" },
-    becas: { es: "Catálogo de Becas", en: "Scholarship Directory" },
-    voluntariados: { es: "Voluntariados e Intercambios", en: "Volunteering & Exchanges" },
-    guia: { es: "Guía de Migración", en: "Migration Guide" },
-    mapa: { es: "Mapa y Directorio Consular", en: "Consular Directory & Map" },
-    comunidad: { es: "Comunidad y Experiencias", en: "Community & Forum" },
-    feedback: { es: "Sugerencias y Mejoras", en: "Feedback & Roadmap" },
-    chat: { es: "Asistente IA", en: "AI Assistant" },
-    admin: { es: "Panel de Administración", en: "Admin Dashboard" },
-  };
-
-  const currentLabel =
-    language === "en"
-      ? tabLabels[activeTab]?.en || activeTab
-      : tabLabels[activeTab]?.es || activeTab;
+  // The label pairs used to live here as an inline English/Spanish ternary.
+  // They are dictionary keys now, so this component holds no copy of its own.
+  const currentLabel = t(`breadcrumb.${activeTab}`, activeTab);
 
   return (
     <nav
-      aria-label="Breadcrumbs"
+      aria-label={t("breadcrumb.aria")}
       className={`flex items-center gap-1.5 text-xs text-on-surface-variant/80 dark:text-slate-400 overflow-x-auto no-scrollbar max-w-full whitespace-nowrap ${className}`}
     >
       {/* Home link */}
@@ -53,7 +38,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
         className="inline-flex items-center gap-1 min-h-[44px] py-2 hover:text-primary dark:hover:text-sky-300 font-medium transition-colors cursor-pointer shrink-0"
       >
         <Home className="w-3.5 h-3.5" />
-        <span>{language === "en" ? "Home" : "Inicio"}</span>
+        <span>{t("breadcrumb.home")}</span>
       </button>
 
       <ChevronRight className="w-3 h-3 text-outline-variant/70 dark:text-slate-600 shrink-0" />
