@@ -15,14 +15,13 @@ import {
   Users,
   DollarSign,
   Languages,
-  X,
   Globe,
 } from "lucide-react";
 import { ChatMessage, ChatConversation, Scholarship } from "../types";
 import { useLanguage } from "../lib/i18n";
-import { useBodyScrollLock } from "../lib/useBodyScrollLock";
 import { useCurrency } from "../lib/CurrencyContext";
 import { formatCurrency } from "../lib/currency";
+import { Modal } from "./ui/Modal";
 
 interface ChatIAProps {
   initialPrompt?: string;
@@ -92,8 +91,6 @@ export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
   const [showProfileDiagnosisModal, setShowProfileDiagnosisModal] = useState<boolean>(false);
-
-  useBodyScrollLock(showProfileDiagnosisModal);
 
   // Profile Diagnosis Form state
   const [diagCareer, setDiagCareer] = useState<string>("Ingeniería de Software / IT");
@@ -571,9 +568,19 @@ Estructura tu diagnóstico con:
 
       {/* Profile Diagnosis Modal (Career + Age + Family + Goal Form) */}
       {showProfileDiagnosisModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 lm-overlay">
-          <div className="bg-surface-container-lowest dark:bg-slate-800 rounded-3xl max-w-xl w-full p-6 md:p-8 space-y-5 shadow-2xl border border-outline-variant/40 dark:border-slate-700 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-outline-variant/30 dark:border-slate-700 pb-3">
+        <Modal
+          open={showProfileDiagnosisModal}
+          onOpenChange={(next) => {
+            if (!next) setShowProfileDiagnosisModal(false);
+          }}
+          title={
+            language === "en"
+              ? "AI Migration Profile Diagnosis"
+              : "Diagnóstico de Perfil Migratorio con IA"
+          }
+          size="lg"
+          header={
+            <div className="border-b border-outline-variant/30 dark:border-slate-700 pb-3">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-secondary/15 dark:bg-teal-500/20 text-secondary dark:text-teal-300 flex items-center justify-center">
                   <Compass className="w-5 h-5" />
@@ -591,264 +598,258 @@ Estructura tu diagnóstico con:
                   </p>
                 </div>
               </div>
-              <button
-                onClick={() => setShowProfileDiagnosisModal(false)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+            </div>
+          }
+        >
+          <div className="space-y-4 text-xs">
+            {/* País de Origen */}
+            <div>
+              <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-secondary" />
+                <span>{language === "en" ? "Country of Origin" : "País de Origen"}</span>
+              </label>
+              <select
+                value={diagOrigin}
+                onChange={(e) => setDiagOrigin(e.target.value)}
+                className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
               >
-                <X className="w-5 h-5" />
-              </button>
+                <option value="Colombia">🇨🇴 Colombia</option>
+                <option value="México">🇲🇽 México</option>
+                <option value="Perú">🇵🇪 Perú</option>
+                <option value="Argentina">🇦🇷 Argentina</option>
+                <option value="Chile">🇨🇱 Chile</option>
+                <option value="Ecuador">🇪🇨 Ecuador</option>
+                <option value="Venezuela">🇻🇪 Venezuela</option>
+                <option value="Bolivia">🇧🇴 Bolivia</option>
+                <option value="Guatemala">🇬🇹 Guatemala</option>
+                <option value="Costa Rica">🇨🇷 Costa Rica</option>
+              </select>
             </div>
 
-            <div className="space-y-4 text-xs">
-              {/* País de Origen */}
+            {/* Carrera y Edad */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center gap-1.5">
-                  <Globe className="w-3.5 h-3.5 text-secondary" />
-                  <span>{language === "en" ? "Country of Origin" : "País de Origen"}</span>
+                  <Briefcase className="w-3.5 h-3.5 text-secondary" />
+                  <span>{language === "en" ? "Career / Profession" : "Carrera o Profesión"}</span>
                 </label>
                 <select
-                  value={diagOrigin}
-                  onChange={(e) => setDiagOrigin(e.target.value)}
+                  value={diagCareer}
+                  onChange={(e) => setDiagCareer(e.target.value)}
                   className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
                 >
-                  <option value="Colombia">🇨🇴 Colombia</option>
-                  <option value="México">🇲🇽 México</option>
-                  <option value="Perú">🇵🇪 Perú</option>
-                  <option value="Argentina">🇦🇷 Argentina</option>
-                  <option value="Chile">🇨🇱 Chile</option>
-                  <option value="Ecuador">🇪🇨 Ecuador</option>
-                  <option value="Venezuela">🇻🇪 Venezuela</option>
-                  <option value="Bolivia">🇧🇴 Bolivia</option>
-                  <option value="Guatemala">🇬🇹 Guatemala</option>
-                  <option value="Costa Rica">🇨🇷 Costa Rica</option>
+                  <option value="Ingeniería de Software / IT">
+                    Ingeniería de Software / IT / Datos
+                  </option>
+                  <option value="Medicina / Enfermería / Salud">
+                    Medicina / Enfermería / Salud
+                  </option>
+                  <option value="Administración / Finanzas / Negocios">
+                    Administración / Negocios / Finanzas
+                  </option>
+                  <option value="Ingeniería Industrial / Civil / Mecánica">
+                    Ingeniería Industrial / Civil / Mecánica
+                  </option>
+                  <option value="Educación / Docencia / Idiomas">
+                    Educación / Docencia / Idiomas
+                  </option>
+                  <option value="Marketing / Diseño / Comunicación">
+                    Marketing / Diseño / Comunicación
+                  </option>
+                  <option value="Derecho / Ciencias Sociales">Derecho / Ciencias Sociales</option>
+                  <option value="Gastronomía / Turismo / Hostelería">
+                    Gastronomía / Turismo / Hostelería
+                  </option>
+                  <option value="Oficios Técnicos / Electricidad / Construcción">
+                    Oficios Técnicos / Electricidad
+                  </option>
                 </select>
               </div>
 
-              {/* Carrera y Edad */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center gap-1.5">
-                    <Briefcase className="w-3.5 h-3.5 text-secondary" />
-                    <span>{language === "en" ? "Career / Profession" : "Carrera o Profesión"}</span>
-                  </label>
-                  <select
-                    value={diagCareer}
-                    onChange={(e) => setDiagCareer(e.target.value)}
-                    className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
-                  >
-                    <option value="Ingeniería de Software / IT">
-                      Ingeniería de Software / IT / Datos
-                    </option>
-                    <option value="Medicina / Enfermería / Salud">
-                      Medicina / Enfermería / Salud
-                    </option>
-                    <option value="Administración / Finanzas / Negocios">
-                      Administración / Negocios / Finanzas
-                    </option>
-                    <option value="Ingeniería Industrial / Civil / Mecánica">
-                      Ingeniería Industrial / Civil / Mecánica
-                    </option>
-                    <option value="Educación / Docencia / Idiomas">
-                      Educación / Docencia / Idiomas
-                    </option>
-                    <option value="Marketing / Diseño / Comunicación">
-                      Marketing / Diseño / Comunicación
-                    </option>
-                    <option value="Derecho / Ciencias Sociales">Derecho / Ciencias Sociales</option>
-                    <option value="Gastronomía / Turismo / Hostelería">
-                      Gastronomía / Turismo / Hostelería
-                    </option>
-                    <option value="Oficios Técnicos / Electricidad / Construcción">
-                      Oficios Técnicos / Electricidad
-                    </option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center justify-between">
-                    <span>{language === "en" ? "Age" : "Edad"}</span>
-                    <span className="text-secondary dark:text-teal-300 font-bold">
-                      {diagAge} años
-                    </span>
-                  </label>
-                  <input
-                    type="range"
-                    min={18}
-                    max={60}
-                    value={diagAge}
-                    onChange={(e) => setDiagAge(Number(e.target.value))}
-                    className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-secondary mt-2"
-                  />
-                  <div className="flex justify-between text-[10px] text-slate-400 mt-1">
-                    <span>18</span>
-                    <span>30 (Puntajes DAAD/Chancenkarte)</span>
-                    <span>60</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Situación Familiar */}
               <div>
-                <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-secondary" />
-                  <span>{language === "en" ? "Family Status" : "Situación Familiar"}</span>
-                </label>
-                <select
-                  value={diagFamily}
-                  onChange={(e) => setDiagFamily(e.target.value)}
-                  className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
-                >
-                  <option value="Soltero/a sin hijos">🧍 Soltero/a sin hijos</option>
-                  <option value="En pareja sin hijos">👫 En pareja sin hijos</option>
-                  <option value="Familia con 1 hijo">👨‍👩‍👧 Familia con 1 hijo</option>
-                  <option value="Familia con 2 o más hijos">👨‍👩‍👧‍👦 Familia con 2 o más hijos</option>
-                </select>
-              </div>
-
-              {/* Idiomas Conocidos (Multilingüe) */}
-              <div className="space-y-2">
-                <label className="block font-bold text-primary dark:text-sky-300 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Languages className="w-3.5 h-3.5 text-secondary" />
-                    <span>
-                      {language === "en"
-                        ? "Known Languages (Multilingual Profile)"
-                        : "Idiomas que dominas (Perfil Multilingüe)"}
-                    </span>
-                  </span>
-                  <span className="text-[11px] font-normal text-slate-500">
-                    Selecciona todos los que apliquen
+                <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center justify-between">
+                  <span>{language === "en" ? "Age" : "Edad"}</span>
+                  <span className="text-secondary dark:text-teal-300 font-bold">
+                    {diagAge} años
                   </span>
                 </label>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-surface dark:bg-slate-900/80 p-3 rounded-2xl border border-outline-variant/40 dark:border-slate-700/60 max-h-48 overflow-y-auto">
-                  {userLanguages.map((item, idx) => (
-                    <div
-                      key={item.name}
-                      className={`p-2 rounded-xl border flex items-center justify-between gap-2 transition-all ${
-                        item.enabled
-                          ? "bg-secondary/10 dark:bg-teal-950/40 border-secondary/40 text-primary dark:text-teal-200 font-semibold"
-                          : "bg-surface-container/40 dark:bg-slate-800/40 border-outline-variant/30 text-on-surface-variant/70 dark:text-slate-400 opacity-80"
-                      }`}
-                    >
-                      <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
-                        <input
-                          type="checkbox"
-                          checked={item.enabled}
-                          onChange={(e) => {
-                            const updated = [...userLanguages];
-                            updated[idx].enabled = e.target.checked;
-                            setUserLanguages(updated);
-                          }}
-                          className="rounded text-secondary focus:ring-secondary w-3.5 h-3.5 accent-secondary cursor-pointer"
-                        />
-                        <span>{item.name}</span>
-                      </label>
-
-                      {item.enabled && (
-                        <select
-                          value={item.level}
-                          onChange={(e) => {
-                            const updated = [...userLanguages];
-                            updated[idx].level = e.target.value;
-                            setUserLanguages(updated);
-                          }}
-                          className="text-[11px] py-0.5 px-1.5 bg-surface dark:bg-slate-800 border border-outline-variant/50 rounded-lg outline-none text-on-surface dark:text-slate-200"
-                        >
-                          <option value="Básico (A1/A2)">A1/A2</option>
-                          <option value="Intermedio (B1/B2)">B1/B2</option>
-                          <option value="Avanzado (C1/C2)">C1/C2</option>
-                          <option value="Nativo / C2">Nativo</option>
-                        </select>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Presupuesto y Objetivo Principal */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center gap-1.5">
-                    <DollarSign className="w-3.5 h-3.5 text-secondary" />
-                    <span>
-                      {language === "en"
-                        ? `Available Budget (${currency})`
-                        : `Presupuesto o Ahorro (${currency})`}
-                    </span>
-                  </label>
-                  <select
-                    value={diagBudgetTier}
-                    onChange={(e) => setDiagBudgetTier(e.target.value as any)}
-                    className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
-                  >
-                    <option value="low">
-                      Menos de {formatCurrency(2000, currency)} (Prioridad Becas 100%)
-                    </option>
-                    <option value="medium">
-                      {formatCurrency(3000, currency)} - {formatCurrency(8000, currency)}
-                    </option>
-                    <option value="high">
-                      {formatCurrency(8000, currency)} - {formatCurrency(15000, currency)}{" "}
-                      (Sperrkonto / Cursos)
-                    </option>
-                    <option value="premium">
-                      Más de {formatCurrency(15000, currency)} (Estudios familiares)
-                    </option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center gap-1.5">
-                    <GraduationCap className="w-3.5 h-3.5 text-secondary" />
-                    <span>{language === "en" ? "Main Goal" : "Meta Principal"}</span>
-                  </label>
-                  <select
-                    value={diagGoal}
-                    onChange={(e) => setDiagGoal(e.target.value)}
-                    className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
-                  >
-                    <option value="Beca de Maestría o Posgrado 100% financiada">
-                      🎓 Beca 100% (DAAD, Carolina, Erasmus)
-                    </option>
-                    <option value="Trabajo directo o Visa de Oportunidades">
-                      💼 Empleo directo / Visa Oportunidades
-                    </option>
-                    <option value="Curso de Idiomas con Trabajo (Stamp 2 / Co-op)">
-                      🗣️ Curso de Idiomas con permiso laboral
-                    </option>
-                    <option value="Nacionalidad en 2 años (España para latinos)">
-                      🇪🇸 Nacionalidad en 2 años (España)
-                    </option>
-                    <option value="Nómada Digital / Trabajo Remoto">
-                      💻 Nómada Digital / Trabajo remoto
-                    </option>
-                  </select>
+                <input
+                  type="range"
+                  min={18}
+                  max={60}
+                  value={diagAge}
+                  onChange={(e) => setDiagAge(Number(e.target.value))}
+                  className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-secondary mt-2"
+                />
+                <div className="flex justify-between text-[10px] text-slate-400 mt-1">
+                  <span>18</span>
+                  <span>30 (Puntajes DAAD/Chancenkarte)</span>
+                  <span>60</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-3 border-t border-outline-variant/20 dark:border-slate-700">
-              <button
-                type="button"
-                onClick={() => setShowProfileDiagnosisModal(false)}
-                className="px-4 py-2.5 text-xs font-bold text-on-surface-variant hover:text-primary dark:hover:text-sky-300 cursor-pointer"
+            {/* Situación Familiar */}
+            <div>
+              <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-secondary" />
+                <span>{language === "en" ? "Family Status" : "Situación Familiar"}</span>
+              </label>
+              <select
+                value={diagFamily}
+                onChange={(e) => setDiagFamily(e.target.value)}
+                className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
               >
-                {language === "en" ? "Cancel" : "Cancelar"}
-              </button>
-              <button
-                type="button"
-                onClick={handleRunProfileDiagnosis}
-                className="bg-primary dark:bg-sky-600 text-white px-6 py-2.5 rounded-xl text-xs font-bold hover:bg-primary-container dark:hover:bg-sky-500 shadow-md transition-all flex items-center gap-2 cursor-pointer"
-              >
-                <Sparkles className="w-4 h-4 text-amber-300" />
-                <span>
-                  {language === "en" ? "Generate AI Diagnosis" : "Generar Diagnóstico con IA"}
+                <option value="Soltero/a sin hijos">🧍 Soltero/a sin hijos</option>
+                <option value="En pareja sin hijos">👫 En pareja sin hijos</option>
+                <option value="Familia con 1 hijo">👨‍👩‍👧 Familia con 1 hijo</option>
+                <option value="Familia con 2 o más hijos">👨‍👩‍👧‍👦 Familia con 2 o más hijos</option>
+              </select>
+            </div>
+
+            {/* Idiomas Conocidos (Multilingüe) */}
+            <div className="space-y-2">
+              <label className="block font-bold text-primary dark:text-sky-300 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Languages className="w-3.5 h-3.5 text-secondary" />
+                  <span>
+                    {language === "en"
+                      ? "Known Languages (Multilingual Profile)"
+                      : "Idiomas que dominas (Perfil Multilingüe)"}
+                  </span>
                 </span>
-              </button>
+                <span className="text-[11px] font-normal text-slate-500">
+                  Selecciona todos los que apliquen
+                </span>
+              </label>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-surface dark:bg-slate-900/80 p-3 rounded-2xl border border-outline-variant/40 dark:border-slate-700/60 max-h-48 overflow-y-auto">
+                {userLanguages.map((item, idx) => (
+                  <div
+                    key={item.name}
+                    className={`p-2 rounded-xl border flex items-center justify-between gap-2 transition-all ${
+                      item.enabled
+                        ? "bg-secondary/10 dark:bg-teal-950/40 border-secondary/40 text-primary dark:text-teal-200 font-semibold"
+                        : "bg-surface-container/40 dark:bg-slate-800/40 border-outline-variant/30 text-on-surface-variant/70 dark:text-slate-400 opacity-80"
+                    }`}
+                  >
+                    <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={item.enabled}
+                        onChange={(e) => {
+                          const updated = [...userLanguages];
+                          updated[idx].enabled = e.target.checked;
+                          setUserLanguages(updated);
+                        }}
+                        className="rounded text-secondary focus:ring-secondary w-3.5 h-3.5 accent-secondary cursor-pointer"
+                      />
+                      <span>{item.name}</span>
+                    </label>
+
+                    {item.enabled && (
+                      <select
+                        value={item.level}
+                        onChange={(e) => {
+                          const updated = [...userLanguages];
+                          updated[idx].level = e.target.value;
+                          setUserLanguages(updated);
+                        }}
+                        className="text-[11px] py-0.5 px-1.5 bg-surface dark:bg-slate-800 border border-outline-variant/50 rounded-lg outline-none text-on-surface dark:text-slate-200"
+                      >
+                        <option value="Básico (A1/A2)">A1/A2</option>
+                        <option value="Intermedio (B1/B2)">B1/B2</option>
+                        <option value="Avanzado (C1/C2)">C1/C2</option>
+                        <option value="Nativo / C2">Nativo</option>
+                      </select>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Presupuesto y Objetivo Principal */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center gap-1.5">
+                  <DollarSign className="w-3.5 h-3.5 text-secondary" />
+                  <span>
+                    {language === "en"
+                      ? `Available Budget (${currency})`
+                      : `Presupuesto o Ahorro (${currency})`}
+                  </span>
+                </label>
+                <select
+                  value={diagBudgetTier}
+                  onChange={(e) => setDiagBudgetTier(e.target.value as any)}
+                  className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
+                >
+                  <option value="low">
+                    Menos de {formatCurrency(2000, currency)} (Prioridad Becas 100%)
+                  </option>
+                  <option value="medium">
+                    {formatCurrency(3000, currency)} - {formatCurrency(8000, currency)}
+                  </option>
+                  <option value="high">
+                    {formatCurrency(8000, currency)} - {formatCurrency(15000, currency)} (Sperrkonto
+                    / Cursos)
+                  </option>
+                  <option value="premium">
+                    Más de {formatCurrency(15000, currency)} (Estudios familiares)
+                  </option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-primary dark:text-sky-300 mb-1 flex items-center gap-1.5">
+                  <GraduationCap className="w-3.5 h-3.5 text-secondary" />
+                  <span>{language === "en" ? "Main Goal" : "Meta Principal"}</span>
+                </label>
+                <select
+                  value={diagGoal}
+                  onChange={(e) => setDiagGoal(e.target.value)}
+                  className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
+                >
+                  <option value="Beca de Maestría o Posgrado 100% financiada">
+                    🎓 Beca 100% (DAAD, Carolina, Erasmus)
+                  </option>
+                  <option value="Trabajo directo o Visa de Oportunidades">
+                    💼 Empleo directo / Visa Oportunidades
+                  </option>
+                  <option value="Curso de Idiomas con Trabajo (Stamp 2 / Co-op)">
+                    🗣️ Curso de Idiomas con permiso laboral
+                  </option>
+                  <option value="Nacionalidad en 2 años (España para latinos)">
+                    🇪🇸 Nacionalidad en 2 años (España)
+                  </option>
+                  <option value="Nómada Digital / Trabajo Remoto">
+                    💻 Nómada Digital / Trabajo remoto
+                  </option>
+                </select>
+              </div>
             </div>
           </div>
-        </div>
+
+          <div className="flex justify-end gap-3 pt-3 border-t border-outline-variant/20 dark:border-slate-700">
+            <button
+              type="button"
+              onClick={() => setShowProfileDiagnosisModal(false)}
+              className="px-4 py-2.5 text-xs font-bold text-on-surface-variant hover:text-primary dark:hover:text-sky-300 cursor-pointer"
+            >
+              {language === "en" ? "Cancel" : "Cancelar"}
+            </button>
+            <button
+              type="button"
+              onClick={handleRunProfileDiagnosis}
+              className="bg-primary dark:bg-sky-600 text-white px-6 py-2.5 rounded-xl text-xs font-bold hover:bg-primary-container dark:hover:bg-sky-500 shadow-md transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4 text-amber-300" />
+              <span>
+                {language === "en" ? "Generate AI Diagnosis" : "Generar Diagnóstico con IA"}
+              </span>
+            </button>
+          </div>
+        </Modal>
       )}
     </div>
   );
