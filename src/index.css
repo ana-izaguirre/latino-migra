@@ -253,8 +253,30 @@ input[type="range"]::-moz-range-thumb {
   }
 }
 
+/*
+ * Every animation below that touches `transform` fills `backwards`, not
+ * `both`.
+ *
+ * With `both`, the animation keeps contributing its final `transform` for as
+ * long as the element lives. That value is `none` in the keyframe, but a
+ * filling animation resolves it to the identity matrix — and any transform
+ * other than the keyword `none` makes the element the containing block for
+ * its `position: fixed` descendants.
+ *
+ * `<main>` carries `.animate-fade-in`, so every overlay in the application
+ * was being positioned against the full height of the page rather than the
+ * viewport. Measured at 375px: a filter sheet meant to sit at the bottom of
+ * the screen was laid out at y=3268 inside a 6583px-tall "fixed" backdrop.
+ * That is why modals kept appearing far below the fold on a phone, and why
+ * fixing them one overlay at a time never held.
+ *
+ * `backwards` is safe here because every keyframe ends on the element's own
+ * resting style — `opacity: 1`, `transform: none` — so there is nothing for
+ * the animation to hold once it is done. The two opacity-only animations keep
+ * `both`: opacity creates no containing block.
+ */
 .animate-fade-in {
-  animation: lm-fade-in-up 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: lm-fade-in-up 0.22s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
 .animate-in {
@@ -262,12 +284,12 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .animate-in.slide-in-from-left {
-  animation: lm-slide-in-left 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: lm-slide-in-left 0.25s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
 .animate-in.slide-in-from-bottom-3,
 .animate-in.slide-in-from-bottom {
-  animation: lm-fade-in-up 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: lm-fade-in-up 0.25s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
 .animate-in.slide-in-from-top-2 {
@@ -275,7 +297,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .animate-slide-up-sheet {
-  animation: lm-slide-in-bottom 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: lm-slide-in-bottom 0.28s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
 @media (prefers-reduced-motion: reduce) {

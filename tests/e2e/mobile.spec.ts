@@ -325,4 +325,69 @@ test.describe("Mobile modal chrome", () => {
 
     expect(collisions, collisions.join(" | ")).toEqual([]);
   });
+  /**
+   * Regression: `<main>` carries `.animate-fade-in`, whose animation used to
+   * fill `both`. A filling `transform` — even one whose keyframe says `none` —
+   * makes the element the containing block for its `position: fixed`
+   * descendants, so every overlay in the application was laid out against the
+   * height of the page instead of the viewport. Measured here at 375px, the
+   * scholarship filter sheet sat at y=3268 inside a 6583px-tall backdrop.
+   *
+   * This has to be an end-to-end test: it is a containing-block resolution,
+   * which only a real layout engine performs.
+   */
+  test("positions a fixed overlay against the viewport, not the page", async ({ page }) => {
+    await page.goto("/");
+    await gotoTabMobile(page, "becas");
+    await page.locator("#btn-open-mobile-filters").click();
+
+    const backdrop = page.locator("div.fixed.inset-0").last();
+    await expect(backdrop).toBeVisible();
+    const box = await backdrop.boundingBox();
+    const viewport = page.viewportSize();
+
+    expect(box, "the filter sheet backdrop should be laid out").not.toBeNull();
+    expect(viewport).not.toBeNull();
+
+    // `inset-0` on a viewport-relative fixed element covers the viewport and
+    // nothing more. A containing block elsewhere shows up as a backdrop taller
+    // than the screen, starting somewhere far off the top.
+    expect(Math.abs(box!.y)).toBeLessThanOrEqual(2);
+    expect(box!.height).toBeLessThanOrEqual(viewport!.height + 2);
+  });
+
+  /**
+   * The mechanism itself, so the next animation added to a page-level wrapper
+   * cannot quietly reintroduce it.
+   */
+  test("leaves no transform on the ancestors of a fixed overlay", async ({ page }) => {
+    await page.goto("/");
+    await gotoTabMobile(page, "becas");
+    await page.locator("#btn-open-mobile-filters").click();
+    await expect(page.locator("div.fixed.inset-0").last()).toBeVisible();
+    // Long enough for every entrance animation on the screen to have finished.
+    await page.waitForTimeout(700);
+
+    const offenders = await page.evaluate(() => {
+      const found: string[] = [];
+      for (const overlay of Array.from(document.querySelectorAll<HTMLElement>("*"))) {
+        if (getComputedStyle(overlay).position !== "fixed") continue;
+        let el = overlay.parentElement;
+        while (el && el !== document.documentElement) {
+          const transform = getComputedStyle(el).transform;
+          if (transform !== "none") {
+            const name = el.getAttribute("class") ?? el.tagName.toLowerCase();
+            found.push(`${name.slice(0, 60)} -> ${transform}`);
+          }
+          el = el.parentElement;
+        }
+      }
+      return Array.from(new Set(found));
+    });
+
+    // A transform anywhere above a fixed element redefines what "fixed" means
+    // for it: the element is positioned against that ancestor instead of the
+    // viewport. `animation-fill-mode: both` is the quiet way to acquire one.
+    expect(offenders, offenders.join(" | ")).toEqual([]);
+  });
 });
