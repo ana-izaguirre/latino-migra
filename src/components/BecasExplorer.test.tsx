@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
-import { screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
+import { screen, fireEvent, waitFor, within } from "@testing-library/react";
 import { renderWithProviders as render } from "../test/renderWithProviders";
 import { BecasExplorer } from "./BecasExplorer";
 import * as firebase from "../lib/firebase";
@@ -219,6 +219,130 @@ describe("BecasExplorer Component", () => {
       render(<BecasExplorer {...defaultProps} />);
 
       await waitFor(() => expect(screen.getByText(/No pudimos cargar/i)).toBeInTheDocument());
+    });
+  });
+  /**
+   * The filters worked; the interface lied about what they would give. Counts
+   * were computed against the whole catalogue while the list was filtered, so
+   * "Alemania" showed 1 result and "Doctorado" still advertised 4 — and
+   * picking both returned nothing. With 22 scholarships across 12 countries,
+   * 30 of the 48 country x level combinations are empty.
+   */
+  describe("filters", () => {
+    const chip = (container: HTMLElement, id: string) =>
+      container.querySelector<HTMLButtonElement>(`#${id}`);
+
+    /** The number shown in a chip's count badge. */
+    const chipCount = (container: HTMLElement, id: string) => {
+      const el = chip(container, id);
+      if (!el) throw new Error(`missing chip #${id}`);
+      return Number(el.textContent?.match(/(\d+)\s*$/)?.[1]);
+    };
+
+    it("puts the country filter before the education level", () => {
+      const { container } = render(<BecasExplorer {...defaultProps} />);
+
+      const country = chip(container, "country-chip-Todos");
+      const level = chip(container, "edu-level-chip-todos");
+      expect(country).toBeInTheDocument();
+      expect(level).toBeInTheDocument();
+      // The destination is the decision people arrive with, and it is what
+      // makes the level counts mean anything.
+      expect(country!.compareDocumentPosition(level!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    });
+
+    it("re-counts the education levels when a country is picked", () => {
+      const { container } = render(<BecasExplorer {...defaultProps} />);
+
+      const before = chipCount(container, "edu-level-chip-postgrado");
+      fireEvent.click(chip(container, "country-chip-Alemania")!);
+      const after = chipCount(container, "edu-level-chip-postgrado");
+
+      expect(after).toBeLessThan(before);
+      // Alemania has a single scholarship, so no level can promise more.
+      expect(chipCount(container, "country-chip-Alemania")).toBe(1);
+      expect(after).toBeLessThanOrEqual(1);
+    });
+
+    it("disables an option that would give no results instead of hiding it", () => {
+      const { container } = render(<BecasExplorer {...defaultProps} />);
+
+      fireEvent.click(chip(container, "country-chip-Alemania")!);
+
+      // Every level that Alemania has nothing for is a dead end, and says so.
+      const deadEnds = ["pregrado", "doctorado", "postdoctorado"].filter(
+        (id) => chipCount(container, `edu-level-chip-${id}`) === 0
+      );
+      expect(deadEnds.length).toBeGreaterThan(0);
+      deadEnds.forEach((id) => {
+        const el = chip(container, `edu-level-chip-${id}`)!;
+        // Still on screen: hiding it would make the list of levels shift
+        // underneath the reader every time the country changed.
+        expect(el).toBeInTheDocument();
+        expect(el).toBeDisabled();
+      });
+    });
+
+    it("counts every option against the catalogue, not against nothing", () => {
+      const { container } = render(<BecasExplorer {...defaultProps} />);
+
+      // 22 scholarships in the bundled dataset.
+      expect(chipCount(container, "country-chip-Todos")).toBe(22);
+      expect(chipCount(container, "edu-level-chip-todos")).toBe(22);
+      expect(chipCount(container, "country-chip-España")).toBe(7);
+    });
+
+    describe("deadline filter", () => {
+      beforeEach(() => {
+        // The dataset carries fixed deadlines, so the clock has to be fixed
+        // too or the expected counts drift with the calendar.
+        vi.useFakeTimers({ shouldAdvanceTime: true });
+        vi.setSystemTime(new Date("2026-10-01T12:00:00Z"));
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      /**
+       * Regression: the filter read `daysLeft`, which no scholarship carries.
+       * "Cierra en 90 días" and "Más de 90 días" therefore matched the entire
+       * catalogue — two of the three options did nothing at all.
+       */
+      it("narrows the list rather than matching everything", () => {
+        const { container } = render(<BecasExplorer {...defaultProps} />);
+
+        const total = chipCount(container, "sidebar-deadline-Todas");
+        expect(chipCount(container, "sidebar-deadline-semester")).toBeLessThan(total);
+        expect(chipCount(container, "sidebar-deadline-later")).toBeLessThan(total);
+        expect(chipCount(container, "sidebar-deadline-urgent")).toBeLessThan(total);
+      });
+
+      it("splits the catalogue between the three ranges", () => {
+        const { container } = render(<BecasExplorer {...defaultProps} />);
+
+        // Counted by hand from the bundled deadlines against 2026-10-01:
+        // one call already closed (2026-09-11), three close within 30 days,
+        // nine within 90, and the remaining twelve later than that.
+        expect(chipCount(container, "sidebar-deadline-Todas")).toBe(22);
+        expect(chipCount(container, "sidebar-deadline-urgent")).toBe(3);
+        expect(chipCount(container, "sidebar-deadline-semester")).toBe(9);
+        expect(chipCount(container, "sidebar-deadline-later")).toBe(12);
+      });
+    });
+
+    it("offers no native select on the mobile filter sheet", () => {
+      const { container } = render(<BecasExplorer {...defaultProps} />);
+
+      fireEvent.click(container.querySelector("#btn-open-mobile-filters")!);
+      const sheet = screen.getByText(/Filtros de Búsqueda/i).closest("div[class*='rounded-t-3xl']");
+      expect(sheet).not.toBeNull();
+
+      // A phone's own picker cannot show how many results an option leads to,
+      // and with most combinations empty that count is the point.
+      expect(within(sheet as HTMLElement).queryByRole("combobox")).toBeNull();
+      expect((sheet as HTMLElement).querySelectorAll("select")).toHaveLength(0);
+      expect(chip(container, "sheet-country-España")).toBeInTheDocument();
     });
   });
 });
