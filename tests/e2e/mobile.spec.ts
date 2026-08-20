@@ -242,6 +242,27 @@ test.describe("Mobile scrolling", () => {
     expect(await page.evaluate(() => Math.round(window.scrollY))).toBeGreaterThan(before);
   });
 
+  test("stops the sheet where the bottom navigation begins", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#login-profile-btn").dispatchEvent("click");
+
+    const dialog = page.locator('[role="dialog"]');
+    await expect(dialog).toBeVisible();
+
+    const geometry = await dialog.evaluate((el) => {
+      const nav = document.querySelector("#mobile-bottom-nav");
+      return {
+        dialogBottom: el.getBoundingClientRect().bottom,
+        navTop: nav ? nav.getBoundingClientRect().top : null,
+      };
+    });
+
+    // The sheet used to run 65px under the bar, which is what "the modal sits
+    // too low" meant: its last stretch was behind the navigation.
+    expect(geometry.navTop, "the bottom navigation should be present").not.toBeNull();
+    expect(geometry.dialogBottom).toBeLessThanOrEqual(geometry.navTop! + 2);
+  });
+
   test("keeps a tall dialog inside the viewport and scrollable", async ({ page }) => {
     await page.goto("/");
     await page.locator("#login-profile-btn").dispatchEvent("click");

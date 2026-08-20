@@ -74,6 +74,7 @@ export const Modal: React.FC<ModalProps> = ({
    * `<body>` and a keyboard user was dropped at the top of the document.
    * Remembering what was focused when the dialog opened restores that.
    */
+  const contentRef = React.useRef<HTMLDivElement>(null);
   const restoreFocusTo = React.useRef<HTMLElement | null>(null);
 
   React.useEffect(() => {
@@ -87,6 +88,15 @@ export const Modal: React.FC<ModalProps> = ({
 
         <Dialog.Content
           id={id}
+          ref={contentRef}
+          /* Radix focuses the first tabbable element, which drew the focus ring
+           around the close button and made it read as the dialog's primary
+           action. Preventing it used to cost focus restoration; now that the
+           restore below is ours, it costs nothing. */
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            contentRef.current?.focus({ preventScroll: true });
+          }}
           onCloseAutoFocus={(event) => {
             event.preventDefault();
             restoreFocusTo.current?.focus({ preventScroll: true });
@@ -94,9 +104,14 @@ export const Modal: React.FC<ModalProps> = ({
           className={[
             // Mobile: a sheet pinned to the bottom edge, never taller than the
             // viewport minus the safe area, scrolling inside itself.
-            "fixed inset-x-0 bottom-0 z-50 flex max-h-[90dvh] w-full flex-col",
+            // Stops where the bottom navigation begins rather than running
+            // under it: the last 65px of the sheet were landing on top of the
+            // nav bar, which read as the panel sitting too low on the screen.
+            "fixed inset-x-0 bottom-[var(--bottom-nav-height)] z-50 flex w-full flex-col",
+            "max-h-[calc(100dvh-var(--bottom-nav-height)-2rem)]",
             "rounded-t-3xl border-t border-outline-variant/40 dark:border-slate-700",
             // Desktop: centred, with the sheet affordances dropped.
+            // The nav bar is hidden above lg, so the offset goes with it.
             "lg:inset-x-auto lg:bottom-auto lg:left-1/2 lg:top-1/2 lg:max-h-[85vh]",
             "lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-3xl lg:border",
             SIZES[size],
@@ -162,7 +177,7 @@ export const Modal: React.FC<ModalProps> = ({
             )}
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-[calc(1.5rem+var(--safe-bottom))] pt-3 lg:pb-6">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-6 pt-3">
             {children}
           </div>
         </Dialog.Content>
