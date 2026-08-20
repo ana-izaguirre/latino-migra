@@ -47,6 +47,20 @@ import {
 } from "../lib/firebase";
 import { usePreferences } from "../lib/PreferencesContext";
 import { useBodyScrollLock } from "../lib/useBodyScrollLock";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card";
+import { Input } from "./ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import {
+  Sheet,
+  SheetCloseButton,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "./ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
 interface BecasExplorerProps {
   searchQuery: string;
@@ -59,6 +73,74 @@ interface BecasExplorerProps {
 
 /** Long enough for a slow connection, short enough to not look frozen. */
 const CATALOGUE_FETCH_TIMEOUT_MS = 8000;
+
+type SortOption = "deadline-asc" | "deadline-desc" | "title-asc" | "support-first";
+
+type ViewModeTab = "all" | "favorites" | "profile";
+
+/** Display names for the stored `educationLevel` values. */
+const EDUCATION_LEVEL_LABELS: Record<string, string> = {
+  pregrado: "Pregrado",
+  postgrado: "Postgrado / Máster",
+  doctorado: "Doctorado / PhD",
+  postdoctorado: "Post Doctorado",
+};
+
+/**
+ * Hoisted out of the markup so the trigger and the list cannot drift apart:
+ * `SelectValue` renders the label of whichever item matches `sortBy`, so a
+ * label that exists in only one of the two would render blank.
+ */
+const SORT_OPTIONS: { id: SortOption; label: string }[] = [
+  { id: "deadline-asc", label: "⏱️ Cierre más próximo (Inminente)" },
+  { id: "deadline-desc", label: "⏳ Más tiempo para postular" },
+  { id: "support-first", label: "💰 Beca Completa primero" },
+  { id: "title-asc", label: "🔤 Nombre (A-Z)" },
+];
+
+/**
+ * Label + listbox pair used by the mobile filter sheet.
+ *
+ * The visible label is a `<span>` rather than a `<label>`: the Radix trigger is
+ * a button, which `<label for>` does not associate with, so the name is carried
+ * by `aria-labelledby` instead.
+ */
+const FilterSelect = ({
+  id,
+  label,
+  value,
+  onValueChange,
+  options,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onValueChange: (value: string) => void;
+  options: { value: string; label: string }[];
+}) => (
+  <div>
+    <span
+      id={`${id}-label`}
+      className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1.5"
+    >
+      {label}
+    </span>
+    <Select value={value} onValueChange={onValueChange}>
+      {/* The label supplies the name; the selection is the trigger's own text,
+          which is how a collapsed combobox exposes its value. */}
+      <SelectTrigger id={id} aria-labelledby={`${id}-label`} className="h-12 bg-surface">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((option) => (
+          <SelectItem key={option.value} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+);
 
 export const BecasExplorer: React.FC<BecasExplorerProps> = ({
   searchQuery,
@@ -94,9 +176,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
   const [selectedSupportType, setSelectedSupportType] = useState<string>("Todos");
   const [selectedInstitutionType, setSelectedInstitutionType] = useState<string>("Todas");
   const [selectedDateRange, setSelectedDateRange] = useState<string>("Todas");
-  const [sortBy, setSortBy] = useState<
-    "deadline-asc" | "deadline-desc" | "title-asc" | "support-first"
-  >("deadline-asc");
+  const [sortBy, setSortBy] = useState<SortOption>("deadline-asc");
   // Favorites live in Firestore for signed-in users and in component state for
   // guests. Nothing is written to browser storage.
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -193,12 +273,35 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
     }
   }, [currentUser?.id]);
 
-  const [viewModeTab, setViewModeTab] = useState<"all" | "favorites" | "profile">("all");
+  const [viewModeTab, setViewModeTab] = useState<ViewModeTab>("all");
+
+  /**
+   * Selecting "Para mi Perfil" also seeds the filters from the saved plan, so
+   * the tab change and those writes have to happen together — Radix reports
+   * the change once, through `onValueChange`.
+   */
+  const handleViewModeChange = (value: string) => {
+    const tab = value as ViewModeTab;
+    setViewModeTab(tab);
+    if (tab !== "profile" || !userProfileFilters) return;
+    if (userProfileFilters.destinationCountry) {
+      setSelectedCountry(userProfileFilters.destinationCountry);
+    }
+    if (userProfileFilters.preferredArea) {
+      setSelectedArea(userProfileFilters.preferredArea);
+    }
+    if (userProfileFilters.educationLevel) {
+      setSelectedEducationLevel(userProfileFilters.educationLevel);
+    }
+  };
   const [selectedScholarship, setSelectedScholarship] = useState<Scholarship | null>(null);
   const [showSuggestModal, setShowSuggestModal] = useState<boolean>(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
 
-  useBodyScrollLock(selectedScholarship !== null || mobileFiltersOpen || showSuggestModal);
+  // `mobileFiltersOpen` is absent on purpose: that panel is a Radix dialog
+  // now and locks the background scroll itself. Locking it here as well would
+  // leave the lock held by whichever owner released last.
+  useBodyScrollLock(selectedScholarship !== null || showSuggestModal);
   const [suggestForm, setSuggestForm] = useState({
     university: "",
     country: "España",
@@ -498,13 +601,13 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
 
           <div className="relative flex-1 min-w-[200px] md:w-64">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400" />
-            <input
-              type="text"
+            <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar por nombre, país, área o universidad..."
               id="becas-search-input"
-              className="w-full pl-9 pr-4 py-2 bg-surface-container-lowest dark:bg-slate-800 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-secondary dark:focus:ring-teal-400"
+              aria-label="Buscar convocatorias"
+              className="pl-9"
             />
           </div>
 
@@ -512,23 +615,28 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
             <span className="text-xs font-semibold text-on-surface-variant dark:text-slate-400 whitespace-nowrap">
               Ordenar por:
             </span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              id="becas-sort-select"
-              className="bg-surface-container-lowest dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 text-xs font-medium rounded-xl px-3 py-2 text-on-surface dark:text-slate-200 outline-none focus:ring-1 focus:ring-secondary"
-            >
-              <option value="deadline-asc">⏱️ Cierre más próximo (Inminente)</option>
-              <option value="deadline-desc">⏳ Más tiempo para postular</option>
-              <option value="support-first">💰 Beca Completa primero</option>
-              <option value="title-asc">🔤 Nombre (A-Z)</option>
-            </select>
+            <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+              <SelectTrigger
+                id="becas-sort-select"
+                aria-label="Ordenar convocatorias"
+                className="w-auto min-w-[13rem]"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_OPTIONS.map((option) => (
+                  <SelectItem key={option.id} value={option.id}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
 
       {/* Main Content Layout (Sidebar + Grid) */}
-      <div className="space-y-6">
+      <Tabs value={viewModeTab} onValueChange={handleViewModeChange} className="space-y-6">
         {syncFeedback && (
           <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-semibold px-4 py-3 rounded-xl flex items-center justify-between shadow-xs animate-fade-in">
             <div className="flex items-center gap-2">
@@ -546,81 +654,61 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
 
         {/* Navigation Tabs: Todas vs Mis Favoritas - Responsive and flex-wrap for mobile */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-outline-variant/40 dark:border-slate-800 pb-4">
-          <div className="flex flex-wrap items-center gap-2 max-w-full">
-            <button
-              type="button"
-              onClick={() => setViewModeTab("all")}
+          <TabsList>
+            <TabsTrigger
+              value="all"
               id="tab-all-scholarships"
-              className={`inline-flex items-center gap-2 min-h-[44px] px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${
-                viewModeTab === "all"
-                  ? "bg-primary text-white dark:bg-sky-600 shadow-sm"
-                  : "bg-surface-container-lowest dark:bg-slate-800 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700 border border-outline-variant/40 dark:border-slate-700"
-              }`}
+              className="data-[state=active]:bg-primary data-[state=active]:text-white dark:data-[state=active]:bg-sky-600"
             >
               <Globe2 className="w-4 h-4" />
               <span>Todas las Convocatorias</span>
-              <span className="ml-1 text-xs px-2 py-0.5 rounded-full bg-white/20 dark:bg-sky-900/50">
+              <Badge
+                variant={viewModeTab === "all" ? "count" : "neutral"}
+                size="sm"
+                className="ml-1"
+              >
                 {scholarshipsList.length}
-              </span>
-            </button>
+              </Badge>
+            </TabsTrigger>
 
-            <button
-              type="button"
-              onClick={() => setViewModeTab("favorites")}
+            <TabsTrigger
+              value="favorites"
               id="tab-favorite-scholarships"
-              className={`inline-flex items-center gap-2 min-h-[44px] px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${
-                viewModeTab === "favorites"
-                  ? "bg-red-500 text-white shadow-sm"
-                  : "bg-surface-container-lowest dark:bg-slate-800 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700 border border-outline-variant/40 dark:border-slate-700"
-              }`}
+              className="data-[state=active]:bg-red-500 data-[state=active]:text-white"
             >
               <Heart
                 className={`w-4 h-4 ${viewModeTab === "favorites" ? "fill-white" : "text-red-500"}`}
               />
               <span>Mis Becas Favoritas</span>
-              <span
-                className={`ml-1 text-xs px-2 py-0.5 rounded-full ${
+              <Badge
+                variant={viewModeTab === "favorites" ? "count" : "neutral"}
+                size="sm"
+                className={`ml-1 ${
                   viewModeTab === "favorites"
-                    ? "bg-white/20"
+                    ? ""
                     : "bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300"
                 }`}
               >
                 {favorites.length}
-              </span>
-            </button>
+              </Badge>
+            </TabsTrigger>
 
             {userProfileFilters && (
-              <button
-                type="button"
-                onClick={() => {
-                  setViewModeTab("profile");
-                  if (userProfileFilters.destinationCountry) {
-                    setSelectedCountry(userProfileFilters.destinationCountry);
-                  }
-                  if (userProfileFilters.preferredArea) {
-                    setSelectedArea(userProfileFilters.preferredArea);
-                  }
-                  if (userProfileFilters.educationLevel) {
-                    setSelectedEducationLevel(userProfileFilters.educationLevel);
-                  }
-                }}
+              <TabsTrigger
+                value="profile"
                 id="tab-profile-scholarships"
-                className={`inline-flex items-center gap-2 min-h-[44px] px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${
-                  viewModeTab === "profile"
-                    ? "bg-secondary text-white dark:bg-teal-600 shadow-sm"
-                    : "bg-surface-container-lowest dark:bg-slate-800 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700 border border-outline-variant/40 dark:border-slate-700"
-                }`}
+                className="data-[state=active]:bg-secondary data-[state=active]:text-white dark:data-[state=active]:bg-teal-600"
               >
                 <Sparkles className="w-4 h-4 text-amber-400" />
                 <span>🎯 Para mi Perfil</span>
                 {userProfileFilters.destinationCountry && (
-                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-surface-container dark:bg-slate-700 text-on-surface dark:text-slate-200">
+                  <Badge variant="neutral" size="sm">
                     {userProfileFilters.destinationCountry}
-                  </span>
+                  </Badge>
                 )}
-              </button>
+              </TabsTrigger>
             )}
-          </div>
+          </TabsList>
 
           {viewModeTab === "favorites" && favorites.length > 0 && (
             <button
@@ -844,170 +932,115 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
         </div>
 
         {/* Mobile Filters Slide-over / Bottom Sheet Modal */}
-        {mobileFiltersOpen && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-            <div className="bg-surface-container-lowest dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl max-w-lg w-full max-h-[88vh] overflow-y-auto shadow-2xl border border-outline-variant/40 dark:border-slate-700 p-5 md:p-6 space-y-5 relative animate-in slide-in-from-bottom-4 duration-200">
-              {/* Header */}
-              <div className="flex items-center justify-between pb-3 border-b border-outline-variant/30 dark:border-slate-800">
-                <div className="flex items-center gap-2 font-bold text-base text-primary dark:text-sky-300">
-                  <Filter className="w-5 h-5 text-secondary dark:text-teal-400" />
-                  <span>Filtros de Búsqueda</span>
-                </div>
+        <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+          <SheetContent aria-describedby={undefined}>
+            <SheetHeader>
+              <SheetTitle>
+                <Filter className="w-5 h-5 text-secondary dark:text-teal-400" />
+                <span>Filtros de Búsqueda</span>
+              </SheetTitle>
+              <div className="flex items-center gap-2">
+                <Button variant="link" size="sm" onClick={clearFilters}>
+                  Limpiar todo
+                </Button>
+                <SheetCloseButton label="Cerrar filtros" />
+              </div>
+            </SheetHeader>
+
+            {/* Mobile Filter Controls */}
+            <div className="space-y-4">
+              {/* Favoritas Toggle */}
+              <div className="p-3 bg-surface dark:bg-slate-800/80 rounded-xl border border-outline-variant/40 dark:border-slate-700 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={clearFilters}
-                    className="text-xs font-semibold text-secondary dark:text-teal-400 hover:underline px-2 py-1 active:scale-95"
-                  >
-                    Limpiar todo
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMobileFiltersOpen(false)}
-                    className="p-1.5 text-on-surface-variant hover:bg-surface-container dark:hover:bg-slate-800 rounded-full active:scale-95"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
+                  <Heart
+                    className={`w-4 h-4 ${viewModeTab === "favorites" ? "fill-red-500 text-red-500" : "text-on-surface-variant"}`}
+                  />
+                  <span className="text-xs font-bold text-on-surface dark:text-slate-200">
+                    Ver solo mis favoritas
+                  </span>
                 </div>
-              </div>
-
-              {/* Mobile Filter Controls */}
-              <div className="space-y-4">
-                {/* Favoritas Toggle */}
-                <div className="p-3 bg-surface dark:bg-slate-800/80 rounded-xl border border-outline-variant/40 dark:border-slate-700 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Heart
-                      className={`w-4 h-4 ${viewModeTab === "favorites" ? "fill-red-500 text-red-500" : "text-on-surface-variant"}`}
-                    />
-                    <span className="text-xs font-bold text-on-surface dark:text-slate-200">
-                      Ver solo mis favoritas
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setViewModeTab(viewModeTab === "favorites" ? "all" : "favorites")
-                    }
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 ${
-                      viewModeTab === "favorites"
-                        ? "bg-red-500 text-white shadow-xs"
-                        : "bg-surface-container dark:bg-slate-700 text-on-surface-variant dark:text-slate-300"
-                    }`}
-                  >
-                    {viewModeTab === "favorites" ? "Activado" : "Desactivado"} ({favorites.length})
-                  </button>
-                </div>
-
-                {/* País Destino Dropdown */}
-                <div>
-                  <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1.5">
-                    País Destino
-                  </label>
-                  <select
-                    value={selectedCountry}
-                    onChange={(e) => setSelectedCountry(e.target.value)}
-                    className="w-full bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 text-on-surface dark:text-slate-200 text-xs font-semibold rounded-xl p-3 outline-none focus:ring-2 focus:ring-secondary"
-                  >
-                    {countries.map((c) => (
-                      <option key={c} value={c}>
-                        {c === "Todos" ? "🌍 Todos los países" : c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Área de Estudio */}
-                <div>
-                  <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1.5">
-                    Área de Estudio
-                  </label>
-                  <select
-                    value={selectedArea}
-                    onChange={(e) => setSelectedArea(e.target.value)}
-                    className="w-full bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 text-on-surface dark:text-slate-200 text-xs font-semibold rounded-xl p-3 outline-none focus:ring-2 focus:ring-secondary"
-                  >
-                    {areas.map((a) => (
-                      <option key={a} value={a}>
-                        {a === "Todas" ? "🎓 Todas las áreas" : a}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Tipo de Apoyo */}
-                <div>
-                  <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1.5">
-                    Tipo de Apoyo
-                  </label>
-                  <select
-                    value={selectedSupportType}
-                    onChange={(e) => setSelectedSupportType(e.target.value)}
-                    className="w-full bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 text-on-surface dark:text-slate-200 text-xs font-semibold rounded-xl p-3 outline-none focus:ring-2 focus:ring-secondary"
-                  >
-                    {supportTypes.map((t) => (
-                      <option key={t} value={t}>
-                        {t === "Todos" ? "🏆 Todos los apoyos" : t}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Tipo de Entidad */}
-                <div>
-                  <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1.5">
-                    Tipo de Entidad
-                  </label>
-                  <select
-                    value={selectedInstitutionType}
-                    onChange={(e) => setSelectedInstitutionType(e.target.value)}
-                    className="w-full bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 text-on-surface dark:text-slate-200 text-xs font-semibold rounded-xl p-3 outline-none focus:ring-2 focus:ring-secondary"
-                  >
-                    {institutionTypes.map((it) => (
-                      <option key={it} value={it}>
-                        {it === "Todas" ? "🏛️ Todas las entidades" : it}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Fecha Límite */}
-                <div>
-                  <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1.5">
-                    Fecha de Cierre
-                  </label>
-                  <select
-                    value={selectedDateRange}
-                    onChange={(e) => setSelectedDateRange(e.target.value)}
-                    className="w-full bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 text-on-surface dark:text-slate-200 text-xs font-semibold rounded-xl p-3 outline-none focus:ring-2 focus:ring-secondary"
-                  >
-                    {dateRanges.map((dr) => (
-                      <option key={dr.id} value={dr.id}>
-                        {dr.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Bottom Apply Action */}
-              <div className="pt-3 border-t border-outline-variant/30 dark:border-slate-800 sticky bottom-0 bg-surface-container-lowest dark:bg-slate-900">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileFiltersOpen(false);
-                    if (mainListRef.current) {
-                      mainListRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-                    }
-                  }}
-                  className="w-full py-3.5 bg-primary dark:bg-sky-600 hover:bg-primary-container text-white font-bold text-sm rounded-xl shadow-md cursor-pointer active:scale-95 transition-all text-center flex items-center justify-center gap-2"
+                <Button
+                  variant={viewModeTab === "favorites" ? "destructive" : "ghost"}
+                  size="sm"
+                  aria-pressed={viewModeTab === "favorites"}
+                  onClick={() => setViewModeTab(viewModeTab === "favorites" ? "all" : "favorites")}
+                  className={
+                    viewModeTab === "favorites" ? "" : "bg-surface-container dark:bg-slate-700"
+                  }
                 >
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Ver {filteredScholarships.length} Convocatorias</span>
-                </button>
+                  {viewModeTab === "favorites" ? "Activado" : "Desactivado"} ({favorites.length})
+                </Button>
               </div>
+
+              <FilterSelect
+                id="mobile-filter-country"
+                label="País Destino"
+                value={selectedCountry}
+                onValueChange={setSelectedCountry}
+                options={countries.map((c) => ({
+                  value: c,
+                  label: c === "Todos" ? "🌍 Todos los países" : c,
+                }))}
+              />
+
+              <FilterSelect
+                id="mobile-filter-area"
+                label="Área de Estudio"
+                value={selectedArea}
+                onValueChange={setSelectedArea}
+                options={areas.map((area) => ({
+                  value: area,
+                  label: area === "Todas" ? "🎓 Todas las áreas" : area,
+                }))}
+              />
+
+              <FilterSelect
+                id="mobile-filter-support"
+                label="Tipo de Apoyo"
+                value={selectedSupportType}
+                onValueChange={setSelectedSupportType}
+                options={supportTypes.map((type) => ({
+                  value: type,
+                  label: type === "Todos" ? "🏆 Todos los apoyos" : type,
+                }))}
+              />
+
+              <FilterSelect
+                id="mobile-filter-institution"
+                label="Tipo de Entidad"
+                value={selectedInstitutionType}
+                onValueChange={setSelectedInstitutionType}
+                options={institutionTypes.map((it) => ({
+                  value: it,
+                  label: it === "Todas" ? "🏛️ Todas las entidades" : it,
+                }))}
+              />
+
+              <FilterSelect
+                id="mobile-filter-deadline"
+                label="Fecha de Cierre"
+                value={selectedDateRange}
+                onValueChange={setSelectedDateRange}
+                options={dateRanges.map((dr) => ({ value: dr.id, label: dr.label }))}
+              />
             </div>
-          </div>
-        )}
+
+            <SheetFooter>
+              <Button
+                size="lg"
+                onClick={() => {
+                  setMobileFiltersOpen(false);
+                  if (mainListRef.current) {
+                    mainListRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }
+                }}
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Ver {filteredScholarships.length} Convocatorias</span>
+              </Button>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Sidebar Filters (Desktop Only: hidden on mobile to avoid 500px dead scroll) */}
@@ -1212,492 +1245,488 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
           </aside>
 
           {/* Scholarships Grid & Pagination Container */}
+          {/* The panel sits inside <main> rather than replacing it: Radix puts
+              `role="tabpanel"` on whatever element it renders, and putting that
+              on <main> would strip the page of its only main landmark. */}
           <main
             ref={mainListRef}
             id="scholarships-main-section"
-            className="lg:col-span-9 space-y-6"
+            className="lg:col-span-9"
             aria-busy={catalogueStatus === "loading"}
           >
-            {/* Where the list on screen came from. The bundled dataset renders
+            <TabsContent value={viewModeTab} className="space-y-6">
+              {/* Where the list on screen came from. The bundled dataset renders
                 immediately, so without this the live catalogue arrives and
                 silently swaps the cards, and a failed load looks identical to a
                 successful one. */}
-            <div role="status" aria-live="polite" className="min-h-[1.5rem]">
-              {catalogueStatus === "loading" && (
-                <p
-                  id="catalogue-loading-status"
-                  className="flex items-center gap-2 text-xs text-on-surface-variant dark:text-slate-400"
-                >
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
-                  Actualizando convocatorias…
-                </p>
-              )}
-              {catalogueStatus === "bundled" && (
-                <p
-                  id="catalogue-bundled-status"
-                  className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400"
-                >
-                  <AlertCircle className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-                  No pudimos cargar las convocatorias más recientes. Estás viendo la lista incluida
-                  en la aplicación, que puede estar desactualizada.
-                </p>
-              )}
-            </div>
-
-            {/* List Toolbar: Counters, Items Per Page & Display Mode */}
-            <div className="bg-surface-container-lowest dark:bg-slate-800 p-4 rounded-2xl border border-outline-variant/40 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3 text-xs md:text-sm text-on-surface-variant dark:text-slate-300">
-                <span>
-                  {filteredScholarships.length === 0 ? (
-                    "0 convocatorias encontradas"
-                  ) : displayMode === "continuous" ? (
-                    <>
-                      Mostrando <strong>{displayedScholarships.length}</strong> de{" "}
-                      <strong>{filteredScholarships.length}</strong> convocatorias
-                    </>
-                  ) : itemsPerPage === 0 ? (
-                    <>
-                      Mostrando todas las <strong>{filteredScholarships.length}</strong>{" "}
-                      convocatorias
-                    </>
-                  ) : (
-                    <>
-                      Mostrando{" "}
-                      <strong>
-                        {Math.min(
-                          (validCurrentPage - 1) * itemsPerPage + 1,
-                          filteredScholarships.length
-                        )}
-                        –{Math.min(validCurrentPage * itemsPerPage, filteredScholarships.length)}
-                      </strong>{" "}
-                      de <strong>{filteredScholarships.length}</strong> convocatorias
-                    </>
-                  )}
-                </span>
-                {favorites.length > 0 && (
-                  <span className="text-secondary dark:text-teal-300 font-semibold bg-secondary/10 dark:bg-teal-900/30 px-2 py-0.5 rounded-full text-xs">
-                    ♥ {favorites.length} guardadas
-                  </span>
+              <div role="status" aria-live="polite" className="min-h-[1.5rem]">
+                {catalogueStatus === "loading" && (
+                  <p
+                    id="catalogue-loading-status"
+                    className="flex items-center gap-2 text-xs text-on-surface-variant dark:text-slate-400"
+                  >
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+                    Actualizando convocatorias…
+                  </p>
+                )}
+                {catalogueStatus === "bundled" && (
+                  <p
+                    id="catalogue-bundled-status"
+                    className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400"
+                  >
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                    No pudimos cargar las convocatorias más recientes. Estás viendo la lista
+                    incluida en la aplicación, que puede estar desactualizada.
+                  </p>
                 )}
               </div>
 
-              {/* Layout Controls: Mode & Items per Page */}
-              <div className="flex flex-wrap items-center gap-2.5">
-                {/* Display Mode Toggle */}
-                <div className="flex items-center bg-surface dark:bg-slate-900 p-1 rounded-xl border border-outline-variant/40 dark:border-slate-700 text-xs">
-                  <button
-                    type="button"
-                    onClick={() => setDisplayMode("paginated")}
-                    id="mode-paginated-btn"
-                    className={`inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-1 rounded-lg font-semibold transition-all ${
-                      displayMode === "paginated"
-                        ? "bg-primary text-white dark:bg-sky-600 shadow-xs"
-                        : "text-on-surface-variant dark:text-slate-400 hover:text-primary dark:hover:text-sky-300"
-                    }`}
-                    title="Modo Paginación: navegar página por página"
-                  >
-                    <Layers className="w-3.5 h-3.5" />
-                    <span className="hidden xs:inline">Páginas</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDisplayMode("continuous")}
-                    id="mode-lazy-btn"
-                    className={`inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-1 rounded-lg font-semibold transition-all ${
-                      displayMode === "continuous"
-                        ? "bg-secondary text-white dark:bg-teal-600 shadow-xs"
-                        : "text-on-surface-variant dark:text-slate-400 hover:text-secondary dark:hover:text-teal-300"
-                    }`}
-                    title="Modo Carga Progresiva: botón Cargar Más para móviles"
-                  >
-                    <ArrowDownCircle className="w-3.5 h-3.5" />
-                    <span className="hidden xs:inline">Carga Diferida</span>
-                  </button>
+              {/* List Toolbar: Counters, Items Per Page & Display Mode */}
+              <div className="bg-surface-container-lowest dark:bg-slate-800 p-4 rounded-2xl border border-outline-variant/40 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3 text-xs md:text-sm text-on-surface-variant dark:text-slate-300">
+                  <span>
+                    {filteredScholarships.length === 0 ? (
+                      "0 convocatorias encontradas"
+                    ) : displayMode === "continuous" ? (
+                      <>
+                        Mostrando <strong>{displayedScholarships.length}</strong> de{" "}
+                        <strong>{filteredScholarships.length}</strong> convocatorias
+                      </>
+                    ) : itemsPerPage === 0 ? (
+                      <>
+                        Mostrando todas las <strong>{filteredScholarships.length}</strong>{" "}
+                        convocatorias
+                      </>
+                    ) : (
+                      <>
+                        Mostrando{" "}
+                        <strong>
+                          {Math.min(
+                            (validCurrentPage - 1) * itemsPerPage + 1,
+                            filteredScholarships.length
+                          )}
+                          –{Math.min(validCurrentPage * itemsPerPage, filteredScholarships.length)}
+                        </strong>{" "}
+                        de <strong>{filteredScholarships.length}</strong> convocatorias
+                      </>
+                    )}
+                  </span>
+                  {favorites.length > 0 && (
+                    <span className="text-secondary dark:text-teal-300 font-semibold bg-secondary/10 dark:bg-teal-900/30 px-2 py-0.5 rounded-full text-xs">
+                      ♥ {favorites.length} guardadas
+                    </span>
+                  )}
                 </div>
 
-                {/* Items per Page Selector */}
-                {displayMode === "paginated" && (
-                  <div className="flex items-center gap-1 bg-surface dark:bg-slate-900 p-1 rounded-xl border border-outline-variant/40 dark:border-slate-700 text-xs font-semibold">
-                    <span className="text-[11px] text-on-surface-variant dark:text-slate-400 px-1 hidden md:inline">
-                      Ver:
-                    </span>
-                    {[6, 12, 18, 0].map((size) => (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() => setItemsPerPage(size)}
-                        id={`items-per-page-${size === 0 ? "all" : size}`}
-                        className={`min-w-[40px] min-h-[40px] sm:min-w-0 sm:min-h-0 px-2 py-1 inline-flex items-center justify-center rounded-lg transition-colors ${
-                          itemsPerPage === size
-                            ? "bg-primary/15 dark:bg-sky-900/60 text-primary dark:text-sky-300 font-bold"
-                            : "text-on-surface-variant dark:text-slate-400 hover:bg-surface-container dark:hover:bg-slate-800"
-                        }`}
-                      >
-                        {size === 0 ? "Todas" : size}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {filteredScholarships.length === 0 ? (
-              <div className="bg-surface-container-lowest dark:bg-slate-800 rounded-2xl p-12 text-center space-y-4 border border-outline-variant/40 dark:border-slate-700">
-                {viewModeTab === "favorites" ? (
-                  <>
-                    <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-950/60 flex items-center justify-center mx-auto text-red-500">
-                      <Heart className="w-8 h-8" />
-                    </div>
-                    <h3 className="font-headline-sm text-lg font-bold text-primary dark:text-sky-300">
-                      Aún no tienes becas en favoritos
-                    </h3>
-                    <p className="text-sm text-on-surface-variant dark:text-slate-400 max-w-md mx-auto">
-                      Haz clic en el icono de corazón (♥) en cualquier convocatoria para guardarla y
-                      acceder a ella rápidamente aquí.
-                    </p>
+                {/* Layout Controls: Mode & Items per Page */}
+                <div className="flex flex-wrap items-center gap-2.5">
+                  {/* Display Mode Toggle */}
+                  <div className="flex items-center bg-surface dark:bg-slate-900 p-1 rounded-xl border border-outline-variant/40 dark:border-slate-700 text-xs">
                     <button
                       type="button"
-                      onClick={() => setViewModeTab("all")}
-                      id="empty-fav-explore-btn"
-                      className="bg-primary dark:bg-sky-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-container"
+                      onClick={() => setDisplayMode("paginated")}
+                      id="mode-paginated-btn"
+                      className={`inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-1 rounded-lg font-semibold transition-all ${
+                        displayMode === "paginated"
+                          ? "bg-primary text-white dark:bg-sky-600 shadow-xs"
+                          : "text-on-surface-variant dark:text-slate-400 hover:text-primary dark:hover:text-sky-300"
+                      }`}
+                      title="Modo Paginación: navegar página por página"
                     >
-                      Ver Todas las Convocatorias
+                      <Layers className="w-3.5 h-3.5" />
+                      <span className="hidden xs:inline">Páginas</span>
                     </button>
-                  </>
-                ) : (
-                  <>
-                    <Search className="w-12 h-12 text-on-surface-variant mx-auto opacity-50" />
-                    <h3 className="font-headline-sm text-lg font-bold text-primary dark:text-sky-300">
-                      No encontramos becas con los filtros seleccionados
-                    </h3>
-                    <p className="text-sm text-on-surface-variant dark:text-slate-400 max-w-md mx-auto">
-                      Prueba ajustando los términos de búsqueda o haz clic en "Limpiar" para ver las
-                      18+ becas disponibles.
-                    </p>
                     <button
-                      onClick={clearFilters}
-                      className="bg-primary text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-primary-container"
+                      type="button"
+                      onClick={() => setDisplayMode("continuous")}
+                      id="mode-lazy-btn"
+                      className={`inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-1 rounded-lg font-semibold transition-all ${
+                        displayMode === "continuous"
+                          ? "bg-secondary text-white dark:bg-teal-600 shadow-xs"
+                          : "text-on-surface-variant dark:text-slate-400 hover:text-secondary dark:hover:text-teal-300"
+                      }`}
+                      title="Modo Carga Progresiva: botón Cargar Más para móviles"
                     >
-                      Limpiar Filtros
+                      <ArrowDownCircle className="w-3.5 h-3.5" />
+                      <span className="hidden xs:inline">Carga Diferida</span>
                     </button>
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-8">
-                {/* Cards Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {displayedScholarships.map((beca) => {
-                    const isFav = favorites.includes(beca.id);
-                    return (
-                      <div
-                        key={beca.id}
-                        className="bg-surface-container-lowest dark:bg-slate-800 rounded-2xl border border-outline-variant/40 dark:border-slate-700 overflow-hidden hover:shadow-xl transition-all flex flex-col justify-between group"
-                      >
-                        <div>
-                          {/* Card Image Header */}
-                          <div className="relative h-44 overflow-hidden">
-                            <img
-                              src={beca.imageUrl}
-                              alt={beca.title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                  </div>
 
-                            {/* Top Badges */}
-                            <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-                              <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-semibold">
-                                <MapPin className="w-3.5 h-3.5 text-sky-400" />
-                                <span>{beca.country}</span>
-                              </div>
-
-                              <button
-                                onClick={(e) => toggleFavorite(beca.id, e)}
-                                className={`p-2 rounded-full backdrop-blur-md transition-colors ${
-                                  isFav
-                                    ? "bg-red-500 text-white"
-                                    : "bg-black/40 text-white hover:bg-black/60"
-                                }`}
-                                title={isFav ? "Quitar de favoritos" : "Guardar beca"}
-                              >
-                                <Heart className={`w-4 h-4 ${isFav ? "fill-white" : ""}`} />
-                              </button>
-                            </div>
-
-                            {/* Deadline Alert Banner */}
-                            <div className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-amber-500/90 text-amber-950 font-bold px-3 py-1 rounded-lg text-xs backdrop-blur-xs">
-                              <Clock className="w-3.5 h-3.5" />
-                              <span>{beca.deadline}</span>
-                            </div>
-
-                            {/* Verified Portal Indicator */}
-                            {beca.officialPortalName && (
-                              <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 font-bold px-2 py-0.5 rounded text-[11px] backdrop-blur-xs">
-                                <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                                <span>Oficial</span>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Card Body */}
-                          <div className="p-5 space-y-3">
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              {beca.educationLevel && (
-                                <span className="bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-xs px-2.5 py-0.5 rounded-full font-bold capitalize">
-                                  {beca.educationLevel === "postgrado"
-                                    ? "Postgrado / Máster"
-                                    : beca.educationLevel === "doctorado"
-                                      ? "Doctorado / PhD"
-                                      : beca.educationLevel === "postdoctorado"
-                                        ? "Post Doctorado"
-                                        : beca.educationLevel === "pregrado"
-                                          ? "Pregrado"
-                                          : beca.educationLevel}
-                                </span>
-                              )}
-                              <span className="bg-secondary-container/40 dark:bg-teal-500/20 text-secondary dark:text-teal-300 text-xs px-2.5 py-0.5 rounded-full font-bold">
-                                {beca.supportType}
-                              </span>
-                              {beca.institutionType && (
-                                <span className="bg-primary/10 dark:bg-sky-500/20 text-primary dark:text-sky-300 text-xs px-2 py-0.5 rounded-full font-semibold">
-                                  {beca.institutionType}
-                                </span>
-                              )}
-                              <span className="text-xs text-on-surface-variant dark:text-slate-400 font-medium">
-                                • {beca.area}
-                              </span>
-                            </div>
-
-                            <h3 className="font-headline-sm text-lg font-bold text-primary dark:text-sky-300 group-hover:text-secondary transition-colors line-clamp-2">
-                              {beca.title}
-                            </h3>
-
-                            <p className="text-xs font-semibold text-on-surface-variant dark:text-slate-300 line-clamp-1">
-                              {beca.institution}
-                            </p>
-
-                            <p className="text-sm text-on-surface-variant dark:text-slate-400 line-clamp-2 leading-relaxed">
-                              {beca.description}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Card Footer Action */}
-                        <div className="px-5 pb-5 pt-2 border-t border-outline-variant/30 dark:border-slate-700/50 flex items-center justify-between gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedScholarship(beca)}
-                            className="btn-tactile flex-1 bg-primary/10 dark:bg-sky-900/40 text-primary dark:text-sky-300 hover:bg-primary hover:text-white dark:hover:bg-sky-600 font-bold text-xs py-2.5 rounded-xl transition-all text-center flex items-center justify-center gap-1.5 shadow-xs"
-                          >
-                            <BookOpen className="w-3.5 h-3.5" />
-                            <span>Ver Detalles</span>
-                          </button>
-
-                          <a
-                            href={generateGoogleCalendarUrl({
-                              title: `Límite Postulación Beca: ${beca.title}`,
-                              details: `Fecha límite de la convocatoria para ${beca.title} de ${beca.institution}. Enlace oficial: ${beca.link}`,
-                              startDate: beca.deadlineDate,
-                              location: beca.country,
-                            })}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="btn-tactile inline-flex items-center gap-1.5 bg-surface dark:bg-slate-700 hover:bg-emerald-50 dark:hover:bg-slate-600 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 font-bold text-xs py-2.5 px-3.5 rounded-xl transition-all shadow-xs"
-                            title="Añadir fecha límite a Google Calendar"
-                          >
-                            <CalendarIcon className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">Calendar</span>
-                          </a>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Bottom Pagination & Lazy Loading Section */}
-                <div className="pt-2">
-                  {displayMode === "continuous" ? (
-                    /* Lazy Loading / Infinite Scroll Mode */
-                    <div className="bg-surface-container-lowest dark:bg-slate-800 p-6 rounded-2xl border border-outline-variant/40 dark:border-slate-700 text-center space-y-4">
-                      {/* Progress Bar */}
-                      <div className="max-w-md mx-auto space-y-1.5">
-                        <div className="flex items-center justify-between text-xs text-on-surface-variant dark:text-slate-400 font-medium">
-                          <span>Progreso de carga</span>
-                          <span>
-                            {displayedScholarships.length} de {filteredScholarships.length} (
-                            {Math.round(
-                              (displayedScholarships.length / filteredScholarships.length) * 100
-                            )}
-                            %)
-                          </span>
-                        </div>
-                        <div className="w-full bg-surface-container dark:bg-slate-700 h-2 rounded-full overflow-hidden">
-                          <div
-                            className="bg-secondary dark:bg-teal-400 h-full rounded-full transition-all duration-300"
-                            style={{
-                              width: `${(displayedScholarships.length / filteredScholarships.length) * 100}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      {displayedScholarships.length < filteredScholarships.length ? (
-                        <div className="space-y-2">
-                          <button
-                            type="button"
-                            onClick={handleLoadMore}
-                            id="btn-load-more-scholarships"
-                            className="btn-tactile inline-flex items-center gap-2 bg-secondary dark:bg-teal-600 hover:bg-secondary/90 text-white font-bold text-sm px-6 py-3 rounded-xl shadow-md hover:shadow-lg transition-all"
-                          >
-                            <ArrowDownCircle className="w-4 h-4 animate-bounce" />
-                            <span>
-                              Cargar Más Convocatorias (+
-                              {Math.min(
-                                itemsPerPage > 0 ? itemsPerPage : 6,
-                                filteredScholarships.length - displayedScholarships.length
-                              )}
-                              )
-                            </span>
-                          </button>
-                          <p className="text-xs text-on-surface-variant dark:text-slate-400">
-                            Quedan {filteredScholarships.length - displayedScholarships.length}{" "}
-                            becas por mostrar
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-2 py-2">
-                          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-1.5">
-                            <CheckCircle2 className="w-4 h-4" />
-                            <span>
-                              Has llegado al final de las {filteredScholarships.length}{" "}
-                              convocatorias
-                            </span>
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (mainListRef.current) {
-                                mainListRef.current.scrollIntoView({
-                                  behavior: "smooth",
-                                  block: "start",
-                                });
-                              }
-                            }}
-                            className="btn-tactile text-xs font-semibold text-secondary dark:text-teal-300 hover:underline inline-block py-1 px-2"
-                          >
-                            Volver arriba del listado ↑
-                          </button>
-                        </div>
-                      )}
+                  {/* Items per Page Selector */}
+                  {displayMode === "paginated" && (
+                    <div className="flex items-center gap-1 bg-surface dark:bg-slate-900 p-1 rounded-xl border border-outline-variant/40 dark:border-slate-700 text-xs font-semibold">
+                      <span className="text-[11px] text-on-surface-variant dark:text-slate-400 px-1 hidden md:inline">
+                        Ver:
+                      </span>
+                      {[6, 12, 18, 0].map((size) => (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => setItemsPerPage(size)}
+                          id={`items-per-page-${size === 0 ? "all" : size}`}
+                          className={`min-w-[40px] min-h-[40px] sm:min-w-0 sm:min-h-0 px-2 py-1 inline-flex items-center justify-center rounded-lg transition-colors ${
+                            itemsPerPage === size
+                              ? "bg-primary/15 dark:bg-sky-900/60 text-primary dark:text-sky-300 font-bold"
+                              : "text-on-surface-variant dark:text-slate-400 hover:bg-surface-container dark:hover:bg-slate-800"
+                          }`}
+                        >
+                          {size === 0 ? "Todas" : size}
+                        </button>
+                      ))}
                     </div>
-                  ) : (
-                    /* Standard Numbered Pagination Mode */
-                    itemsPerPage > 0 &&
-                    totalPages > 1 && (
-                      <div className="bg-surface-container-lowest dark:bg-slate-800 p-4 md:p-6 rounded-2xl border border-outline-variant/40 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="text-xs md:text-sm text-on-surface-variant dark:text-slate-400 font-medium">
-                          Página <strong>{validCurrentPage}</strong> de{" "}
-                          <strong>{totalPages}</strong> ({filteredScholarships.length}{" "}
-                          convocatorias)
-                        </div>
-
-                        {/* Navigation Controls */}
-                        <div className="flex items-center gap-1.5">
-                          {/* First Page */}
-                          <button
-                            type="button"
-                            onClick={() => handlePageChange(1)}
-                            disabled={validCurrentPage === 1}
-                            aria-label="Primera página"
-                            id="pagination-first-page"
-                            className="btn-tactile p-2 rounded-xl border border-outline-variant/40 dark:border-slate-700 text-on-surface dark:text-slate-200 hover:bg-surface-container dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                          >
-                            <ChevronsLeft className="w-4 h-4" />
-                          </button>
-
-                          {/* Previous Page */}
-                          <button
-                            type="button"
-                            onClick={() => handlePageChange(validCurrentPage - 1)}
-                            disabled={validCurrentPage === 1}
-                            aria-label="Página anterior"
-                            id="pagination-prev-page"
-                            className="btn-tactile px-3 py-2 rounded-xl border border-outline-variant/40 dark:border-slate-700 text-xs font-bold text-on-surface dark:text-slate-200 hover:bg-surface-container dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-1"
-                          >
-                            <ChevronLeft className="w-4 h-4" />
-                            <span className="hidden md:inline">Anterior</span>
-                          </button>
-
-                          {/* Numbered Page Buttons */}
-                          <div className="flex items-center gap-1">
-                            {Array.from({ length: totalPages }, (_, i) => i + 1)
-                              .filter((page) => {
-                                if (page === 1 || page === totalPages) return true;
-                                return Math.abs(page - validCurrentPage) <= 1;
-                              })
-                              .map((page, idx, arr) => {
-                                const prevPage = arr[idx - 1];
-                                const showEllipsisBefore = prevPage && page - prevPage > 1;
-
-                                return (
-                                  <React.Fragment key={page}>
-                                    {showEllipsisBefore && (
-                                      <span className="px-1 text-xs text-on-surface-variant dark:text-slate-500 font-bold">
-                                        …
-                                      </span>
-                                    )}
-                                    <button
-                                      type="button"
-                                      onClick={() => handlePageChange(page)}
-                                      id={`pagination-page-${page}`}
-                                      aria-current={page === validCurrentPage ? "page" : undefined}
-                                      className={`btn-tactile w-9 h-9 rounded-xl text-xs font-bold transition-all flex items-center justify-center ${
-                                        page === validCurrentPage
-                                          ? "bg-primary text-white dark:bg-sky-600 shadow-sm ring-2 ring-primary/20"
-                                          : "border border-outline-variant/40 dark:border-slate-700 text-on-surface dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700"
-                                      }`}
-                                    >
-                                      {page}
-                                    </button>
-                                  </React.Fragment>
-                                );
-                              })}
-                          </div>
-
-                          {/* Next Page */}
-                          <button
-                            type="button"
-                            onClick={() => handlePageChange(validCurrentPage + 1)}
-                            disabled={validCurrentPage === totalPages}
-                            aria-label="Página siguiente"
-                            id="pagination-next-page"
-                            className="btn-tactile px-3 py-2 rounded-xl border border-outline-variant/40 dark:border-slate-700 text-xs font-bold text-on-surface dark:text-slate-200 hover:bg-surface-container dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-1"
-                          >
-                            <span className="hidden md:inline">Siguiente</span>
-                            <ChevronRight className="w-4 h-4" />
-                          </button>
-
-                          {/* Last Page */}
-                          <button
-                            type="button"
-                            onClick={() => handlePageChange(totalPages)}
-                            disabled={validCurrentPage === totalPages}
-                            aria-label="Última página"
-                            id="pagination-last-page"
-                            className="btn-tactile p-2 rounded-xl border border-outline-variant/40 dark:border-slate-700 text-on-surface dark:text-slate-200 hover:bg-surface-container dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                          >
-                            <ChevronsRight className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    )
                   )}
                 </div>
               </div>
-            )}
+
+              {filteredScholarships.length === 0 ? (
+                <div className="bg-surface-container-lowest dark:bg-slate-800 rounded-2xl p-12 text-center space-y-4 border border-outline-variant/40 dark:border-slate-700">
+                  {viewModeTab === "favorites" ? (
+                    <>
+                      <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-950/60 flex items-center justify-center mx-auto text-red-500">
+                        <Heart className="w-8 h-8" />
+                      </div>
+                      <h3 className="font-headline-sm text-lg font-bold text-primary dark:text-sky-300">
+                        Aún no tienes becas en favoritos
+                      </h3>
+                      <p className="text-sm text-on-surface-variant dark:text-slate-400 max-w-md mx-auto">
+                        Haz clic en el icono de corazón (♥) en cualquier convocatoria para guardarla
+                        y acceder a ella rápidamente aquí.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setViewModeTab("all")}
+                        id="empty-fav-explore-btn"
+                        className="bg-primary dark:bg-sky-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-container"
+                      >
+                        Ver Todas las Convocatorias
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Search className="w-12 h-12 text-on-surface-variant mx-auto opacity-50" />
+                      <h3 className="font-headline-sm text-lg font-bold text-primary dark:text-sky-300">
+                        No encontramos becas con los filtros seleccionados
+                      </h3>
+                      <p className="text-sm text-on-surface-variant dark:text-slate-400 max-w-md mx-auto">
+                        Prueba ajustando los términos de búsqueda o haz clic en "Limpiar" para ver
+                        las 18+ becas disponibles.
+                      </p>
+                      <button
+                        onClick={clearFilters}
+                        className="bg-primary text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-primary-container"
+                      >
+                        Limpiar Filtros
+                      </button>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {/* Cards Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {displayedScholarships.map((beca) => {
+                      const isFav = favorites.includes(beca.id);
+                      return (
+                        <Card key={beca.id} className="hover:shadow-xl transition-all group">
+                          <div>
+                            <CardHeader className="h-44 overflow-hidden">
+                              <img
+                                src={beca.imageUrl}
+                                alt={beca.title}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+                              {/* Top Badges */}
+                              <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+                                <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-semibold">
+                                  <MapPin className="w-3.5 h-3.5 text-sky-400" />
+                                  <span>{beca.country}</span>
+                                </div>
+
+                                <button
+                                  onClick={(e) => toggleFavorite(beca.id, e)}
+                                  className={`p-2 rounded-full backdrop-blur-md transition-colors ${
+                                    isFav
+                                      ? "bg-red-500 text-white"
+                                      : "bg-black/40 text-white hover:bg-black/60"
+                                  }`}
+                                  title={isFav ? "Quitar de favoritos" : "Guardar beca"}
+                                >
+                                  <Heart className={`w-4 h-4 ${isFav ? "fill-white" : ""}`} />
+                                </button>
+                              </div>
+
+                              {/* Deadline Alert Banner */}
+                              <div className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-amber-500/90 text-amber-950 font-bold px-3 py-1 rounded-lg text-xs backdrop-blur-xs">
+                                <Clock className="w-3.5 h-3.5" />
+                                <span>{beca.deadline}</span>
+                              </div>
+
+                              {/* Verified Portal Indicator */}
+                              {beca.officialPortalName && (
+                                <Badge
+                                  variant="official"
+                                  size="sm"
+                                  className="absolute bottom-3 right-3 rounded backdrop-blur-xs"
+                                >
+                                  <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                                  <span>Oficial</span>
+                                </Badge>
+                              )}
+                            </CardHeader>
+
+                            <CardContent>
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                {beca.educationLevel && (
+                                  <Badge variant="level" className="capitalize">
+                                    {EDUCATION_LEVEL_LABELS[beca.educationLevel] ??
+                                      beca.educationLevel}
+                                  </Badge>
+                                )}
+                                <Badge variant="support">{beca.supportType}</Badge>
+                                {beca.institutionType && (
+                                  <Badge variant="institution">{beca.institutionType}</Badge>
+                                )}
+                                <span className="text-xs text-on-surface-variant dark:text-slate-400 font-medium">
+                                  • {beca.area}
+                                </span>
+                              </div>
+
+                              <CardTitle className="group-hover:text-secondary transition-colors">
+                                {beca.title}
+                              </CardTitle>
+
+                              <p className="text-xs font-semibold text-on-surface-variant dark:text-slate-300 line-clamp-1">
+                                {beca.institution}
+                              </p>
+
+                              <p className="text-sm text-on-surface-variant dark:text-slate-400 line-clamp-2 leading-relaxed">
+                                {beca.description}
+                              </p>
+                            </CardContent>
+                          </div>
+
+                          <CardFooter>
+                            <Button
+                              variant="soft"
+                              size="sm"
+                              onClick={() => setSelectedScholarship(beca)}
+                              className="flex-1"
+                            >
+                              <BookOpen className="w-3.5 h-3.5" />
+                              <span>Ver Detalles</span>
+                            </Button>
+
+                            <Button variant="success" size="sm" asChild>
+                              <a
+                                href={generateGoogleCalendarUrl({
+                                  title: `Límite Postulación Beca: ${beca.title}`,
+                                  details: `Fecha límite de la convocatoria para ${beca.title} de ${beca.institution}. Enlace oficial: ${beca.link}`,
+                                  startDate: beca.deadlineDate,
+                                  location: beca.country,
+                                })}
+                                target="_blank"
+                                rel="noreferrer"
+                                title="Añadir fecha límite a Google Calendar"
+                              >
+                                <CalendarIcon className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">Calendar</span>
+                              </a>
+                            </Button>
+                          </CardFooter>
+                        </Card>
+                      );
+                    })}
+                  </div>
+
+                  {/* Bottom Pagination & Lazy Loading Section */}
+                  <div className="pt-2">
+                    {displayMode === "continuous" ? (
+                      /* Lazy Loading / Infinite Scroll Mode */
+                      <div className="bg-surface-container-lowest dark:bg-slate-800 p-6 rounded-2xl border border-outline-variant/40 dark:border-slate-700 text-center space-y-4">
+                        {/* Progress Bar */}
+                        <div className="max-w-md mx-auto space-y-1.5">
+                          <div className="flex items-center justify-between text-xs text-on-surface-variant dark:text-slate-400 font-medium">
+                            <span>Progreso de carga</span>
+                            <span>
+                              {displayedScholarships.length} de {filteredScholarships.length} (
+                              {Math.round(
+                                (displayedScholarships.length / filteredScholarships.length) * 100
+                              )}
+                              %)
+                            </span>
+                          </div>
+                          <div className="w-full bg-surface-container dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                            <div
+                              className="bg-secondary dark:bg-teal-400 h-full rounded-full transition-all duration-300"
+                              style={{
+                                width: `${(displayedScholarships.length / filteredScholarships.length) * 100}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        {displayedScholarships.length < filteredScholarships.length ? (
+                          <div className="space-y-2">
+                            <button
+                              type="button"
+                              onClick={handleLoadMore}
+                              id="btn-load-more-scholarships"
+                              className="btn-tactile inline-flex items-center gap-2 bg-secondary dark:bg-teal-600 hover:bg-secondary/90 text-white font-bold text-sm px-6 py-3 rounded-xl shadow-md hover:shadow-lg transition-all"
+                            >
+                              <ArrowDownCircle className="w-4 h-4 animate-bounce" />
+                              <span>
+                                Cargar Más Convocatorias (+
+                                {Math.min(
+                                  itemsPerPage > 0 ? itemsPerPage : 6,
+                                  filteredScholarships.length - displayedScholarships.length
+                                )}
+                                )
+                              </span>
+                            </button>
+                            <p className="text-xs text-on-surface-variant dark:text-slate-400">
+                              Quedan {filteredScholarships.length - displayedScholarships.length}{" "}
+                              becas por mostrar
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-2 py-2">
+                            <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-1.5">
+                              <CheckCircle2 className="w-4 h-4" />
+                              <span>
+                                Has llegado al final de las {filteredScholarships.length}{" "}
+                                convocatorias
+                              </span>
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (mainListRef.current) {
+                                  mainListRef.current.scrollIntoView({
+                                    behavior: "smooth",
+                                    block: "start",
+                                  });
+                                }
+                              }}
+                              className="btn-tactile text-xs font-semibold text-secondary dark:text-teal-300 hover:underline inline-block py-1 px-2"
+                            >
+                              Volver arriba del listado ↑
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      /* Standard Numbered Pagination Mode */
+                      itemsPerPage > 0 &&
+                      totalPages > 1 && (
+                        <div className="bg-surface-container-lowest dark:bg-slate-800 p-4 md:p-6 rounded-2xl border border-outline-variant/40 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
+                          <div className="text-xs md:text-sm text-on-surface-variant dark:text-slate-400 font-medium">
+                            Página <strong>{validCurrentPage}</strong> de{" "}
+                            <strong>{totalPages}</strong> ({filteredScholarships.length}{" "}
+                            convocatorias)
+                          </div>
+
+                          {/* Navigation Controls */}
+                          <div className="flex items-center gap-1.5">
+                            {/* First Page */}
+                            <button
+                              type="button"
+                              onClick={() => handlePageChange(1)}
+                              disabled={validCurrentPage === 1}
+                              aria-label="Primera página"
+                              id="pagination-first-page"
+                              className="btn-tactile p-2 rounded-xl border border-outline-variant/40 dark:border-slate-700 text-on-surface dark:text-slate-200 hover:bg-surface-container dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                            >
+                              <ChevronsLeft className="w-4 h-4" />
+                            </button>
+
+                            {/* Previous Page */}
+                            <button
+                              type="button"
+                              onClick={() => handlePageChange(validCurrentPage - 1)}
+                              disabled={validCurrentPage === 1}
+                              aria-label="Página anterior"
+                              id="pagination-prev-page"
+                              className="btn-tactile px-3 py-2 rounded-xl border border-outline-variant/40 dark:border-slate-700 text-xs font-bold text-on-surface dark:text-slate-200 hover:bg-surface-container dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-1"
+                            >
+                              <ChevronLeft className="w-4 h-4" />
+                              <span className="hidden md:inline">Anterior</span>
+                            </button>
+
+                            {/* Numbered Page Buttons */}
+                            <div className="flex items-center gap-1">
+                              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                .filter((page) => {
+                                  if (page === 1 || page === totalPages) return true;
+                                  return Math.abs(page - validCurrentPage) <= 1;
+                                })
+                                .map((page, idx, arr) => {
+                                  const prevPage = arr[idx - 1];
+                                  const showEllipsisBefore = prevPage && page - prevPage > 1;
+
+                                  return (
+                                    <React.Fragment key={page}>
+                                      {showEllipsisBefore && (
+                                        <span className="px-1 text-xs text-on-surface-variant dark:text-slate-500 font-bold">
+                                          …
+                                        </span>
+                                      )}
+                                      <button
+                                        type="button"
+                                        onClick={() => handlePageChange(page)}
+                                        id={`pagination-page-${page}`}
+                                        aria-current={
+                                          page === validCurrentPage ? "page" : undefined
+                                        }
+                                        className={`btn-tactile w-9 h-9 rounded-xl text-xs font-bold transition-all flex items-center justify-center ${
+                                          page === validCurrentPage
+                                            ? "bg-primary text-white dark:bg-sky-600 shadow-sm ring-2 ring-primary/20"
+                                            : "border border-outline-variant/40 dark:border-slate-700 text-on-surface dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700"
+                                        }`}
+                                      >
+                                        {page}
+                                      </button>
+                                    </React.Fragment>
+                                  );
+                                })}
+                            </div>
+
+                            {/* Next Page */}
+                            <button
+                              type="button"
+                              onClick={() => handlePageChange(validCurrentPage + 1)}
+                              disabled={validCurrentPage === totalPages}
+                              aria-label="Página siguiente"
+                              id="pagination-next-page"
+                              className="btn-tactile px-3 py-2 rounded-xl border border-outline-variant/40 dark:border-slate-700 text-xs font-bold text-on-surface dark:text-slate-200 hover:bg-surface-container dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-1"
+                            >
+                              <span className="hidden md:inline">Siguiente</span>
+                              <ChevronRight className="w-4 h-4" />
+                            </button>
+
+                            {/* Last Page */}
+                            <button
+                              type="button"
+                              onClick={() => handlePageChange(totalPages)}
+                              disabled={validCurrentPage === totalPages}
+                              aria-label="Última página"
+                              id="pagination-last-page"
+                              className="btn-tactile p-2 rounded-xl border border-outline-variant/40 dark:border-slate-700 text-on-surface dark:text-slate-200 hover:bg-surface-container dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                            >
+                              <ChevronsRight className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+            </TabsContent>
           </main>
         </div>
-      </div>
+      </Tabs>
 
       {/* Suggest Official Scholarship Modal */}
       {showSuggestModal && (

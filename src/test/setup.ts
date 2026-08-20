@@ -31,6 +31,21 @@ if (hasDom) {
 
   // Mock scrollIntoView
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
+
+  /**
+   * Radix primitives measure their trigger and capture the pointer while a
+   * listbox is open. jsdom implements neither, so without these a Select
+   * throws on open and the failure reads as a component bug.
+   */
+  const globals = window as unknown as { ResizeObserver?: unknown };
+  globals.ResizeObserver ??= class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+  window.HTMLElement.prototype.hasPointerCapture ??= vi.fn(() => false);
+  window.HTMLElement.prototype.setPointerCapture ??= vi.fn();
+  window.HTMLElement.prototype.releasePointerCapture ??= vi.fn();
 }
 
 // Mock Firebase SDK

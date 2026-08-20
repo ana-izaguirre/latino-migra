@@ -10,6 +10,7 @@ Current state of the system. Verified against the code, not a target design.
 | Build | Vite | 6 |
 | Styling | Tailwind CSS (via `@tailwindcss/vite`) | 4 |
 | Icons | lucide-react | 0.546 |
+| UI primitives | shadcn/ui over Radix (`dialog`, `select`, `tabs`, `slot`) | 1.x / 2.x |
 | Maps | `@vis.gl/react-google-maps` | 1.9 |
 | Database | Firebase Firestore (client SDK) | 12 |
 | Auth | Firebase Auth — Google popup | 12 |
@@ -34,6 +35,7 @@ Approximately 19,400 lines of TypeScript across 88 tracked files.
 │   ├── types.ts             Shared domain types
 │   ├── index.css            Tailwind theme, mobile ergonomics, animations, focus
 │   ├── components/          21 components, one per screen plus shared widgets
+│   │   └── ui/             shadcn/ui primitives, restyled to the app theme
 │   ├── lib/                 firebase, i18n, currency, preferences, sanitize, auth, calendar
 │   ├── data/                6 static TypeScript datasets (135 KB)
 │   └── test/                Vitest setup, provider helper, server-side tests
@@ -72,6 +74,27 @@ business rules, UI state and presentation in a single file:
 Shared widgets: `TopNavBar`, `MobileBottomNav`, `Footer`, `Breadcrumbs`,
 `FloatingChatWidget`, `ScrollTopBottomButton`, `AuthModal`,
 `NotificationSettingsModal`, `CalendarAgendaButton`.
+
+#### `src/components/ui` — shadcn/ui primitives
+
+Generated components kept in the repository and edited, which is how shadcn/ui
+is meant to be used: they are source, not a dependency to upgrade.
+
+`Button`, `Badge`, `Card`, `Input` are presentational; `Select`, `Sheet` and
+`Tabs` wrap Radix and bring the keyboard and screen-reader behaviour the
+hand-rolled equivalents lacked.
+
+Two decisions constrain them:
+
+- **The app theme wins.** `components.json` sets `cssVariables: false`, so the
+  primitives carry no palette of their own and paint with the `@theme` tokens
+  in `src/index.css`. What shadcn does ship with its own values — `rounded-md`
+  (6 px) and `h-9` — was changed to the `rounded-xl` (12 px) and 40 px control
+  the rest of the app uses. Re-running `npx shadcn add` overwrites a file, so
+  that adjustment has to be redone when it does.
+- **Radix owns modality.** `Sheet` locks the background scroll itself, so a
+  caller must not also pass its state to `useBodyScrollLock`; two owners of
+  one lock release in the wrong order.
 
 ### `src/data` — 135 KB, bundled into the client
 

@@ -17,12 +17,12 @@ semantic layer, which is not visible, remains largely unaddressed.
 | 1.4.3 Contrast | **Needs measurement** | Frequent `text-[10px]` and `text-[11px]` on tinted backgrounds; not yet measured |
 | 1.4.4 Resize text | Passes | Relative units throughout; no fixed-height text containers |
 | 1.4.10 Reflow | Passes | Verified by E2E: no horizontal document scroll on any screen at 390 px |
-| 2.1.1 Keyboard | **Partial** | Menus and the mobile drawer close on Escape. Modals do not trap focus and mostly cannot be dismissed by keyboard |
+| 2.1.1 Keyboard | **Partial** | Menus and the mobile drawer close on Escape. The Becas filter sheet is a Radix dialog and traps focus, restores it on close and dismisses on Escape. The remaining 11 hand-rolled overlays do neither |
 | 2.3.3 Animation from interactions | Passes | `prefers-reduced-motion` honoured in `src/index.css` |
 | 2.4.7 Focus visible | Passes | Global 3 px `:focus-visible` ring in `src/index.css` |
 | 2.5.5 Target size | Passes | 44 px minimum on touch layouts, enforced by E2E assertions |
 | 3.3.2 Labels or instructions | **Fails** | Form controls rely on placeholders; almost no associated `<label>` |
-| 4.1.2 Name, role, value | **Fails** | 12 `fixed inset-0` modal overlays; 2 declare `role="dialog"`, 1 declares `aria-modal` |
+| 4.1.2 Name, role, value | **Partial** | 11 hand-rolled `fixed inset-0` overlays remain. The Becas filter sheet, its five filter listboxes and the view switcher now carry real dialog, listbox and tab semantics from Radix |
 | 4.1.3 Status messages | **Fails** | Zero `aria-live`, `role="status"` or `role="alert"` anywhere |
 
 ## What is in place
