@@ -29,6 +29,10 @@ describe("Comunidad Component", () => {
     const newPostBtn = screen.getByRole("button", { name: /Crear Publicación/i });
     fireEvent.click(newPostBtn);
 
-    expect(await screen.findByText(/Nueva Publicación en la Comunidad/i)).toBeInTheDocument();
+    // By role: the dialog also carries the same string as its accessible name,
+    // which Radix renders visually hidden.
+    expect(
+      await screen.findByRole("heading", { name: /Nueva Publicación en la Comunidad/i })
+    ).toBeInTheDocument();
   });
 });

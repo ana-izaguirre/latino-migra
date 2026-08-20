@@ -78,6 +78,13 @@ Recently addressed and verified by tests:
   them in Firestore and nothing in the browser, so they follow the account to
   another device. Signing in migrates the cookie and deletes it. A **Clear my
   preferences** control in the preferences menu empties both.
+- Every dialog is one component, `src/components/ui/Modal.tsx`, built on
+  `@radix-ui/react-dialog`. A sheet rising from the bottom edge on a phone, a
+  centred dialog on a pointer device. Eleven of the twelve hand-written overlays
+  are gone; the twelfth is the navigation drawer, which is a different shape and
+  keeps its own implementation.
+- Focus is trapped inside an open dialog and returns to the control that opened
+  it. Neither was true of any overlay before.
 - The scholarship catalogue says where its list came from. The bundled dataset
   renders immediately and Firestore replaces it, which used to happen silently —
   and a failed load was indistinguishable from a successful one. A polite live

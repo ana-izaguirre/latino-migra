@@ -53,30 +53,6 @@ body {
   min-width: 0;
 }
 
-/* Modal overlays.
-
-   Ten overlays in this app are `fixed inset-0 flex items-center justify-center`
-   with no scroll container. A panel taller than the viewport is then centred
-   and clipped at BOTH ends, with no way to reach what overflows: the modal
-   cannot scroll, and swiping scrolls the page behind it while the fixed panel
-   stays put. On a phone that reads as the screen being stuck.
-
-   `align-items: flex-start` plus `margin-block: auto` on the panel keeps it
-   centred when it fits and lets it scroll when it does not -- flex centring
-   alone clips the overflow unreachably. */
-.lm-overlay {
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  align-items: flex-start;
-}
-
-.lm-overlay > * {
-  /* Centres the panel while it fits and lets it scroll once it does not --
-     flex centring alone clips the overflow unreachably. */
-  margin-block: auto;
-}
-
 /* Any element that opts into scrolling gets momentum + contained overscroll,
    so scrolling a drawer/sheet never chains to the page underneath. */
 .overflow-y-auto,

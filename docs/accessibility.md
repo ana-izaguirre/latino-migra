@@ -41,6 +41,22 @@ semantic layer, which is not visible, remains largely unaddressed.
 - Escape closes the drawer and both desktop menus.
 - Semantic landmarks: `<nav>`, `<main>`, `<header>`, `<footer>` are used.
 
+## Dialogs
+
+All dialogs render through `src/components/ui/Modal.tsx`, on Radix's dialog
+primitive. That supplies the focus trap, `Escape`, the portal, `aria-modal` and
+the `aria-labelledby`/`aria-describedby` wiring — none of which the twelve
+hand-written overlays had between them. With one open, the page behind is
+hidden from assistive technology and unreachable by Tab.
+
+Focus return is handled in the component rather than by Radix: every dialog is
+controlled from an external button rather than a `Dialog.Trigger`, so Radix had
+nothing to restore to and focus fell to `<body>`. The component remembers what
+was focused when the dialog opened.
+
+A custom `header` renders its own visible heading, so the accessible name is a
+visually hidden `span` rather than a second heading with the same text.
+
 ## What is missing
 
 **Form labels.** 24 inputs, one `htmlFor`. Screen readers announce "edit box"

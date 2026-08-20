@@ -11,7 +11,6 @@ import {
   AlertTriangle,
   CornerDownRight,
   Send,
-  X,
   BookmarkCheck,
   Cloud,
   Loader2,
@@ -20,7 +19,6 @@ import {
 import { ForumPost, NavigationTab, GoogleUser } from "../types";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { isAdmin } from "../lib/authUtils";
-import { useBodyScrollLock } from "../lib/useBodyScrollLock";
 import { useLanguage } from "../lib/i18n";
 import {
   fetchCommunityPostsPaginated,
@@ -31,6 +29,7 @@ import {
   CloudForumPost,
 } from "../lib/firebase";
 import { QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
+import { Modal } from "./ui/Modal";
 
 const INITIAL_SEED_POSTS: Omit<CloudForumPost, "id">[] = [
   {
@@ -111,7 +110,6 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [showNewPostModal, setShowNewPostModal] = useState<boolean>(false);
 
-  useBodyScrollLock(showNewPostModal);
   const [expandedRepliesPostId, setExpandedRepliesPostId] = useState<string | null>(null);
   const [replyInput, setReplyInput] = useState<string>("");
 
@@ -796,9 +794,17 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
 
       {/* New Post Modal with Real-time Duplicate Detection */}
       {showNewPostModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 lm-overlay">
-          <div className="bg-surface-container-lowest dark:bg-slate-800 rounded-3xl max-w-2xl w-full p-6 md:p-8 space-y-5 shadow-2xl border border-outline-variant/40 dark:border-slate-700 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-outline-variant/30 dark:border-slate-700 pb-3">
+        <Modal
+          open={showNewPostModal}
+          onOpenChange={(next) => {
+            if (!next) setShowNewPostModal(false);
+          }}
+          title={
+            language === "en" ? "Create New Community Topic" : "Nueva Publicación en la Comunidad"
+          }
+          size="lg"
+          header={
+            <div className="border-b border-outline-variant/30 dark:border-slate-700 pb-3">
               <div>
                 <h3 className="font-headline-md text-xl font-bold text-primary dark:text-sky-300 flex items-center gap-2">
                   <MessageSquare className="w-5 h-5 text-secondary" />
@@ -814,205 +820,197 @@ export const Comunidad: React.FC<ComunidadProps> = ({ currentUser, setActiveTab 
                     : "Consulta una duda o comparte tu experiencia migratoria real (Guardado permanente en la nube)"}
                 </p>
               </div>
-              <button
-                onClick={() => setShowNewPostModal(false)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-              >
-                <X className="w-5 h-5" />
-              </button>
+            </div>
+          }
+        >
+          <form onSubmit={handleCreatePost} className="space-y-4">
+            {/* Title input */}
+            <div className="space-y-1">
+              <label className="block text-xs font-bold text-primary dark:text-sky-300">
+                {language === "en" ? "Title / Question *" : "Título de la Consulta o Experiencia *"}
+              </label>
+              <input
+                type="text"
+                required
+                value={postTitle}
+                onChange={(e) => setPostTitle(e.target.value)}
+                placeholder={
+                  language === "en"
+                    ? "e.g., How to get student health insurance in Spain without copays?"
+                    : "ej. ¿Cómo tramitar el seguro médico en España sin copagos para la visa?"
+                }
+                className="w-full p-3 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
+              />
             </div>
 
-            <form onSubmit={handleCreatePost} className="space-y-4">
-              {/* Title input */}
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-primary dark:text-sky-300">
+            {/* Duplicate Prevention Alert Box */}
+            {potentialDuplicates.length > 0 && (
+              <div className="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 rounded-2xl space-y-2 animate-in fade-in duration-200">
+                <div className="flex items-center gap-2 text-xs font-bold text-amber-900 dark:text-amber-300">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>
+                    {t(
+                      "community.duplicateAlert",
+                      "¡Prevención de Duplicados! Temas similares ya respondidos:"
+                    )}
+                  </span>
+                </div>
+                <div className="space-y-1.5 pl-6">
+                  {potentialDuplicates.slice(0, 2).map((dup) => (
+                    <div
+                      key={dup.id}
+                      className="text-xs text-amber-800 dark:text-amber-200 flex items-start justify-between gap-2"
+                    >
+                      <span className="font-semibold truncate">• {dup.title}</span>
+                      <span className="text-[10px] bg-amber-200 dark:bg-amber-900 px-2 py-0.5 rounded-full font-bold shrink-0">
+                        {dup.replies} respuestas
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[11px] text-amber-800/80 dark:text-amber-300/80 pl-6">
                   {language === "en"
-                    ? "Title / Question *"
-                    : "Título de la Consulta o Experiencia *"}
+                    ? "If your question is different, feel free to proceed with publishing below."
+                    : "Si tu caso tiene detalles particulares, puedes continuar publicando sin problemas."}
+                </p>
+              </div>
+            )}
+
+            {/* Categoría y Destino */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-primary dark:text-sky-300 mb-1">
+                  {language === "en" ? "Category" : "Categoría"}
+                </label>
+                <select
+                  value={postCategory}
+                  onChange={(e) => setPostCategory(e.target.value)}
+                  className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
+                >
+                  {categories
+                    .filter((c) => c !== "Todas")
+                    .map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-primary dark:text-sky-300 mb-1">
+                  {language === "en" ? "Country of Destination" : "País de Destino"}
+                </label>
+                <select
+                  value={postCountry}
+                  onChange={(e) => setPostCountry(e.target.value)}
+                  className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
+                >
+                  <option value="España">🇪🇸 España</option>
+                  <option value="Alemania">🇩🇪 Alemania</option>
+                  <option value="Irlanda">🇮🇪 Irlanda</option>
+                  <option value="Canadá">🇨🇦 Canadá</option>
+                  <option value="Francia">🇫🇷 Francia</option>
+                  <option value="Italia">🇮🇹 Italia</option>
+                  <option value="EE.UU.">🇺🇸 Estados Unidos</option>
+                  <option value="Australia">🇦🇺 Australia</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-primary dark:text-sky-300 mb-1">
+                  {language === "en" ? "City" : "Ciudad"}
                 </label>
                 <input
                   type="text"
-                  required
-                  value={postTitle}
-                  onChange={(e) => setPostTitle(e.target.value)}
-                  placeholder={
-                    language === "en"
-                      ? "e.g., How to get student health insurance in Spain without copays?"
-                      : "ej. ¿Cómo tramitar el seguro médico en España sin copagos para la visa?"
-                  }
-                  className="w-full p-3 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
+                  value={postCity}
+                  onChange={(e) => setPostCity(e.target.value)}
+                  placeholder="ej. Madrid, Barcelona, Valencia..."
+                  className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
                 />
               </div>
+            </div>
 
-              {/* Duplicate Prevention Alert Box */}
-              {potentialDuplicates.length > 0 && (
-                <div className="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 rounded-2xl space-y-2 animate-in fade-in duration-200">
-                  <div className="flex items-center gap-2 text-xs font-bold text-amber-900 dark:text-amber-300">
-                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                    <span>
-                      {t(
-                        "community.duplicateAlert",
-                        "¡Prevención de Duplicados! Temas similares ya respondidos:"
-                      )}
-                    </span>
-                  </div>
-                  <div className="space-y-1.5 pl-6">
-                    {potentialDuplicates.slice(0, 2).map((dup) => (
-                      <div
-                        key={dup.id}
-                        className="text-xs text-amber-800 dark:text-amber-200 flex items-start justify-between gap-2"
-                      >
-                        <span className="font-semibold truncate">• {dup.title}</span>
-                        <span className="text-[10px] bg-amber-200 dark:bg-amber-900 px-2 py-0.5 rounded-full font-bold shrink-0">
-                          {dup.replies} respuestas
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-[11px] text-amber-800/80 dark:text-amber-300/80 pl-6">
-                    {language === "en"
-                      ? "If your question is different, feel free to proceed with publishing below."
-                      : "Si tu caso tiene detalles particulares, puedes continuar publicando sin problemas."}
-                  </p>
-                </div>
-              )}
-
-              {/* Categoría y Destino */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-primary dark:text-sky-300 mb-1">
-                    {language === "en" ? "Category" : "Categoría"}
-                  </label>
-                  <select
-                    value={postCategory}
-                    onChange={(e) => setPostCategory(e.target.value)}
-                    className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
-                  >
-                    {categories
-                      .filter((c) => c !== "Todas")
-                      .map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-primary dark:text-sky-300 mb-1">
-                    {language === "en" ? "Country of Destination" : "País de Destino"}
-                  </label>
-                  <select
-                    value={postCountry}
-                    onChange={(e) => setPostCountry(e.target.value)}
-                    className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
-                  >
-                    <option value="España">🇪🇸 España</option>
-                    <option value="Alemania">🇩🇪 Alemania</option>
-                    <option value="Irlanda">🇮🇪 Irlanda</option>
-                    <option value="Canadá">🇨🇦 Canadá</option>
-                    <option value="Francia">🇫🇷 Francia</option>
-                    <option value="Italia">🇮🇹 Italia</option>
-                    <option value="EE.UU.">🇺🇸 Estados Unidos</option>
-                    <option value="Australia">🇦🇺 Australia</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-primary dark:text-sky-300 mb-1">
-                    {language === "en" ? "City" : "Ciudad"}
-                  </label>
-                  <input
-                    type="text"
-                    value={postCity}
-                    onChange={(e) => setPostCity(e.target.value)}
-                    placeholder="ej. Madrid, Barcelona, Valencia..."
-                    className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
-                  />
-                </div>
-              </div>
-
-              {/* Autor info */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-primary dark:text-sky-300 mb-1">
-                    {language === "en" ? "Your Name or Alias" : "Tu Nombre o Alias"}
-                  </label>
-                  <input
-                    type="text"
-                    value={postAuthor}
-                    onChange={(e) => setPostAuthor(e.target.value)}
-                    placeholder="ej. Mariana S."
-                    className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-primary dark:text-sky-300 mb-1">
-                    {language === "en" ? "Your Origin Country" : "Tu País de Origen o Ubicación"}
-                  </label>
-                  <select
-                    value={postAuthorCountry}
-                    onChange={(e) => setPostAuthorCountry(e.target.value)}
-                    className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
-                  >
-                    <option value="España">🇪🇸 España</option>
-                    <option value="Colombia">🇨🇴 Colombia</option>
-                    <option value="México">🇲🇽 México</option>
-                    <option value="Perú">🇵🇪 Perú</option>
-                    <option value="Argentina">🇦🇷 Argentina</option>
-                    <option value="Chile">🇨🇱 Chile</option>
-                    <option value="Ecuador">🇪🇨 Ecuador</option>
-                    <option value="Venezuela">🇻🇪 Venezuela</option>
-                    <option value="Bolivia">🇧🇴 Bolivia</option>
-                    <option value="Guatemala">🇬🇹 Guatemala</option>
-                    <option value="Costa Rica">🇨🇷 Costa Rica</option>
-                    <option value="Honduras">🇭🇳 Honduras</option>
-                    <option value="El Salvador">🇸🇻 El Salvador</option>
-                    <option value="Rep. Dominicana">🇩🇴 Rep. Dominicana</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Contenido */}
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-primary dark:text-sky-300">
-                  {language === "en" ? "Detailed Description *" : "Detalle o Consulta *"}
+            {/* Autor info */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-primary dark:text-sky-300 mb-1">
+                  {language === "en" ? "Your Name or Alias" : "Tu Nombre o Alias"}
                 </label>
-                <textarea
-                  rows={4}
-                  required
-                  value={postContent}
-                  onChange={(e) => setPostContent(e.target.value)}
-                  placeholder={
-                    language === "en"
-                      ? "Explain your situation, visa timeline, questions or advice for others..."
-                      : "Explica tu situación, fechas de tu viaje, dudas específicas o recomendaciones para otros postulantes..."
-                  }
-                  className="w-full p-3 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100 leading-relaxed"
+                <input
+                  type="text"
+                  value={postAuthor}
+                  onChange={(e) => setPostAuthor(e.target.value)}
+                  placeholder="ej. Mariana S."
+                  className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-2 border-t border-outline-variant/20 dark:border-slate-700">
-                <button
-                  type="button"
-                  onClick={() => setShowNewPostModal(false)}
-                  className="px-4 py-2.5 text-xs font-bold text-on-surface-variant hover:text-primary dark:hover:text-sky-300 cursor-pointer"
+              <div>
+                <label className="block text-xs font-bold text-primary dark:text-sky-300 mb-1">
+                  {language === "en" ? "Your Origin Country" : "Tu País de Origen o Ubicación"}
+                </label>
+                <select
+                  value={postAuthorCountry}
+                  onChange={(e) => setPostAuthorCountry(e.target.value)}
+                  className="w-full p-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100"
                 >
-                  {language === "en" ? "Cancel" : "Cancelar"}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmittingPost}
-                  className="bg-primary dark:bg-sky-600 text-white px-6 py-2.5 rounded-xl text-xs font-bold hover:bg-primary-container dark:hover:bg-sky-500 shadow-sm transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
-                >
-                  {isSubmittingPost && <Loader2 className="w-4 h-4 animate-spin" />}
-                  <span>{language === "en" ? "Publish to Cloud" : "Publicar en la Nube"}</span>
-                </button>
+                  <option value="España">🇪🇸 España</option>
+                  <option value="Colombia">🇨🇴 Colombia</option>
+                  <option value="México">🇲🇽 México</option>
+                  <option value="Perú">🇵🇪 Perú</option>
+                  <option value="Argentina">🇦🇷 Argentina</option>
+                  <option value="Chile">🇨🇱 Chile</option>
+                  <option value="Ecuador">🇪🇨 Ecuador</option>
+                  <option value="Venezuela">🇻🇪 Venezuela</option>
+                  <option value="Bolivia">🇧🇴 Bolivia</option>
+                  <option value="Guatemala">🇬🇹 Guatemala</option>
+                  <option value="Costa Rica">🇨🇷 Costa Rica</option>
+                  <option value="Honduras">🇭🇳 Honduras</option>
+                  <option value="El Salvador">🇸🇻 El Salvador</option>
+                  <option value="Rep. Dominicana">🇩🇴 Rep. Dominicana</option>
+                </select>
               </div>
-            </form>
-          </div>
-        </div>
+            </div>
+
+            {/* Contenido */}
+            <div className="space-y-1">
+              <label className="block text-xs font-bold text-primary dark:text-sky-300">
+                {language === "en" ? "Detailed Description *" : "Detalle o Consulta *"}
+              </label>
+              <textarea
+                rows={4}
+                required
+                value={postContent}
+                onChange={(e) => setPostContent(e.target.value)}
+                placeholder={
+                  language === "en"
+                    ? "Explain your situation, visa timeline, questions or advice for others..."
+                    : "Explica tu situación, fechas de tu viaje, dudas específicas o recomendaciones para otros postulantes..."
+                }
+                className="w-full p-3 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs font-medium focus:ring-2 focus:ring-secondary outline-none dark:text-slate-100 leading-relaxed"
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2 border-t border-outline-variant/20 dark:border-slate-700">
+              <button
+                type="button"
+                onClick={() => setShowNewPostModal(false)}
+                className="px-4 py-2.5 text-xs font-bold text-on-surface-variant hover:text-primary dark:hover:text-sky-300 cursor-pointer"
+              >
+                {language === "en" ? "Cancel" : "Cancelar"}
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmittingPost}
+                className="bg-primary dark:bg-sky-600 text-white px-6 py-2.5 rounded-xl text-xs font-bold hover:bg-primary-container dark:hover:bg-sky-500 shadow-sm transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
+              >
+                {isSubmittingPost && <Loader2 className="w-4 h-4 animate-spin" />}
+                <span>{language === "en" ? "Publish to Cloud" : "Publicar en la Nube"}</span>
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
     </div>
   );
