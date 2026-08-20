@@ -108,6 +108,19 @@ Recently addressed and verified by tests:
   `useBodyScrollLock` (`src/lib/`) pins the body and restores the reading
   position on close — the same mechanism the drawer already used, now shared by
   all ten overlays.
+- Overlays are positioned against the viewport, not against the page. `<main>`
+  carries `.animate-fade-in`, whose animation used to fill `both`; a filling
+  animation keeps contributing its final `transform`, and Chromium resolves the
+  keyword `none` to the identity matrix, which is still a transform. Any
+  transform makes the element the containing block for its `position: fixed`
+  descendants, so every overlay in the application was laid out against the
+  full height of the page. Measured at 375px: a filter sheet meant to sit at
+  the bottom of the screen was placed at y=3268 inside a 6583px-tall
+  "fixed inset-0" backdrop, which is why modals kept appearing far below the
+  fold on a phone. Every animation in `index.css` that touches `transform` now
+  fills `backwards`; the two opacity-only ones keep `both`, since opacity
+  creates no containing block. `tests/e2e/mobile.spec.ts` pins both the
+  position and the mechanism.
 - Overlays carry `.lm-overlay`, which gives them a scroll container. Flex
   centring clipped a panel taller than the viewport at both ends with no way to
   reach the overflow; `align-items: flex-start` plus auto margins centres it
