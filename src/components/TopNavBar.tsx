@@ -373,13 +373,22 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
         </div>
 
         {/* Search Bar & Actions */}
-        <div className="flex items-center gap-0.5 sm:gap-2 md:gap-3 shrink-0">
+        <div className="flex min-w-0 items-center gap-0.5 sm:gap-2 md:gap-3 shrink-0">
           {/* Greeting for Logged-in User */}
+          {/*
+            The greeting is bounded and truncates. Its row is `shrink-0`, so a
+            greeting free to grow pushes into the navigation beside it: a long
+            first name plus a country chip drew "¡Hola, …!" on top of
+            "Herramientas", and neither string was readable.
+          */}
           {currentUser && (
-            <div className="hidden xl:flex items-center gap-1.5 px-3 py-1 bg-secondary/10 dark:bg-teal-950/40 text-primary dark:text-teal-300 rounded-full text-xs font-semibold border border-secondary/20">
-              <span>👋 ¡Hola, {currentUser.name.split(" ")[0]}!</span>
+            <div
+              id="nav-user-greeting"
+              className="hidden xl:flex min-w-0 max-w-[16rem] items-center gap-1.5 px-3 py-1 bg-secondary/10 dark:bg-teal-950/40 text-primary dark:text-teal-300 rounded-full text-xs font-semibold border border-secondary/20"
+            >
+              <span className="truncate">👋 ¡Hola, {currentUser.name.split(" ")[0]}!</span>
               {currentUser.countryOfOrigin && (
-                <span className="text-[10px] bg-secondary/20 dark:bg-teal-800/60 px-1.5 py-0.5 rounded-full font-bold">
+                <span className="shrink-0 text-[10px] bg-secondary/20 dark:bg-teal-800/60 px-1.5 py-0.5 rounded-full font-bold">
                   {currentUser.countryOfOrigin}
                 </span>
               )}

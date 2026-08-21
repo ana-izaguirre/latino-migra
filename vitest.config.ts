@@ -40,10 +40,10 @@ export default defineConfig({
       // tests, so coverage can only go up. Never lower these to make a build
       // pass — write the test instead.
       thresholds: {
-        statements: 52,
-        branches: 47,
-        functions: 46,
-        lines: 52,
+        statements: 54,
+        branches: 49,
+        functions: 48,
+        lines: 54,
         "src/lib/PreferencesContext.tsx": {
           statements: 95,
           branches: 85,

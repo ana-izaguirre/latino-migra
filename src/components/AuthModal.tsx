@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ShieldCheck, Bookmark, Calendar, Sparkles, LogOut } from "lucide-react";
+import { ShieldCheck, Bookmark, Calendar, Sparkles, LogOut, AlertTriangle } from "lucide-react";
 import { GoogleUser } from "../types";
 import { signInWithGoogle, isUserAdmin } from "../lib/firebase";
 import { getSafeImageUrl } from "../lib/sanitize";
@@ -13,6 +13,27 @@ interface AuthModalProps {
   onSignOut: () => void;
 }
 
+/**
+ * What to tell the visitor when sign-in did not complete.
+ *
+ * Firebase reports the common cases by code. Everything else gets the generic
+ * message rather than the raw error, which is English and mentions Firebase.
+ */
+export function describeSignInError(err: unknown): string {
+  const code = typeof err === "object" && err !== null && "code" in err ? String(err.code) : "";
+
+  if (code === "auth/popup-blocked") {
+    return "Tu navegador bloqueó la ventana de Google. Permite las ventanas emergentes de este sitio e inténtalo de nuevo.";
+  }
+  if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
+    return "Cerraste la ventana de Google antes de terminar. Inténtalo de nuevo cuando quieras.";
+  }
+  if (code === "auth/network-request-failed") {
+    return "No pudimos conectar con Google. Revisa tu conexión e inténtalo de nuevo.";
+  }
+  return "No pudimos completar el inicio de sesión con Google. Inténtalo de nuevo.";
+}
+
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   onClose,
@@ -22,9 +43,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 }) => {
   const [selectedCountry, setSelectedCountry] = useState<string>("Colombia");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  /** Spanish message shown when sign-in did not complete. */
+  const [signInError, setSignInError] = useState<string | null>(null);
 
   const handleFirebaseGoogleSignIn = async () => {
     setIsLoading(true);
+    setSignInError(null);
     try {
       const { user: fbUser, countryOfOrigin } = await signInWithGoogle(selectedCountry);
       // App.tsx resolves this too, from its auth-state subscription, but the two
@@ -49,30 +73,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       onSignIn(userToSignIn);
       onClose();
     } catch (err) {
-      console.warn(
-        "Firebase Auth popup no completado o en modo de prueba, activando acceso rápido:",
-        err
-      );
-      // Demo fallback for local preview if the popup is blocked. The identity
-      // is deliberately generic: it used to be a real administrator's name and
-      // address, which shipped a personal email in the bundle and -- while
-      // isAdmin() still consulted an email allowlist -- handed the admin
-      // interface to anyone whose popup failed to open.
-      const fallbackUser: GoogleUser = {
-        id: "google-user-" + Date.now(),
-        name: "Invitada LatinoMigra",
-        email: "invitado@latinomigra.local",
-        avatar:
-          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-        countryOfOrigin: selectedCountry,
-        signedInAt: new Date().toLocaleDateString("es-ES", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        }),
-      };
-      onSignIn(fallbackUser);
-      onClose();
+      // Never fabricate a session. This branch used to build a
+      // "Invitada LatinoMigra" user and sign the visitor in with it, so a
+      // blocked popup was indistinguishable from a successful sign-in: the
+      // modal closed, the greeting said hello, and everything the visitor
+      // saved went under an id that changed on every attempt — and vanished
+      // on the next reload, because Firebase had never heard of it.
+      console.warn("Google sign-in did not complete:", err);
+      setSignInError(describeSignInError(err));
     } finally {
       setIsLoading(false);
     }
@@ -204,6 +212,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </svg>
             <span>Continuar con Google</span>
           </button>
+
+          {/* A failed sign-in has to be visible: it used to close the modal and
+              hand back a fabricated session instead. */}
+          {signInError && (
+            <p
+              id="auth-signin-error"
+              role="alert"
+              className="flex items-start gap-2 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs font-semibold text-amber-800 dark:text-amber-300"
+            >
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
+              <span>{signInError}</span>
+            </p>
+          )}
 
           {/* Country Selection */}
           <div className="space-y-1.5 pt-2">

@@ -118,4 +118,65 @@ describe("TopNavBar Component", () => {
     render(<TopNavBar {...defaultProps} currentUser={mockUser} />);
     expect(screen.getByText("Ana María")).toBeInTheDocument();
   });
+  /**
+   * The greeting sits in a row marked `shrink-0`, so a greeting free to grow
+   * pushes into the navigation beside it: a long first name plus a country
+   * chip drew "¡Hola, …!" on top of "Herramientas", and neither string was
+   * readable.
+   */
+  describe("the signed-in greeting", () => {
+    const user: GoogleUser = {
+      id: "uid-1",
+      name: "Ana Izaguirre",
+      email: "ana@example.com",
+      avatar: "https://example.com/a.jpg",
+      countryOfOrigin: "Honduras",
+      signedInAt: "21 ago 2026",
+    };
+
+    it("greets by first name", () => {
+      render(<TopNavBar {...defaultProps} currentUser={user} />);
+
+      const greeting = document.getElementById("nav-user-greeting");
+      expect(greeting).toHaveTextContent("¡Hola, Ana!");
+      expect(greeting).toHaveTextContent("Honduras");
+    });
+
+    it("is bounded, so it cannot grow into the navigation", () => {
+      render(<TopNavBar {...defaultProps} currentUser={user} />);
+
+      const greeting = document.getElementById("nav-user-greeting");
+      expect(greeting).toHaveClass("max-w-[16rem]");
+      expect(greeting).toHaveClass("min-w-0");
+    });
+
+    it("truncates a long name instead of widening", () => {
+      render(
+        <TopNavBar
+          {...defaultProps}
+          currentUser={{ ...user, name: "Maríadelascandelarias Izaguirre" }}
+        />
+      );
+
+      const name = document.getElementById("nav-user-greeting")?.firstElementChild;
+      expect(name).toHaveClass("truncate");
+      // The country chip must not be what gives way.
+      expect(document.getElementById("nav-user-greeting")?.lastElementChild).toHaveClass(
+        "shrink-0"
+      );
+    });
+
+    it("is absent when nobody is signed in", () => {
+      render(<TopNavBar {...defaultProps} />);
+      expect(document.getElementById("nav-user-greeting")).toBeNull();
+    });
+
+    it("omits the country chip rather than rendering an empty one", () => {
+      render(<TopNavBar {...defaultProps} currentUser={{ ...user, countryOfOrigin: "" }} />);
+
+      const greeting = document.getElementById("nav-user-greeting");
+      expect(greeting).toHaveTextContent("¡Hola, Ana!");
+      expect(greeting?.children).toHaveLength(1);
+    });
+  });
 });
