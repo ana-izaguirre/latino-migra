@@ -15,6 +15,58 @@ test.describe("Scholarship list on a phone", () => {
     await expect(page.locator("#btn-open-mobile-filters")).toBeVisible();
   });
 
+  /**
+   * The sheet's six filter groups used `wrap`, so each became a block — the
+   * country group alone was 356px — and the six ran to 1435px inside a 716px
+   * dialog. Reaching the last filter meant scrolling past five others (#85).
+   */
+  test("fits its filter groups inside the sheet instead of stacking blocks", async ({ page }) => {
+    await page.locator("#btn-open-mobile-filters").click();
+    const dialog = page.locator('[role="dialog"]');
+    await expect(dialog).toBeVisible();
+
+    const { dialogHeight, contentHeight, groups } = await dialog.evaluate((el) => {
+      const scroller = el.querySelector("div[class*='overflow-y-auto']");
+      return {
+        dialogHeight: Math.round(el.getBoundingClientRect().height),
+        contentHeight: scroller ? scroller.scrollHeight : Number.MAX_SAFE_INTEGER,
+        groups: el.querySelectorAll('[role="group"]').length,
+      };
+    });
+
+    expect(groups).toBeGreaterThanOrEqual(6);
+
+    /*
+      A ratchet, not a target. The wrapped layout measured 1435px against a
+      716px dialog at 375px — over two screens of filters. One row per group
+      brings it to 679px, so anything approaching the old figure is a
+      regression, whatever the exact viewport of the run.
+    */
+    expect(contentHeight).toBeLessThan(900);
+    expect(contentHeight).toBeLessThan(dialogHeight * 1.2);
+  });
+
+  test("keeps each filter group on one row, as the quick filters do", async ({ page }) => {
+    await page.locator("#btn-open-mobile-filters").click();
+    await expect(page.locator('[role="dialog"]')).toBeVisible();
+
+    const rows = await page
+      .locator('[role="dialog"] [role="group"]')
+      .evaluateAll((groups) =>
+        groups.map(
+          (group) =>
+            new Set(
+              Array.from(group.querySelectorAll("button")).map((chip) =>
+                Math.round(chip.getBoundingClientRect().top)
+              )
+            ).size
+        )
+      );
+
+    expect(rows.length).toBeGreaterThan(0);
+    for (const rowCount of rows) expect(rowCount).toBe(1);
+  });
+
   test("has one way to see more, and no numbered pager", async ({ page }) => {
     await expect(page.locator("#btn-load-more-scholarships")).toBeVisible();
 
