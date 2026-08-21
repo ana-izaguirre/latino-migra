@@ -31,13 +31,10 @@ describe("BecasExplorer filters", () => {
     return screen.getByRole("dialog");
   };
 
-  const chooseOption = async (
-    user: ReturnType<typeof userEvent.setup>,
-    triggerId: string,
-    optionName: RegExp
-  ) => {
-    await user.click(document.querySelector(`#${triggerId}`) as HTMLElement);
-    await user.click(await screen.findByRole("option", { name: optionName }));
+  const chooseOption = async (user: ReturnType<typeof userEvent.setup>, chipId: string) => {
+    const chip = document.querySelector(`#${CSS.escape(chipId)}`) as HTMLElement | null;
+    if (!chip) throw new Error(`missing filter chip #${chipId}`);
+    await user.click(chip);
   };
 
   it("opens the filter sheet as a named dialog and moves focus into it", async () => {
@@ -50,7 +47,9 @@ describe("BecasExplorer filters", () => {
     // `aria-hidden` instead, which assistive tech supports more reliably.
     expect(dialog).toHaveAccessibleName(/Filtros de Búsqueda/i);
     expect(dialog.contains(document.activeElement)).toBe(true);
-    expect(within(dialog).getByRole("button", { name: /Cerrar filtros/i })).toBeInTheDocument();
+    // The shared `Modal` labels its own close button; the panel does not
+    // supply one.
+    expect(within(dialog).getByRole("button", { name: /Cerrar modal/i })).toBeInTheDocument();
   });
 
   it("closes the filter sheet on Escape", async () => {
@@ -69,7 +68,7 @@ describe("BecasExplorer filters", () => {
     await openFilters(user);
     expect(filteredCount()).toBe(SCHOLARSHIPS_DATA.length);
 
-    await chooseOption(user, "mobile-filter-country", /^Alemania$/);
+    await chooseOption(user, "sheet-country-Alemania");
 
     const expected = SCHOLARSHIPS_DATA.filter((s) => s.country === "Alemania").length;
     expect(expected).toBeGreaterThan(0);
@@ -81,7 +80,7 @@ describe("BecasExplorer filters", () => {
     render(<BecasExplorer {...defaultProps} />);
 
     await openFilters(user);
-    await chooseOption(user, "mobile-filter-support", /^Beca Parcial$/);
+    await chooseOption(user, "sheet-support-Beca Parcial");
 
     const expected = SCHOLARSHIPS_DATA.filter((s) => s.supportType === "Beca Parcial").length;
     expect(expected).toBeGreaterThan(0);
@@ -93,7 +92,7 @@ describe("BecasExplorer filters", () => {
     render(<BecasExplorer {...defaultProps} />);
 
     await openFilters(user);
-    await chooseOption(user, "mobile-filter-institution", /^Gubernamental$/);
+    await chooseOption(user, "sheet-institution-Gubernamental");
 
     const expected = SCHOLARSHIPS_DATA.filter((s) => s.institutionType === "Gubernamental").length;
     expect(expected).toBeGreaterThan(0);
@@ -101,17 +100,28 @@ describe("BecasExplorer filters", () => {
   });
 
   it("narrows the catalogue by closing date", async () => {
-    const user = userEvent.setup();
+    // The dataset carries fixed deadlines, so the clock is fixed too.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date("2026-10-01T12:00:00Z"));
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<BecasExplorer {...defaultProps} />);
 
     await openFilters(user);
-    await chooseOption(user, "mobile-filter-deadline", /Próximos 30 días/);
+    await chooseOption(user, "sheet-deadline-urgent");
 
-    const expected = SCHOLARSHIPS_DATA.filter(
-      (s) => (s.daysLeft !== undefined && s.daysLeft <= 30) || Boolean(s.isUrgent)
-    ).length;
+    // Derived from the deadline, not from `daysLeft`: no scholarship carries
+    // that field, so the previous expectation here was measuring `isUrgent`
+    // alone — a flag written once at creation and never recomputed.
+    const day = 86_400_000;
+    const today = new Date("2026-10-01T00:00:00Z").getTime();
+    const expected = SCHOLARSHIPS_DATA.filter((s) => {
+      const days = Math.round((new Date(s.deadlineDate).getTime() - today) / day);
+      return days >= 0 && days <= 30;
+    }).length;
+
     expect(expected).toBeGreaterThan(0);
     expect(filteredCount()).toBe(expected);
+    vi.useRealTimers();
   });
 
   it("combines two filters rather than replacing one with the other", async () => {
@@ -119,8 +129,8 @@ describe("BecasExplorer filters", () => {
     render(<BecasExplorer {...defaultProps} />);
 
     await openFilters(user);
-    await chooseOption(user, "mobile-filter-country", /^España$/);
-    await chooseOption(user, "mobile-filter-support", /^Beca Completa$/);
+    await chooseOption(user, "sheet-country-España");
+    await chooseOption(user, "sheet-support-Beca Completa");
 
     const expected = SCHOLARSHIPS_DATA.filter(
       (s) => s.country === "España" && s.supportType === "Beca Completa"
@@ -134,7 +144,7 @@ describe("BecasExplorer filters", () => {
     render(<BecasExplorer {...defaultProps} />);
 
     await openFilters(user);
-    await chooseOption(user, "mobile-filter-country", /^Alemania$/);
+    await chooseOption(user, "sheet-country-Alemania");
     expect(filteredCount()).toBeLessThan(SCHOLARSHIPS_DATA.length);
 
     await user.click(screen.getByRole("button", { name: /Limpiar todo/i }));

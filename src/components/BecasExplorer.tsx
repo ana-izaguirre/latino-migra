@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   Search,
   Filter,
@@ -46,20 +46,13 @@ import {
   getUserMigrationPlan,
 } from "../lib/firebase";
 import { usePreferences } from "../lib/PreferencesContext";
+import { FilterChipGroup } from "./ui/FilterChipGroup";
 import { Modal } from "./ui/Modal";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import {
-  Sheet,
-  SheetCloseButton,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "./ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
 interface BecasExplorerProps {
@@ -69,6 +62,20 @@ interface BecasExplorerProps {
   onAskAIAboutScholarship: (scholarship: Scholarship) => void;
   currentUser?: GoogleUser | null;
   onOpenAuthModal?: () => void;
+}
+
+/**
+ * Days from today to a deadline, or null when the date cannot be read.
+ *
+ * The dataset carries `deadlineDate` and never `daysLeft`, which the filters
+ * had been reading — so the deadline options silently matched everything.
+ */
+function daysUntil(deadline: string): number | null {
+  const target = new Date(deadline);
+  if (Number.isNaN(target.getTime())) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.round((target.getTime() - today.getTime()) / 86_400_000);
 }
 
 /** Long enough for a slow connection, short enough to not look frozen. */
@@ -97,50 +104,6 @@ const SORT_OPTIONS: { id: SortOption; label: string }[] = [
   { id: "support-first", label: "💰 Beca Completa primero" },
   { id: "title-asc", label: "🔤 Nombre (A-Z)" },
 ];
-
-/**
- * Label + listbox pair used by the mobile filter sheet.
- *
- * The visible label is a `<span>` rather than a `<label>`: the Radix trigger is
- * a button, which `<label for>` does not associate with, so the name is carried
- * by `aria-labelledby` instead.
- */
-const FilterSelect = ({
-  id,
-  label,
-  value,
-  onValueChange,
-  options,
-}: {
-  id: string;
-  label: string;
-  value: string;
-  onValueChange: (value: string) => void;
-  options: { value: string; label: string }[];
-}) => (
-  <div>
-    <span
-      id={`${id}-label`}
-      className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1.5"
-    >
-      {label}
-    </span>
-    <Select value={value} onValueChange={onValueChange}>
-      {/* The label supplies the name; the selection is the trigger's own text,
-          which is how a collapsed combobox exposes its value. */}
-      <SelectTrigger id={id} aria-labelledby={`${id}-label`} className="h-12 bg-surface">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {options.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
-            {option.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  </div>
-);
 
 export const BecasExplorer: React.FC<BecasExplorerProps> = ({
   searchQuery,
@@ -330,14 +293,22 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
     "Australia",
   ];
 
+  // Labels are short because they are read on a phone, inside a chip.
   const educationLevels = [
-    { id: "todos", label: "🎓 Todos los niveles" },
-    { id: "pregrado", label: "📚 Pregrado / Grado" },
+    { id: "todos", label: "🎓 Todos" },
+    { id: "pregrado", label: "📚 Pregrado" },
     { id: "postgrado", label: "🎯 Postgrado / Máster" },
-    { id: "doctorado", label: "🔬 Doctorado / PhD" },
-    { id: "postdoctorado", label: "🏛️ Post Doctorado / Estancias" },
+    { id: "doctorado", label: "🔬 Doctorado" },
+    { id: "postdoctorado", label: "🏛️ Postdoctorado" },
   ];
   const areas = ["Todas", "STEM", "Artes y Humanidades", "Salud", "Negocios", "Todas las áreas"];
+  // "Todas" clears the area filter; "Todas las áreas" is a value scholarships
+  // actually carry, meaning the call is open to any field. Two options reading
+  // "Todas las áreas" were indistinguishable, so the labels say which is which.
+  const areaLabels: Record<string, string> = {
+    Todas: "✨ Todas",
+    "Todas las áreas": "Abierta a cualquier área",
+  };
   const supportTypes = ["Todos", "Beca Completa", "Beca Parcial", "Manutención"];
   const institutionTypes = [
     "Todas",
@@ -347,10 +318,10 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
     "Fundación",
   ];
   const dateRanges = [
-    { id: "Todas", label: "Todas las fechas" },
-    { id: "urgent", label: "⚡ Próximos 30 días (Cierre Urgente)" },
-    { id: "semester", label: "📅 Próximos 90 días (Semestre actual)" },
-    { id: "later", label: "⏳ Más de 90 días / Anuales" },
+    { id: "Todas", label: "📆 Todas" },
+    { id: "urgent", label: "⚡ Cierra en 30 días" },
+    { id: "semester", label: "📅 Cierra en 90 días" },
+    { id: "later", label: "⏳ Más de 90 días" },
   ];
 
   const handleSyncScholarships = async () => {
@@ -408,53 +379,251 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
     setVisibleCount(itemsPerPage > 0 ? itemsPerPage : 6);
   };
 
+  /**
+   * One definition of "does this scholarship match the filters", shared by the
+   * list and by the counts beside each option.
+   *
+   * They used to be written twice: the list filtered on every active filter
+   * while the counts were computed against the whole catalogue. So "Alemania"
+   * showed 1 result and "Doctorado" still advertised 4, and picking both
+   * returned nothing. With 22 scholarships across 12 countries, 30 of the 48
+   * country x level combinations are empty — the filters worked, and the
+   * interface walked people into dead ends without warning.
+   *
+   * `overrides` lets a count ask "how many would there be if this one option
+   * changed", which is what makes the numbers cascade.
+   */
+  const matchesFilters = useCallback(
+    (
+      item: Scholarship,
+      overrides: Partial<{
+        country: string;
+        educationLevel: string;
+        area: string;
+        supportType: string;
+        institutionType: string;
+        dateRange: string;
+      }> = {}
+    ) => {
+      const country = overrides.country ?? selectedCountry;
+      const educationLevel = overrides.educationLevel ?? selectedEducationLevel;
+      const area = overrides.area ?? selectedArea;
+      const supportType = overrides.supportType ?? selectedSupportType;
+      const institutionType = overrides.institutionType ?? selectedInstitutionType;
+      const dateRange = overrides.dateRange ?? selectedDateRange;
+
+      const q = searchQuery.toLowerCase();
+      const matchesSearch =
+        item.title.toLowerCase().includes(q) ||
+        item.institution.toLowerCase().includes(q) ||
+        item.description.toLowerCase().includes(q) ||
+        item.country.toLowerCase().includes(q) ||
+        (item.officialPortalName ?? "").toLowerCase().includes(q);
+
+      const matchesCountry = country === "Todos" || item.country === country;
+      const matchesEducation =
+        educationLevel === "todos" ||
+        item.educationLevel === educationLevel ||
+        (educationLevel === "postgrado" && !item.educationLevel);
+      const matchesArea = area === "Todas" || item.area === area || item.area === "Todas las áreas";
+      const matchesSupport = supportType === "Todos" || item.supportType === supportType;
+      const matchesInstType =
+        institutionType === "Todas" || item.institutionType === institutionType;
+
+      // `daysLeft` is absent from every scholarship in the dataset, so the
+      // deadline is read from `deadlineDate` instead. Reading `daysLeft` made
+      // "this semester" and "later" return the entire catalogue: two of the
+      // three options did nothing at all.
+      //
+      // The `isUrgent` flag is not consulted: it is written once when a record
+      // is created and never recomputed, so it says a call is closing soon long
+      // after it has closed. The deadline itself is the only thing that stays
+      // true, and an already-closed call is not "closing in 30 days".
+      let matchesDate = true;
+      if (dateRange !== "Todas") {
+        const days = daysUntil(item.deadlineDate);
+        if (days === null) matchesDate = false;
+        else if (dateRange === "urgent") matchesDate = days >= 0 && days <= 30;
+        else if (dateRange === "semester") matchesDate = days >= 0 && days <= 90;
+        else if (dateRange === "later") matchesDate = days > 90;
+      }
+
+      return (
+        matchesSearch &&
+        matchesCountry &&
+        matchesEducation &&
+        matchesArea &&
+        matchesSupport &&
+        matchesInstType &&
+        matchesDate
+      );
+    },
+    [
+      searchQuery,
+      selectedCountry,
+      selectedEducationLevel,
+      selectedArea,
+      selectedSupportType,
+      selectedInstitutionType,
+      selectedDateRange,
+    ]
+  );
+
+  /**
+   * How many results an option would give, with every other filter left as it
+   * is. A zero here means the option is a dead end, and the interface says so
+   * instead of letting someone walk into an empty list.
+   */
+  const countWith = useCallback(
+    (overrides: Parameters<typeof matchesFilters>[1]) =>
+      scholarshipsList.filter(
+        (item) =>
+          (viewModeTab !== "favorites" || favorites.includes(item.id)) &&
+          matchesFilters(item, overrides)
+      ).length,
+    [scholarshipsList, matchesFilters, viewModeTab, favorites]
+  );
+
+  /**
+   * Every filter option with the number of results it would give, with the
+   * other filters left as they are. Built from `countWith`, so the numbers
+   * cascade: narrowing the country immediately re-counts the levels, the
+   * areas and the rest.
+   */
+  const countryOptions = useMemo(
+    () =>
+      countries.map((c) => ({
+        id: c,
+        label: c === "Todos" ? "🌍 Todos" : c,
+        count: countWith({ country: c }),
+      })),
+    // `countries` is a constant list defined in this component.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [countWith]
+  );
+
+  const educationOptions = useMemo(
+    () => educationLevels.map((l) => ({ ...l, count: countWith({ educationLevel: l.id }) })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [countWith]
+  );
+
+  const areaOptions = useMemo(
+    () => areas.map((a) => ({ id: a, label: areaLabels[a] ?? a, count: countWith({ area: a }) })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [countWith]
+  );
+
+  const supportOptions = useMemo(
+    () =>
+      supportTypes.map((t) => ({
+        id: t,
+        label: t === "Todos" ? "🏆 Todos" : t,
+        count: countWith({ supportType: t }),
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [countWith]
+  );
+
+  const institutionOptions = useMemo(
+    () =>
+      institutionTypes.map((t) => ({
+        id: t,
+        label: t === "Todas" ? "🏛️ Todas" : t,
+        count: countWith({ institutionType: t }),
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [countWith]
+  );
+
+  const dateOptions = useMemo(
+    () => dateRanges.map((r) => ({ ...r, count: countWith({ dateRange: r.id }) })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [countWith]
+  );
+
+  /** Filters that are not on their default, for the "Limpiar" affordances. */
+  const advancedFilterCount =
+    (selectedArea !== "Todas" ? 1 : 0) +
+    (selectedSupportType !== "Todos" ? 1 : 0) +
+    (selectedInstitutionType !== "Todas" ? 1 : 0) +
+    (selectedDateRange !== "Todas" ? 1 : 0) +
+    (viewModeTab === "favorites" ? 1 : 0);
+
+  const activeFilterCount =
+    advancedFilterCount +
+    (selectedCountry !== "Todos" ? 1 : 0) +
+    (selectedEducationLevel !== "todos" ? 1 : 0);
+
+  /**
+   * The whole filter set, rendered identically in the desktop sidebar and the
+   * mobile sheet. Both can be in the DOM at once, so each copy scopes its
+   * element ids.
+   */
+  const renderFilterGroups = (scope: "sidebar" | "sheet") => (
+    <>
+      <FilterChipGroup
+        label="País Destino"
+        icon={<Globe2 className="w-3.5 h-3.5 text-secondary dark:text-teal-400" />}
+        options={countryOptions}
+        value={selectedCountry}
+        onChange={setSelectedCountry}
+        idPrefix={`${scope}-country`}
+        layout="wrap"
+      />
+      <FilterChipGroup
+        label="Nivel Educativo"
+        icon={<GraduationCap className="w-3.5 h-3.5 text-secondary dark:text-teal-400" />}
+        options={educationOptions}
+        value={selectedEducationLevel}
+        onChange={setSelectedEducationLevel}
+        idPrefix={`${scope}-education`}
+        layout="wrap"
+      />
+      <FilterChipGroup
+        label="Área de Estudio"
+        icon={<BookOpen className="w-3.5 h-3.5 text-secondary dark:text-teal-400" />}
+        options={areaOptions}
+        value={selectedArea}
+        onChange={setSelectedArea}
+        idPrefix={`${scope}-area`}
+        layout="wrap"
+      />
+      <FilterChipGroup
+        label="Tipo de Apoyo"
+        icon={<Award className="w-3.5 h-3.5 text-secondary dark:text-teal-400" />}
+        options={supportOptions}
+        value={selectedSupportType}
+        onChange={setSelectedSupportType}
+        idPrefix={`${scope}-support`}
+        layout="wrap"
+      />
+      <FilterChipGroup
+        label="Tipo de Entidad"
+        icon={<Building2 className="w-3.5 h-3.5 text-secondary dark:text-teal-400" />}
+        options={institutionOptions}
+        value={selectedInstitutionType}
+        onChange={setSelectedInstitutionType}
+        idPrefix={`${scope}-institution`}
+        layout="wrap"
+      />
+      <FilterChipGroup
+        label="Fecha de Cierre"
+        icon={<CalendarIcon className="w-3.5 h-3.5 text-secondary dark:text-teal-400" />}
+        options={dateOptions}
+        value={selectedDateRange}
+        onChange={setSelectedDateRange}
+        idPrefix={`${scope}-deadline`}
+        layout="wrap"
+      />
+    </>
+  );
+
   const filteredScholarships = useMemo(() => {
     return scholarshipsList
       .filter((item) => {
-        // If we are in "favorites" tab, only include favorited scholarships
-        if (viewModeTab === "favorites" && !favorites.includes(item.id)) {
-          return false;
-        }
-
-        const matchesSearch =
-          item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.institution.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.country.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (item.officialPortalName &&
-            item.officialPortalName.toLowerCase().includes(searchQuery.toLowerCase()));
-
-        const matchesCountry = selectedCountry === "Todos" || item.country === selectedCountry;
-        const matchesEducation =
-          selectedEducationLevel === "todos" ||
-          item.educationLevel === selectedEducationLevel ||
-          (selectedEducationLevel === "postgrado" && !item.educationLevel);
-        const matchesArea =
-          selectedArea === "Todas" || item.area === selectedArea || item.area === "Todas las áreas";
-        const matchesSupport =
-          selectedSupportType === "Todos" || item.supportType === selectedSupportType;
-        const matchesInstType =
-          selectedInstitutionType === "Todas" || item.institutionType === selectedInstitutionType;
-
-        // Date Range Match
-        let matchesDate = true;
-        if (selectedDateRange === "urgent") {
-          matchesDate = (item.daysLeft !== undefined && item.daysLeft <= 30) || !!item.isUrgent;
-        } else if (selectedDateRange === "semester") {
-          matchesDate = item.daysLeft !== undefined ? item.daysLeft <= 90 : true;
-        } else if (selectedDateRange === "later") {
-          matchesDate = item.daysLeft !== undefined ? item.daysLeft > 90 : true;
-        }
-
-        return (
-          matchesSearch &&
-          matchesCountry &&
-          matchesEducation &&
-          matchesArea &&
-          matchesSupport &&
-          matchesInstType &&
-          matchesDate
-        );
+        if (viewModeTab === "favorites" && !favorites.includes(item.id)) return false;
+        return matchesFilters(item);
       })
       .sort((a, b) => {
         if (sortBy === "deadline-asc") {
@@ -471,19 +640,9 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
         }
         return a.title.localeCompare(b.title);
       });
-  }, [
-    scholarshipsList,
-    viewModeTab,
-    favorites,
-    searchQuery,
-    selectedCountry,
-    selectedEducationLevel,
-    selectedArea,
-    selectedSupportType,
-    selectedInstitutionType,
-    selectedDateRange,
-    sortBy,
-  ]);
+    // `matchesFilters` already closes over every filter, so listing them here
+    // as well only risks the two lists drifting apart.
+  }, [scholarshipsList, viewModeTab, favorites, matchesFilters, sortBy]);
 
   // Reset pagination when viewModeTab, filters, sort or pageSize change
   useEffect(() => {
@@ -779,65 +938,10 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
           </div>
         )}
 
-        {/* Quick Education Level Selector Chips Bar (User Request: Pregrado, Postgrado, Doctorado, Post doctorado) */}
-        <div className="bg-surface-container-lowest dark:bg-slate-800 p-3.5 md:p-4 rounded-2xl border border-outline-variant/40 dark:border-slate-700 space-y-2.5">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-secondary dark:text-teal-400" />
-              <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-slate-400">
-                Nivel Educativo
-              </span>
-            </div>
-            {selectedEducationLevel !== "todos" && (
-              <button
-                type="button"
-                onClick={() => setSelectedEducationLevel("todos")}
-                className="text-xs font-semibold text-secondary dark:text-teal-400 hover:underline cursor-pointer active:scale-95 transition-transform"
-              >
-                Ver todos
-              </button>
-            )}
-          </div>
-
-          {/* Scrollable on mobile, grid on tablets and desktop */}
-          <div className="flex sm:grid sm:grid-cols-3 lg:grid-cols-5 gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
-            {educationLevels.map((lvl) => {
-              const count = scholarshipsList.filter((s) =>
-                lvl.id === "todos"
-                  ? true
-                  : s.educationLevel === lvl.id || (lvl.id === "postgrado" && !s.educationLevel)
-              ).length;
-              const isSelected = selectedEducationLevel === lvl.id;
-              return (
-                <button
-                  key={lvl.id}
-                  type="button"
-                  onClick={() => setSelectedEducationLevel(lvl.id)}
-                  id={`edu-level-chip-${lvl.id}`}
-                  className={`shrink-0 sm:shrink flex items-center justify-between gap-2 min-h-[44px] px-3 py-2 sm:py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer select-none active:scale-95 ${
-                    isSelected
-                      ? "bg-primary text-white dark:bg-sky-600 shadow-sm ring-2 ring-primary/30"
-                      : "bg-surface dark:bg-slate-900 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700/60 border border-outline-variant/30 dark:border-slate-700"
-                  }`}
-                >
-                  <span className="whitespace-nowrap">{lvl.label}</span>
-                  <span
-                    className={`text-[11px] px-2 py-0.5 rounded-full font-mono ${
-                      isSelected
-                        ? "bg-white/20 text-white"
-                        : "bg-surface-container dark:bg-slate-800 text-on-surface-variant dark:text-slate-400"
-                    }`}
-                  >
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Mobile Quick Filters Bar (Visible on screens < lg) */}
-        <div className="lg:hidden bg-surface-container-lowest dark:bg-slate-800 p-3.5 rounded-2xl border border-outline-variant/40 dark:border-slate-700 space-y-3">
+        {/* Mobile quick filters. Country comes before education level: the
+            destination is the decision people arrive with, and fixing it first
+            is what makes the level counts mean anything. */}
+        <div className="lg:hidden bg-surface-container-lowest dark:bg-slate-800 p-3.5 rounded-2xl border border-outline-variant/40 dark:border-slate-700 space-y-3.5">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 font-bold text-xs text-primary dark:text-sky-300">
               <SlidersHorizontal className="w-4 h-4 text-secondary dark:text-teal-400" />
@@ -845,13 +949,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
-              {(selectedCountry !== "Todos" ||
-                selectedEducationLevel !== "todos" ||
-                selectedArea !== "Todas" ||
-                selectedSupportType !== "Todos" ||
-                selectedInstitutionType !== "Todas" ||
-                selectedDateRange !== "Todas" ||
-                viewModeTab === "favorites") && (
+              {activeFilterCount > 0 && (
                 <button
                   type="button"
                   onClick={clearFilters}
@@ -869,80 +967,64 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
               >
                 <Filter className="w-3.5 h-3.5" />
                 <span>Más Filtros</span>
-                {(selectedCountry !== "Todos" ? 1 : 0) +
-                  (selectedArea !== "Todas" ? 1 : 0) +
-                  (selectedSupportType !== "Todos" ? 1 : 0) +
-                  (selectedInstitutionType !== "Todas" ? 1 : 0) +
-                  (selectedDateRange !== "Todas" ? 1 : 0) +
-                  (viewModeTab === "favorites" ? 1 : 0) >
-                  0 && (
-                  <span className="bg-white/20 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">
-                    {(selectedCountry !== "Todos" ? 1 : 0) +
-                      (selectedArea !== "Todas" ? 1 : 0) +
-                      (selectedSupportType !== "Todos" ? 1 : 0) +
-                      (selectedInstitutionType !== "Todas" ? 1 : 0) +
-                      (selectedDateRange !== "Todas" ? 1 : 0) +
-                      (viewModeTab === "favorites" ? 1 : 0)}
+                {advancedFilterCount > 0 && (
+                  <span className="bg-white/20 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                    {advancedFilterCount}
                   </span>
                 )}
               </button>
             </div>
           </div>
 
-          {/* Quick Select dropdowns for mobile */}
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="text-[10px] font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider block mb-1">
-                País
-              </label>
-              <select
-                value={selectedCountry}
-                onChange={(e) => setSelectedCountry(e.target.value)}
-                className="w-full bg-surface dark:bg-slate-900 border border-outline-variant/60 dark:border-slate-700 text-on-surface dark:text-slate-200 text-xs font-semibold rounded-xl px-2.5 py-2 outline-none focus:ring-2 focus:ring-secondary"
-              >
-                {countries.map((c) => (
-                  <option key={c} value={c}>
-                    {c === "Todos" ? "🌍 Todos los países" : c}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <FilterChipGroup
+            label="País Destino"
+            icon={<Globe2 className="w-4 h-4 text-secondary dark:text-teal-400" />}
+            options={countryOptions}
+            value={selectedCountry}
+            onChange={setSelectedCountry}
+            idPrefix="country-chip"
+            onClear={selectedCountry !== "Todos" ? () => setSelectedCountry("Todos") : undefined}
+          />
 
-            <div>
-              <label className="text-[10px] font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider block mb-1">
-                Tipo de Apoyo
-              </label>
-              <select
-                value={selectedSupportType}
-                onChange={(e) => setSelectedSupportType(e.target.value)}
-                className="w-full bg-surface dark:bg-slate-900 border border-outline-variant/60 dark:border-slate-700 text-on-surface dark:text-slate-200 text-xs font-semibold rounded-xl px-2.5 py-2 outline-none focus:ring-2 focus:ring-secondary"
-              >
-                {supportTypes.map((t) => (
-                  <option key={t} value={t}>
-                    {t === "Todos" ? "🏆 Todos los apoyos" : t}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <FilterChipGroup
+            label="Nivel Educativo"
+            icon={<GraduationCap className="w-4 h-4 text-secondary dark:text-teal-400" />}
+            options={educationOptions}
+            value={selectedEducationLevel}
+            onChange={setSelectedEducationLevel}
+            idPrefix="edu-level-chip"
+            onClear={
+              selectedEducationLevel !== "todos"
+                ? () => setSelectedEducationLevel("todos")
+                : undefined
+            }
+          />
         </div>
 
         {/* Mobile Filters Slide-over / Bottom Sheet Modal */}
-        <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
-          <SheetContent aria-describedby={undefined}>
-            <SheetHeader>
-              <SheetTitle>
-                <Filter className="w-5 h-5 text-secondary dark:text-teal-400" />
-                <span>Filtros de Búsqueda</span>
-              </SheetTitle>
-              <div className="flex items-center gap-2">
-                <Button variant="link" size="sm" onClick={clearFilters}>
+        {mobileFiltersOpen && (
+          <Modal
+            open={mobileFiltersOpen}
+            onOpenChange={setMobileFiltersOpen}
+            title="Filtros de Búsqueda"
+            size="md"
+            id="mobile-filters-sheet"
+            header={
+              <div className="flex min-w-0 items-center justify-between gap-2">
+                <div className="flex items-center gap-2 font-bold text-base text-primary dark:text-sky-300">
+                  <Filter className="w-5 h-5 shrink-0 text-secondary dark:text-teal-400" />
+                  <span className="truncate">Filtros de Búsqueda</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="shrink-0 text-xs font-semibold text-secondary dark:text-teal-400 hover:underline px-2 py-1 active:scale-95"
+                >
                   Limpiar todo
-                </Button>
-                <SheetCloseButton label="Cerrar filtros" />
+                </button>
               </div>
-            </SheetHeader>
-
+            }
+          >
             {/* Mobile Filter Controls */}
             <div className="space-y-4">
               {/* Favoritas Toggle */}
@@ -955,88 +1037,40 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                     Ver solo mis favoritas
                   </span>
                 </div>
-                <Button
-                  variant={viewModeTab === "favorites" ? "destructive" : "ghost"}
-                  size="sm"
-                  aria-pressed={viewModeTab === "favorites"}
+                <button
+                  type="button"
                   onClick={() => setViewModeTab(viewModeTab === "favorites" ? "all" : "favorites")}
-                  className={
-                    viewModeTab === "favorites" ? "" : "bg-surface-container dark:bg-slate-700"
-                  }
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 ${
+                    viewModeTab === "favorites"
+                      ? "bg-red-500 text-white shadow-xs"
+                      : "bg-surface-container dark:bg-slate-700 text-on-surface-variant dark:text-slate-300"
+                  }`}
                 >
                   {viewModeTab === "favorites" ? "Activado" : "Desactivado"} ({favorites.length})
-                </Button>
+                </button>
               </div>
 
-              <FilterSelect
-                id="mobile-filter-country"
-                label="País Destino"
-                value={selectedCountry}
-                onValueChange={setSelectedCountry}
-                options={countries.map((c) => ({
-                  value: c,
-                  label: c === "Todos" ? "🌍 Todos los países" : c,
-                }))}
-              />
-
-              <FilterSelect
-                id="mobile-filter-area"
-                label="Área de Estudio"
-                value={selectedArea}
-                onValueChange={setSelectedArea}
-                options={areas.map((area) => ({
-                  value: area,
-                  label: area === "Todas" ? "🎓 Todas las áreas" : area,
-                }))}
-              />
-
-              <FilterSelect
-                id="mobile-filter-support"
-                label="Tipo de Apoyo"
-                value={selectedSupportType}
-                onValueChange={setSelectedSupportType}
-                options={supportTypes.map((type) => ({
-                  value: type,
-                  label: type === "Todos" ? "🏆 Todos los apoyos" : type,
-                }))}
-              />
-
-              <FilterSelect
-                id="mobile-filter-institution"
-                label="Tipo de Entidad"
-                value={selectedInstitutionType}
-                onValueChange={setSelectedInstitutionType}
-                options={institutionTypes.map((it) => ({
-                  value: it,
-                  label: it === "Todas" ? "🏛️ Todas las entidades" : it,
-                }))}
-              />
-
-              <FilterSelect
-                id="mobile-filter-deadline"
-                label="Fecha de Cierre"
-                value={selectedDateRange}
-                onValueChange={setSelectedDateRange}
-                options={dateRanges.map((dr) => ({ value: dr.id, label: dr.label }))}
-              />
+              {renderFilterGroups("sheet")}
             </div>
 
-            <SheetFooter>
-              <Button
-                size="lg"
+            {/* Bottom Apply Action */}
+            <div className="pt-3 border-t border-outline-variant/30 dark:border-slate-800 sticky bottom-0 bg-surface-container-lowest dark:bg-slate-900">
+              <button
+                type="button"
                 onClick={() => {
                   setMobileFiltersOpen(false);
                   if (mainListRef.current) {
                     mainListRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
                   }
                 }}
+                className="w-full py-3.5 bg-primary dark:bg-sky-600 hover:bg-primary-container text-white font-bold text-sm rounded-xl shadow-md cursor-pointer active:scale-95 transition-all text-center flex items-center justify-center gap-2"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Ver {filteredScholarships.length} Convocatorias</span>
-              </Button>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
+              </button>
+            </div>
+          </Modal>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Sidebar Filters (Desktop Only: hidden on mobile to avoid 500px dead scroll) */}
@@ -1054,32 +1088,6 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Limpiar</span>
               </button>
-            </div>
-
-            {/* Nivel Educativo en Sidebar */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <GraduationCap className="w-3.5 h-3.5 text-secondary dark:text-teal-400" />
-                <span>Nivel Educativo</span>
-              </label>
-              <div className="space-y-1">
-                {educationLevels.map((lvl) => (
-                  <button
-                    key={lvl.id}
-                    onClick={() => setSelectedEducationLevel(lvl.id)}
-                    className={`w-full text-left px-3 py-1.5 rounded-lg text-xs transition-colors flex items-center justify-between cursor-pointer active:scale-95 ${
-                      selectedEducationLevel === lvl.id
-                        ? "bg-primary/10 dark:bg-sky-900/40 text-primary dark:text-sky-300 font-bold"
-                        : "text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700/50"
-                    }`}
-                  >
-                    <span>{lvl.label}</span>
-                    {selectedEducationLevel === lvl.id && (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-primary dark:text-sky-400" />
-                    )}
-                  </button>
-                ))}
-              </div>
             </div>
 
             {/* Quick Filter for Favorites inside sidebar */}
@@ -1109,135 +1117,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
               </button>
             </div>
 
-            {/* Fecha Límite de Aplicación */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <CalendarIcon className="w-3.5 h-3.5 text-secondary dark:text-teal-400" />
-                <span>Fecha de Aplicación</span>
-              </label>
-              <div className="space-y-1">
-                {dateRanges.map((range) => (
-                  <button
-                    key={range.id}
-                    onClick={() => setSelectedDateRange(range.id)}
-                    className={`w-full text-left px-3 py-1.5 rounded-lg text-xs transition-colors flex items-center justify-between cursor-pointer active:scale-95 ${
-                      selectedDateRange === range.id
-                        ? "bg-primary/10 dark:bg-sky-900/40 text-primary dark:text-sky-300 font-bold"
-                        : "text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700/50"
-                    }`}
-                  >
-                    <span>{range.label}</span>
-                    {selectedDateRange === range.id && (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-primary dark:text-sky-400" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Tipo de Emisor / Entidad */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Building2 className="w-3.5 h-3.5 text-secondary dark:text-teal-400" />
-                <span>Tipo de Entidad</span>
-              </label>
-              <div className="space-y-1">
-                {institutionTypes.map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => setSelectedInstitutionType(type)}
-                    className={`w-full text-left px-3 py-1.5 rounded-lg text-xs transition-colors flex items-center justify-between cursor-pointer active:scale-95 ${
-                      selectedInstitutionType === type
-                        ? "bg-primary/10 dark:bg-sky-900/40 text-primary dark:text-sky-300 font-bold"
-                        : "text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700/50"
-                    }`}
-                  >
-                    <span>{type}</span>
-                    {selectedInstitutionType === type && (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-primary dark:text-sky-400" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* País Destino */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Globe2 className="w-3.5 h-3.5 text-secondary dark:text-teal-400" />
-                <span>País Destino</span>
-              </label>
-              <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
-                {countries.map((country) => (
-                  <button
-                    key={country}
-                    onClick={() => setSelectedCountry(country)}
-                    className={`w-full text-left px-3 py-1.5 rounded-lg text-xs transition-colors flex items-center justify-between cursor-pointer active:scale-95 ${
-                      selectedCountry === country
-                        ? "bg-primary/10 dark:bg-sky-900/40 text-primary dark:text-sky-300 font-bold"
-                        : "text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700/50"
-                    }`}
-                  >
-                    <span>{country}</span>
-                    {selectedCountry === country && (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-primary dark:text-sky-400" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Área de Estudio */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <GraduationCap className="w-3.5 h-3.5 text-secondary dark:text-teal-400" />
-                <span>Área de Estudio</span>
-              </label>
-              <div className="space-y-1">
-                {areas.map((area) => (
-                  <button
-                    key={area}
-                    onClick={() => setSelectedArea(area)}
-                    className={`w-full text-left px-3 py-1.5 rounded-lg text-xs transition-colors flex items-center justify-between cursor-pointer active:scale-95 ${
-                      selectedArea === area
-                        ? "bg-primary/10 dark:bg-sky-900/40 text-primary dark:text-sky-300 font-bold"
-                        : "text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700/50"
-                    }`}
-                  >
-                    <span>{area}</span>
-                    {selectedArea === area && (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-primary dark:text-sky-400" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Tipo de Apoyo */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Award className="w-3.5 h-3.5 text-secondary dark:text-teal-400" />
-                <span>Tipo de Apoyo</span>
-              </label>
-              <div className="space-y-1">
-                {supportTypes.map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => setSelectedSupportType(type)}
-                    className={`w-full text-left px-3 py-1.5 rounded-lg text-xs transition-colors flex items-center justify-between cursor-pointer active:scale-95 ${
-                      selectedSupportType === type
-                        ? "bg-primary/10 dark:bg-sky-900/40 text-primary dark:text-sky-300 font-bold"
-                        : "text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700/50"
-                    }`}
-                  >
-                    <span>{type}</span>
-                    {selectedSupportType === type && (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-primary dark:text-sky-400" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {renderFilterGroups("sidebar")}
           </aside>
 
           {/* Scholarships Grid & Pagination Container */}
