@@ -450,3 +450,44 @@ test.describe("Mobile dialog focus", () => {
     await expect(trigger).toBeFocused();
   });
 });
+
+/**
+ * The first screen on a phone.
+ *
+ * Its three hero actions wrapped onto three full-width lines at 375px and
+ * read as stacked blocks rather than a choice, and one of them led to the
+ * planner, which the navigation no longer offers.
+ */
+test.describe("Home on a phone", () => {
+  test("puts its two destinations on one row", async ({ page }) => {
+    await page.goto("/");
+
+    const becas = await page.locator("#hero-btn-becas").boundingBox();
+    const guias = await page.locator("#hero-btn-guias").boundingBox();
+
+    expect(becas).not.toBeNull();
+    expect(guias).not.toBeNull();
+    // Same top edge means one row. Stacked blocks was the complaint.
+    expect(Math.abs(becas!.y - guias!.y)).toBeLessThanOrEqual(2);
+
+    const width = page.viewportSize()!.width;
+    expect(becas!.x + becas!.width).toBeLessThanOrEqual(width);
+    expect(guias!.x + guias!.width).toBeLessThanOrEqual(width);
+  });
+
+  test("keeps both actions thumb-sized", async ({ page }) => {
+    await page.goto("/");
+
+    for (const id of ["#hero-btn-becas", "#hero-btn-guias"]) {
+      const box = await page.locator(id).boundingBox();
+      expect(box!.height, id).toBeGreaterThanOrEqual(44);
+    }
+  });
+
+  test("offers no route to a screen the navigation has hidden", async ({ page }) => {
+    await page.goto("/");
+
+    await expect(page.locator("#hero-btn-planificador")).toHaveCount(0);
+    await expect(page.locator("#feature-btn-plan")).toHaveCount(0);
+  });
+});

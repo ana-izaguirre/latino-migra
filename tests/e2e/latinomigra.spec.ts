@@ -26,8 +26,9 @@ test.describe("LatinoMigra - End to End Suite", () => {
     await expect(page.locator("#nav-item-comunidad")).toBeVisible();
     await page.keyboard.press("Escape");
 
-    // Check metrics / trust badges exist
-    await expect(page.locator("text=+5,000 Becas Activas").first()).toBeVisible();
+    // No catalogue figures on the first screen: the badge claimed "+5,000
+    // Becas Activas" against a catalogue of 22.
+    await expect(page.getByText(/\+5,000/)).toHaveCount(0);
   });
 
   test("2. Pantalla Explorador de Becas: Filtros, búsqueda y modal de detalle", async ({
