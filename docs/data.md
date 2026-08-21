@@ -52,7 +52,7 @@ the table below is the only record of the intended shape.
 | `forumPosts` | public | **`create` unauthenticated** | Browser |
 | `forumPosts/{id}/replies` | public | **`create` unauthenticated** | Browser |
 | `feedbackSuggestions` | public | **`create` unauthenticated** | Browser |
-| `visa_guide_votes/{code}/visas` | **no rule declared** | **no rule declared** | Browser (always denied) |
+| `visa_guide_votes/{voteId}` | Public | Signed-in, own id only, create only | Browser |
 
 ### Rule structure
 
@@ -79,15 +79,26 @@ accepts — `uid`, `displayName`, `email`, `photoURL`, `countryOfOrigin`,
 `updatedAt`. `allow write` previously accepted any field, including `role`,
 which `App.tsx` read back as an authorization decision.
 
-### `visa_guide_votes` — undeclared path
+### `visa_guide_votes` — one document per (user, country, visa)
 
-`fetchVisaGuideVotes` and `voteVisaHelpful` in `src/lib/firebase.ts` read and
-write `visa_guide_votes/{countryCode}/visas`. That path appears in no `match`
-block, so the deny-all catch-all applies. Both functions catch the permission
-error and fall back to a module-level `Map`, so the failure is invisible. Guide
-helpfulness votes have never persisted.
+The path used to be `visa_guide_votes/{countryCode}/visas`, which appeared in no
+`match` block, so the deny-all catch-all applied. Both functions caught the
+permission error and fell back to a module-level `Map`, so the failure was
+invisible — and the guide printed `helpfulVotes || 18`, an invented count, for
+every visa in the product (#24, #79).
 
-It is the only collection referenced in code but absent from the rules.
+It is a flat collection now. The document id is
+`{uid}__{countryCode}__{visaId}`, and the rule requires the id to match the
+fields in the document, so the id itself enforces one vote per person: a second
+vote writes the same document and `create` fails once it exists. There is no
+`update` and no `delete`, and no stored counter — a counter any signed-in
+client may increment is a counter anyone can inflate, and there is no server
+here to hold it.
+
+The count is an aggregation over those documents (`getCountFromServer`), which
+is why `read` is public: a guest sees the counts and cannot vote.
+
+A failed read leaves the counts unknown, and unknown renders as no number.
 
 ## Write paths
 

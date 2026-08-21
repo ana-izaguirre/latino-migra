@@ -100,6 +100,33 @@ service cloud.firestore {
       allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
 
+    // Visa guide votes: one document per (user, country, visa).
+    //
+    // The collection had no rule at all, so every write was denied by the
+    // catch-all and the client swallowed the failure and printed an invented
+    // count instead (#24, #79).
+    //
+    // The document id carries all three parts, so the id itself enforces one
+    // vote per person: a second vote writes the same document, and `create`
+    // fails once it exists. That is why there is no update rule and no stored
+    // counter -- a counter any signed-in client may increment is a counter
+    // anyone can inflate, and there is no server here to hold it. The count is
+    // an aggregation over these documents, which is why read is public.
+    match /visa_guide_votes/{voteId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+                    && voteId == request.auth.uid + '__'
+                                 + request.resource.data.countryCode + '__'
+                                 + request.resource.data.visaId
+                    && request.resource.data.userId == request.auth.uid
+                    && isValidId(request.resource.data.countryCode)
+                    && isValidId(request.resource.data.visaId)
+                    && request.resource.data.keys().hasOnly(
+                         ['userId', 'countryCode', 'visaId', 'createdAt']);
+      // No update and no delete: a vote is a fact about a moment, and an
+      // editable one is a counter in disguise.
+    }
+
     // Community Forum Posts: Anyone can read, authenticated or guest users can post/like with size limits
     match /forumPosts/{postId} {
       allow read: if true;

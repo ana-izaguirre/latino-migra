@@ -308,6 +308,25 @@ export const TRANSLATIONS: TranslationDictionary = {
   "estudios.rejectedNotice": { es: "No mostramos", en: "We are not showing" },
   "estudios.rejectedOne": { es: "programa porque", en: "programme because" },
   "estudios.rejectedMany": { es: "programas porque", en: "programmes because" },
+  "guia.voteUseful": { es: "Marcar como útil", en: "Mark as useful" },
+  "guia.voteCount": { es: "útiles", en: "found it useful" },
+  "guia.voteFirst": { es: "Sé el primero en marcarla útil", en: "Be the first to mark it useful" },
+  "guia.voteTitle": {
+    es: "Marcar esta información como útil",
+    en: "Mark this information as useful",
+  },
+  "guia.voteSignIn": {
+    es: "Inicia sesión para marcar esta guía como útil",
+    en: "Sign in to mark this guide as useful",
+  },
+  "guia.voteFailed": {
+    es: "No pudimos registrar tu voto. Inténtalo de nuevo más tarde.",
+    en: "We could not record your vote. Try again later.",
+  },
+  "guia.votesUnavailable": {
+    es: "No pudimos cargar cuántas personas marcaron estas guías como útiles.",
+    en: "We could not load how many people marked these guides as useful.",
+  },
   "guia.costsIntro": {
     es: "Promedio estimado para un estudiante o profesional en",
     en: "Estimated average for a student or professional in",
