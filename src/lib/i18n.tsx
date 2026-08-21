@@ -136,6 +136,11 @@ export const TRANSLATIONS: TranslationDictionary = {
   },
 
   // Chat
+  "chat.newConversation": { es: "Nueva Consulta", en: "New Consultation" },
+  "chat.requestFailed": {
+    es: "No pudimos conectar con el asistente. Revisa tu conexión e inténtalo de nuevo.",
+    en: "We could not reach the assistant. Check your connection and try again.",
+  },
   "chat.evalProfile": { es: "🎯 Diagnosticar Mi Perfil", en: "🎯 Diagnose My Profile" },
   "chat.welcomeTitle": {
     es: "¡Hola! ¿Cómo puedo orientar tu plan migratorio?",
