@@ -61,11 +61,29 @@ test.describe("Scholarship list on a phone", () => {
   });
 
   test("shows a placeholder rather than a broken image when a cover fails", async ({ page }) => {
-    // Point every cover at a URL that cannot resolve, which is what a dead
-    // remote host looks like to the browser.
-    await page.route("**/*.{png,jpg,jpeg,webp,avif}", (route) => route.abort());
+    // Fail every image request, which is what a dead remote host looks like
+    // to the browser.
+    //
+    // Matched by resource type rather than by file extension: the covers are
+    // Unsplash URLs like `photo-1543783207-ec64e4d95325?auto=format&w=800`,
+    // which carry no extension at all. A `**/*.{png,jpg,…}` pattern matches
+    // none of them, so the route never fired and this test passed without
+    // ever exercising the fallback.
+    let imagesBlocked = 0;
+    await page.route("**/*", (route) => {
+      if (route.request().resourceType() !== "image") return route.continue();
+      imagesBlocked += 1;
+      return route.abort();
+    });
     await page.reload();
     await page.locator("#bottom-nav-becas").click();
+
+    // The test has to prove its own premise. The previous pattern matched no
+    // request at all, so this assertion is what stops it passing for the
+    // wrong reason again.
+    await expect
+      .poll(() => imagesBlocked, { message: "no image request was intercepted" })
+      .toBeGreaterThan(0);
 
     const placeholder = page.getByRole("img", { name: /Imagen no disponible/ }).first();
     await expect(placeholder).toBeVisible();
