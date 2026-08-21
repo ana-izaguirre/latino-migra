@@ -119,6 +119,19 @@ catalogue returns `"Becas & Estudios"`. Those expectations were corrected.
 `src/test/renderWithProviders.tsx` now mirrors `main.tsx` and should be used for
 any component test.
 
+**Radix components need `userEvent`, not `fireEvent`.**
+A Radix trigger activates on pointer-down, so `fireEvent.click` dispatches a
+click the component never listens for and the interaction silently does
+nothing — the test then fails on a later assertion, pointing at the wrong
+thing. Use `userEvent`, which fires the whole pointer sequence.
+`src/test/setup.ts` also stubs `ResizeObserver` and the pointer-capture methods
+that Radix calls and jsdom does not implement.
+
+`src/components/BecasExplorer.filters.test.tsx` derives its expected counts
+from `SCHOLARSHIPS_DATA` rather than hard-coding them, so it asserts the filter
+predicate itself: a test that only checked "the number changed" would still
+pass if a filter matched the wrong field.
+
 **E2E do not exercise the production path.**
 `playwright.config.ts` starts the server with `npm run start`, which does not set
 `NODE_ENV=production`. `server.ts` therefore takes the Vite development branch.

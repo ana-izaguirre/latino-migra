@@ -6,7 +6,7 @@ Measured and observed characteristics of the current build.
 
 | Metric | Value | Source |
 |---|---|---|
-| JavaScript bundle | 1,484 KB (≈385 KB gzipped) | `vite build` output |
+| JavaScript bundle | 1,620 KB (≈433 KB gzipped) | `vite build` output |
 | CSS bundle | 123 KB | `vite build` output |
 | Static datasets in bundle | 135 KB | `src/data/` |
 | Code split points | 0 | no `React.lazy` or dynamic imports |
@@ -27,6 +27,24 @@ scholarship catalogue downloads the planner, the calculator, the forum, the map
 and 48 KB of visa guides for seven countries.
 
 `migrationGuides.ts` alone is 48 KB and is fully parsed to display one country.
+
+### Radix, and what it cost
+
+Adopting the shadcn/ui primitives added **131 KB raw / 45 KB gzipped** —
+measured, not estimated: `vite build` on the parent commit produced
+1,489.17 KB (387.97 KB gzipped) and 1,620.30 KB (433.03 KB gzipped) after.
+That is 11.6% more gzipped JavaScript, and it buys the dialog, listbox and tab
+behaviour described in `docs/accessibility.md`.
+
+Most of it is `@radix-ui/react-select`, which pulls in the popper, focus-scope
+and dismissable-layer packages. `Button`, `Badge`, `Card` and `Input` cost
+almost nothing; `class-variance-authority`, `clsx` and `tailwind-merge` are
+about 4 KB together.
+
+Since everything ships in one chunk, every visitor pays this on first load
+whether or not they open the Becas screen. That makes the code splitting
+already recommended below more valuable than it was, not less — the primitives
+belong in whichever chunks use them.
 
 ## Dependency weight
 

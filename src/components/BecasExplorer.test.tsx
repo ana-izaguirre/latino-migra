@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { screen, fireEvent, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { renderWithProviders as render } from "../test/renderWithProviders";
 import { BecasExplorer } from "./BecasExplorer";
 import * as firebase from "../lib/firebase";
@@ -110,20 +111,24 @@ describe("BecasExplorer Component", () => {
     expect(screen.getByText(/Mostrando todas las/i)).toBeInTheDocument();
   });
 
-  it("toggles favorites in memory and filters by My Favorites section", () => {
+  it("toggles favorites in memory and filters by My Favorites section", async () => {
+    const user = userEvent.setup();
     const { container } = render(<BecasExplorer {...defaultProps} />);
 
     // Favourites start empty — nothing is restored from browser storage.
-    const favTab = screen.getByRole("button", { name: /Mis Becas Favoritas/i });
+    // The view switcher is a real tablist, so the triggers carry `role="tab"`,
+    // and they activate on pointer-down rather than on a bare click event —
+    // hence `userEvent`, which fires the whole pointer sequence.
+    const favTab = screen.getByRole("tab", { name: /Mis Becas Favoritas/i });
     expect(favTab).toBeInTheDocument();
-    fireEvent.click(favTab);
+    await user.click(favTab);
     expect(screen.getByText(/Sección: Mis Becas Guardadas/i)).toBeInTheDocument();
 
     // Switch back to all. The empty-favourites state also renders a
     // "Ver Todas las Convocatorias" call to action, so target the tab by id.
     const allTab = container.querySelector("#tab-all-scholarships");
     expect(allTab).toBeInTheDocument();
-    fireEvent.click(allTab!);
+    await user.click(allTab!);
 
     // Find favorite button on a card and click it
     const favButtons = container.querySelectorAll(
@@ -133,7 +138,7 @@ describe("BecasExplorer Component", () => {
     fireEvent.click(favButtons[0]);
 
     // The favourites tab counter reflects the new selection.
-    expect(screen.getByRole("button", { name: /Mis Becas Favoritas\s*1/i })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Mis Becas Favoritas\s*1/i })).toBeInTheDocument();
   });
 
   it("persists nothing to browser storage", () => {
