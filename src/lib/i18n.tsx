@@ -204,7 +204,6 @@ export const TRANSLATIONS: TranslationDictionary = {
     en: "Ask the assistant which suits me",
   },
   "guia.costTitle": { es: "Costo de Vida Estimado", en: "Estimated Cost of Living" },
-  "guia.openCalculator": { es: "Abrir Calculadora", en: "Open Calculator" },
   "guia.checklistTitle": { es: "Documentación Clave Requerida", en: "Key Documents Required" },
   "guia.checklistIntro": {
     es: "Marca las casillas conforme reúnas cada documento para tu cita consular o trámites de llegada.",
@@ -309,6 +308,14 @@ export const TRANSLATIONS: TranslationDictionary = {
   "estudios.rejectedNotice": { es: "No mostramos", en: "We are not showing" },
   "estudios.rejectedOne": { es: "programa porque", en: "programme because" },
   "estudios.rejectedMany": { es: "programas porque", en: "programmes because" },
+  "guia.costsIntro": {
+    es: "Promedio estimado para un estudiante o profesional en",
+    en: "Estimated average for a student or professional in",
+  },
+  "guia.conversionNotice": {
+    es: "La segunda cifra es una conversión aproximada a la moneda que elegiste, no un precio publicado. Cámbiala en Preferencias.",
+    en: "The second figure is an approximate conversion into the currency you chose, not a published price. Change it in Preferences.",
+  },
   "becas.quickFilters": { es: "Filtros Rápidos", en: "Quick Filters" },
   "becas.clear": { es: "Limpiar", en: "Clear" },
   "becas.moreFilters": { es: "Más Filtros", en: "More Filters" },

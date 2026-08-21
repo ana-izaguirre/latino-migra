@@ -26,6 +26,8 @@ import { Disclosure } from "./ui/Disclosure";
 import { CalendarAgendaButton } from "./CalendarAgendaButton";
 import { fetchVisaGuideVotes, voteVisaHelpful, VisaVotesData } from "../lib/firebase";
 import { usePreferences } from "../lib/PreferencesContext";
+import { useCurrency } from "../lib/CurrencyContext";
+import { convertCostRange, formatCostRange } from "../lib/currency";
 
 interface GuiaMigracionProps {
   setActiveTab: (tab: NavigationTab) => void;
@@ -40,6 +42,7 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
   // Country selection is shared app-wide, so opening a guide for Alemania also
   // moves the planner, calculator, consular map and alerts to Alemania.
   const { destinationCountryCode, setDestinationCountryByCode } = usePreferences();
+  const { currency } = useCurrency();
   const selectedCountryCode = destinationCountryCode || "ES";
   const setSelectedCountryCode = setDestinationCountryByCode;
   const [selectedCategory, setSelectedCategory] = useState<string>("todos");
@@ -490,40 +493,57 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
                   {t("guia.costTitle", "Costo de Vida Estimado")}
                 </h3>
               </div>
-              <button
-                onClick={() => setActiveTab("calculadora")}
-                className="text-xs font-bold text-secondary dark:text-teal-300 hover:underline"
-              >
-                {t("guia.openCalculator", "Abrir Calculadora")}
-              </button>
             </div>
             <p className="text-xs text-on-surface-variant dark:text-slate-400">
-              Promedio mensual estimado para un estudiante o profesional en {guide.country}.
+              {t("guia.costsIntro", "Promedio estimado para un estudiante o profesional en")}{" "}
+              {guide.country}.
             </p>
 
             <div className="space-y-4 pt-2">
-              {guide.costs.map((cost, idx) => (
-                <div key={idx} className="space-y-1.5">
-                  <div className="flex justify-between text-xs font-semibold text-on-surface dark:text-slate-200">
-                    <span>{cost.category}</span>
-                    <span className="font-bold text-primary dark:text-sky-300">{cost.range}</span>
+              {guide.costs.map((cost, idx) => {
+                /*
+                  Two lines, not one. The first is what the destination
+                  actually charges: rent in Berlin is quoted in euros and
+                  paying it in lempiras is not a thing. The second is the same
+                  range in the currency the visitor chose, marked as an
+                  approximation — presenting a conversion as the price would
+                  be quoting a number nobody published.
+                */
+                const local = formatCostRange(cost.min, cost.max, cost.currency);
+                const converted = convertCostRange(cost.min, cost.max, cost.currency, currency);
+
+                return (
+                  <div key={idx} className="space-y-1.5">
+                    <div className="flex flex-wrap justify-between gap-x-3 text-xs font-semibold text-on-surface dark:text-slate-200">
+                      <span>{cost.category}</span>
+                      <span className="font-bold text-primary dark:text-sky-300 whitespace-nowrap">
+                        {local} / {cost.period}
+                      </span>
+                    </div>
+                    {converted && (
+                      <p className="text-[11px] text-on-surface-variant dark:text-slate-400 text-right">
+                        ≈ {converted} / {cost.period}
+                      </p>
+                    )}
+                    <div className="w-full bg-surface-container dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${cost.color}`}
+                        style={{ width: `${cost.percentage}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full bg-surface-container dark:bg-slate-700 h-2 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${cost.color}`}
-                      style={{ width: `${cost.percentage}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
-            <button
-              onClick={() => setActiveTab("calculadora")}
-              className="w-full mt-2 py-2.5 px-4 bg-surface dark:bg-slate-900 hover:bg-surface-container text-xs font-bold text-primary dark:text-sky-300 rounded-xl border border-outline-variant/40 dark:border-slate-700 transition-colors text-center block"
-            >
-              📊 Simular en mi moneda local (COP, MXN, PEN, ARS...)
-            </button>
+            {guide.costs.some((cost) => cost.currency !== currency) && (
+              <p className="text-[11px] text-on-surface-variant dark:text-slate-400 pt-1">
+                {t(
+                  "guia.conversionNotice",
+                  "La segunda cifra es una conversión aproximada a la moneda que elegiste, no un precio publicado. Cámbiala en Preferencias."
+                )}
+              </p>
+            )}
           </div>
 
           {/* Community Tip Card */}
