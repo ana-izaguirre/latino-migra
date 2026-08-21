@@ -308,6 +308,8 @@ export const TRANSLATIONS: TranslationDictionary = {
   "estudios.rejectedNotice": { es: "No mostramos", en: "We are not showing" },
   "estudios.rejectedOne": { es: "programa porque", en: "programme because" },
   "estudios.rejectedMany": { es: "programas porque", en: "programmes because" },
+  "guia.categoryLabel": { es: "Tipo de vía", en: "Route type" },
+  "guia.categoryAll": { es: "Todas", en: "All" },
   "guia.countryLabel": { es: "País de destino", en: "Destination country" },
   "guia.voteUseful": { es: "Marcar como útil", en: "Mark as useful" },
   "guia.voteCount": { es: "útiles", en: "found it useful" },
