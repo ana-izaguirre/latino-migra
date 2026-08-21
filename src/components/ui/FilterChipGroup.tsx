@@ -1,4 +1,5 @@
 import React from "react";
+import { useLanguage } from "../../lib/i18n";
 
 export interface FilterChipOption {
   /** Value stored in state when the chip is picked. */
@@ -53,6 +54,7 @@ export const FilterChipGroup: React.FC<FilterChipGroupProps> = ({
   layout = "scroll",
   onClear,
 }) => {
+  const { t } = useLanguage();
   const labelId = `${idPrefix}-label`;
 
   return (
@@ -98,7 +100,11 @@ export const FilterChipGroup: React.FC<FilterChipGroupProps> = ({
               onClick={() => onChange(option.id)}
               disabled={isEmpty}
               aria-pressed={isSelected}
-              title={isEmpty ? "No hay convocatorias con los filtros actuales" : undefined}
+              title={
+                isEmpty
+                  ? t("becas.noResultsForOption", "No hay convocatorias con los filtros actuales")
+                  : undefined
+              }
               className={`shrink-0 inline-flex items-center gap-2 min-h-[44px] px-3 py-2 rounded-xl text-xs font-bold transition-all select-none ${
                 isEmpty
                   ? "bg-surface dark:bg-slate-900 text-on-surface-variant/40 dark:text-slate-600 cursor-not-allowed border border-transparent"
