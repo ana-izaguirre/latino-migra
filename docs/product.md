@@ -9,7 +9,7 @@ planning to migrate to Europe or North America. It combines a verified
 scholarship catalogue, step-by-step visa guides, cost-of-living planning,
 consular directory, community forum and an AI assistant.
 
-The content is the product's core asset: 22 scholarships, 57 visa types across
+The content is the product's core asset: 22 scholarships, 24 visa types across
 7 destination countries, 32 consulates and campuses, and country-specific
 anti-scam guidance.
 

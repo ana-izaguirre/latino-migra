@@ -60,6 +60,23 @@ test.describe("Migration guides on a phone", () => {
     await expect(page.getByText(/Tipos de Visado en Alemania/)).toBeVisible();
   });
 
+  test("counts each visa category, and the count matches what it shows", async ({ page }) => {
+    const chips = page.locator('button[id^="visa-category-"]');
+    const count = await chips.count();
+    expect(count).toBeGreaterThan(1);
+
+    // Every chip carries a number, and selecting one renders exactly that many
+    // routes — the list and the counts come from one predicate.
+    for (let i = 1; i < count; i += 1) {
+      const chip = chips.nth(i);
+      const promised = Number((await chip.innerText()).match(/(\d+)\s*$/)?.[1]);
+      expect(promised, await chip.innerText()).toBeGreaterThan(0);
+
+      await chip.click();
+      await expect(page.locator('[id^="visa-details-"]:not([id$="-panel"])')).toHaveCount(promised);
+    }
+  });
+
   test("collapses the heavy sections", async ({ page }) => {
     for (const id of GUIDE_DISCLOSURES) {
       const control = page.locator(`#${id}`);

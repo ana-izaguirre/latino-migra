@@ -74,7 +74,7 @@ and in the datasets.
 ## Retrieval
 
 There is none. The model answers from its training data. The application's own
-verified content — 57 visa records, 22 scholarships, anti-scam guidance, consular
+verified content — 24 visa records, 22 scholarships, anti-scam guidance, consular
 addresses — is never passed as context.
 
 `ChatIA` already renders a `sources` array on assistant messages, but the backend
