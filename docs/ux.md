@@ -131,6 +131,19 @@ Recently addressed and verified by tests:
 - Dismissing the drawer restores the reading position instead of jumping to the
   top.
 
+## The first screen
+
+- Two destinations, side by side at every width. Three wide buttons wrapped
+  onto three full-width lines at 375px and read as stacked blocks rather than
+  a choice — and the third led to the planner, which the navigation no longer
+  offers.
+- No catalogue figures. The badge claimed "+5,000 Becas Activas" against a
+  catalogue of 22, on the one screen whose job is to say what the product is.
+  Numbers about the catalogue belong on the catalogue, where they are counted
+  rather than asserted.
+- Nothing here links to a hidden screen. The planner card is gone with the
+  planner.
+
 ## Scholarship list
 
 - One way through the catalogue. The screen carried a numbered pager and a
@@ -147,6 +160,22 @@ Recently addressed and verified by tests:
   `src/components/ui/ImageWithFallback.tsx`. An empty `src` counts as a
   failure: the browser would otherwise resolve it against the page URL and
   fetch the document itself.
+
+## Scholarship detail
+
+- Requisitos and beneficios collapse below `lg` through the same `Disclosure`
+  the guides use. Together they are the bulk of the panel and arrived as one
+  wall of text.
+- The calendar action says what it does. "Agendar en Google Calendar" read as
+  booking an appointment with somebody; nothing is booked with anyone, so it
+  is "Recordarme la fecha límite", and the event that lands in the reader's
+  calendar is titled "Recordatorio: cierra la beca …".
+- One link to the official call, not two. The header and the action row both
+  pointed at the same page.
+- The "Consultar IA" button is hidden behind
+  `SHOW_ASK_AI_ABOUT_SCHOLARSHIP`, not deleted: the assistant cannot yet
+  answer usefully about one specific call, and the handler, the prop and the
+  path through `App` stay wired so restoring it is one word.
 
 ## Migration guides
 

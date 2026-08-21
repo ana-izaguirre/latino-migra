@@ -107,6 +107,10 @@ describe("BecasExplorer translation", () => {
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByRole("heading", { name: "Key Requirements" })).toBeInTheDocument();
     expect(within(dialog).getByRole("heading", { name: "What Is Included" })).toBeInTheDocument();
+    // The collapse controls added in #68 translate too, and they are what a
+    // phone reader actually operates.
+    expect(within(dialog).getByText(/See key requirements/i)).toBeInTheDocument();
+    expect(within(dialog).getByText(/Remind me of the deadline/i)).toBeInTheDocument();
   });
 
   it("goes back to Spanish", () => {

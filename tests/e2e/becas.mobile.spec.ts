@@ -61,11 +61,29 @@ test.describe("Scholarship list on a phone", () => {
   });
 
   test("shows a placeholder rather than a broken image when a cover fails", async ({ page }) => {
-    // Point every cover at a URL that cannot resolve, which is what a dead
-    // remote host looks like to the browser.
-    await page.route("**/*.{png,jpg,jpeg,webp,avif}", (route) => route.abort());
+    // Fail every image request, which is what a dead remote host looks like
+    // to the browser.
+    //
+    // Matched by resource type rather than by file extension: the covers are
+    // Unsplash URLs like `photo-1543783207-ec64e4d95325?auto=format&w=800`,
+    // which carry no extension at all. A `**/*.{png,jpg,…}` pattern matches
+    // none of them, so the route never fired and this test passed without
+    // ever exercising the fallback.
+    let imagesBlocked = 0;
+    await page.route("**/*", (route) => {
+      if (route.request().resourceType() !== "image") return route.continue();
+      imagesBlocked += 1;
+      return route.abort();
+    });
     await page.reload();
     await page.locator("#bottom-nav-becas").click();
+
+    // The test has to prove its own premise. The previous pattern matched no
+    // request at all, so this assertion is what stops it passing for the
+    // wrong reason again.
+    await expect
+      .poll(() => imagesBlocked, { message: "no image request was intercepted" })
+      .toBeGreaterThan(0);
 
     const placeholder = page.getByRole("img", { name: /Imagen no disponible/ }).first();
     await expect(placeholder).toBeVisible();
@@ -102,5 +120,96 @@ test.describe("Scholarship list on a phone", () => {
     const after = Number(await bar.getAttribute("aria-valuenow"));
 
     expect(after).toBeGreaterThan(before);
+  });
+});
+
+/**
+ * The scholarship detail panel.
+ *
+ * It arrived as one wall of text with three equally loud buttons — one
+ * offering an assistant that cannot yet answer about a specific call, and one
+ * saying "Agendar", which reads as booking an appointment with somebody.
+ */
+test.describe("Scholarship detail on a phone", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#bottom-nav-becas").click();
+    await page
+      .getByRole("button", { name: /Ver Detalles/ })
+      .first()
+      .click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+  });
+
+  test("collapses requisitos and beneficios, and opens them on tap", async ({ page }) => {
+    for (const id of ["beca-requisitos", "beca-beneficios"]) {
+      const control = page.locator(`#${id}`);
+      await expect(control, id).toBeVisible();
+      await expect(control).toHaveAttribute("aria-expanded", "false");
+      await expect(page.locator(`#${id}-panel`)).toBeHidden();
+    }
+
+    await page.locator("#beca-requisitos").click();
+    await expect(page.locator("#beca-requisitos-panel")).toBeVisible();
+    // Opening one leaves the other alone: they are separate disclosures, not
+    // an accordion where reading one hides the other.
+    await expect(page.locator("#beca-beneficios-panel")).toBeHidden();
+  });
+
+  test("keeps the bulk of the panel out of the way until it is asked for", async ({ page }) => {
+    // Measure the collapsible content itself rather than the dialog: the
+    // dialog is height-capped, so its own box and scrollHeight are the same
+    // whether the sections are open or shut.
+    const collapsibleHeight = () =>
+      page.evaluate(() =>
+        ["beca-requisitos-panel", "beca-beneficios-panel"].reduce(
+          (total, id) =>
+            total + Math.round(document.getElementById(id)?.getBoundingClientRect().height ?? 0),
+          0
+        )
+      );
+
+    // Collapsed means `display: none`, so it occupies nothing at all.
+    expect(await collapsibleHeight()).toBe(0);
+
+    for (const id of ["beca-requisitos", "beca-beneficios"]) {
+      await page.locator(`#${id}`).click();
+      await expect(page.locator(`#${id}`)).toHaveAttribute("aria-expanded", "true");
+    }
+
+    expect(await collapsibleHeight()).toBeGreaterThan(0);
+  });
+
+  test("offers the official call once, safely", async ({ page }) => {
+    const link = page.locator("#beca-official-link");
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute("href", /^https?:\/\//);
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("rel", /noopener/);
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByText(/convocatoria oficial/i)).toHaveCount(1);
+  });
+
+  test("says the calendar action sets a reminder", async ({ page }) => {
+    const link = page.locator("#beca-calendar-reminder");
+    await expect(link).toContainText(/Recordarme la fecha límite/i);
+    await expect(link).not.toContainText(/Agendar/i);
+  });
+
+  test("does not offer the assistant", async ({ page }) => {
+    await expect(page.locator("#beca-ask-ai")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Consultar IA/i })).toHaveCount(0);
+  });
+
+  test("keeps every action inside the viewport and thumb-sized", async ({ page }) => {
+    const width = page.viewportSize()!.width;
+
+    for (const id of ["beca-official-link", "beca-calendar-reminder"]) {
+      const box = await page.locator(`#${id}`).boundingBox();
+      expect(box, id).not.toBeNull();
+      expect(box!.height, id).toBeGreaterThanOrEqual(44);
+      expect(box!.x + box!.width, id).toBeLessThanOrEqual(width);
+    }
   });
 });
