@@ -147,11 +147,11 @@ export async function signInWithGoogle(countryOfOrigin?: string) {
       userRef,
       {
         uid: user.uid,
-        displayName: user.displayName || "Usuario LatinoMigra",
+        // Stored as the provider gave it. A placeholder written here comes
+        // back on every later read as though it were the person's own (#99).
+        displayName: user.displayName || "",
         email: user.email || "",
-        photoURL:
-          user.photoURL ||
-          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+        photoURL: user.photoURL || "",
         countryOfOrigin: finalCountry,
         updatedAt: new Date().toISOString(),
       },

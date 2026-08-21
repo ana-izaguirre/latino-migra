@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { ShieldCheck, Bookmark, Calendar, Sparkles, LogOut, AlertTriangle } from "lucide-react";
 import { GoogleUser } from "../types";
 import { signInWithGoogle, isUserAdmin } from "../lib/firebase";
-import { getSafeImageUrl } from "../lib/sanitize";
+import { Avatar } from "./ui/Avatar";
 import { Modal } from "./ui/Modal";
 import { useLanguage } from "../lib/i18n";
 import { LATIN_AMERICAN_COUNTRIES } from "../data/countriesData";
@@ -92,11 +92,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const admin = await isUserAdmin(fbUser.uid);
       const userToSignIn: GoogleUser = {
         id: fbUser.uid,
-        name: fbUser.displayName || "Usuario LatinoMigra",
-        email: fbUser.email || "usuario@latinomigra.com",
-        avatar:
-          fbUser.photoURL ||
-          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+        // Absent, not invented. `usuario@latinomigra.com` was an address at
+        // the project's own domain attributed to a real person, and the avatar
+        // was a stock photograph of a stranger shown as their face (#99).
+        name: fbUser.displayName || t("auth.unnamedAccount", "Cuenta sin nombre"),
+        email: fbUser.email || "",
+        avatar: fbUser.photoURL || "",
         countryOfOrigin: countryOfOrigin || selectedCountry,
         isAdmin: admin,
         signedInAt: new Date().toLocaleDateString("es-ES", {
@@ -150,11 +151,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       {currentUser ? (
         <div className="space-y-6">
           <div className="bg-surface-container/60 dark:bg-slate-800/80 p-4 rounded-2xl border border-outline-variant/40 dark:border-slate-700 flex items-center gap-4">
-            <img
-              src={getSafeImageUrl(currentUser.avatar)}
-              alt={currentUser.name}
-              referrerPolicy="no-referrer"
-              className="w-14 h-14 rounded-full object-cover border-2 border-primary/30"
+            <Avatar
+              id="auth-avatar"
+              src={currentUser.avatar}
+              name={currentUser.name}
+              className="w-14 h-14 rounded-full border-2 border-primary/30 text-xl"
             />
             <div className="flex-1 min-w-0">
               <h4 className="font-bold text-sm text-primary dark:text-sky-300 truncate">

@@ -65,12 +65,11 @@ export default function App() {
           ]);
           const userData: GoogleUser = {
             id: fbUser.uid,
-            name: fbUser.displayName || profile?.displayName || "Usuario LatinoMigra",
+            // A missing field stays missing. `Avatar` renders the initial when
+            // there is no picture, rather than a stranger's photograph (#99).
+            name: fbUser.displayName || profile?.displayName || "",
             email: fbUser.email || profile?.email || "",
-            avatar:
-              fbUser.photoURL ||
-              profile?.photoURL ||
-              "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+            avatar: fbUser.photoURL || profile?.photoURL || "",
             countryOfOrigin: profile?.countryOfOrigin || "Colombia",
             // Never `profile?.role`: that document is writable by its owner.
             isAdmin: admin,

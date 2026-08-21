@@ -24,6 +24,7 @@ export const TRANSLATIONS: TranslationDictionary = {
   },
   "auth.continueWithGoogle": { es: "Continuar con Google", en: "Continue with Google" },
   "auth.signOut": { es: "Cerrar Sesión", en: "Sign out" },
+  "auth.unnamedAccount": { es: "Cuenta sin nombre", en: "Unnamed account" },
   "auth.verifiedAccount": { es: "Cuenta Google Verificada", en: "Verified Google account" },
   "auth.roleLabel": { es: "Rol de Cuenta:", en: "Account role:" },
   "auth.roleAdmin": { es: "🔑 Administrador", en: "🔑 Administrator" },
