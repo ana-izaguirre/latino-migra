@@ -16,10 +16,18 @@ npm run dev             # tsx server.ts — Express + Vite middleware on :3000
 ```
 
 > The app starts **without** a `.env`. `src/lib/firebase.ts` falls back to a
-> hardcoded configuration pointing at the `refined-coral-0zp2g` project, and
-> `server.ts` constructs the Gemini client with `"dummy-key-for-boot"`. Nothing
-> warns about this, so an unconfigured checkout can read from and write to a real
-> Firebase project.
+> placeholder configuration naming the `refined-coral-0zp2g` project, and
+> `server.ts` constructs the Gemini client with `"dummy-key-for-boot"`.
+>
+> Note that the repository's own `.env` ships every `VITE_FIREBASE_*` value as
+> an **empty string**, and `"" || fallback` is the fallback — so filling in
+> `.env.example` is not optional, and a build that skipped it looks configured
+> while nothing authenticated works.
+>
+> Since #78, `isFirebaseConfigured()` compares the resolved configuration
+> against those placeholders, logs a warning at start-up, and the sign-in modal
+> says the build cannot sign anyone in rather than offering a retry that can
+> never succeed. The Gemini side still warns about nothing.
 
 ## Environment variables
 
