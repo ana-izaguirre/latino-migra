@@ -1,18 +1,15 @@
 import { Page, expect } from "@playwright/test";
 
-/** Every screen reachable from the navigation. */
-export const ALL_TABS = [
-  "home",
-  "planificador",
-  "calculadora",
-  "becas",
-  "voluntariados",
-  "guia",
-  "mapa",
-  "comunidad",
-  "feedback",
-  "chat",
-] as const;
+/**
+ * Every screen reachable from the navigation.
+ *
+ * The product is narrowed to Becas, Guías and the assistant, so the planner,
+ * the calculator, volunteering, the community, the feedback hub and the
+ * consular map are no longer offered —
+ * see `src/lib/navigation.ts`. Their components still exist; nothing links to
+ * them. Restoring one means adding it back here as well.
+ */
+export const ALL_TABS = ["home", "becas", "guia", "chat"] as const;
 
 export type Tab = (typeof ALL_TABS)[number];
 

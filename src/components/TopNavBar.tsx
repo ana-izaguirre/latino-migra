@@ -23,6 +23,7 @@ import {
   Settings,
   Trash2,
 } from "lucide-react";
+import { isTabVisible } from "../lib/navigation";
 import { NavigationTab, ThemeMode, GoogleUser } from "../types";
 import { useLanguage } from "../lib/i18n";
 import { useCurrency } from "../lib/CurrencyContext";
@@ -199,7 +200,11 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
   };
 
   const userIsAdmin = isAdmin(currentUser);
-  const navItems = allNavItems.filter((item) => !item.adminOnly || userIsAdmin);
+  // Hidden screens leave the navigation together, from one list — see
+  // `src/lib/navigation.ts`.
+  const navItems = allNavItems.filter(
+    (item) => (!item.adminOnly || userIsAdmin) && isTabVisible(item.id)
+  );
   const primaryNavItems = navItems.filter((item) => item.primary);
   const secondaryNavItems = navItems.filter((item) => !item.primary);
   const secondaryIsActive = secondaryNavItems.some((item) => item.id === activeTab);

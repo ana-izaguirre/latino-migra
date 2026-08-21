@@ -33,8 +33,6 @@ describe("HeroLanding Component", () => {
     const destinations: [string, string][] = [
       ["hero-btn-becas", "becas"],
       ["hero-btn-guias", "guia"],
-      ["hero-btn-planificador", "planificador"],
-      ["feature-btn-plan", "planificador"],
       ["feature-btn-chat", "chat"],
       ["feature-btn-guia-step", "guia"],
       ["feature-btn-becas-verified", "becas"],
@@ -57,7 +55,7 @@ describe("HeroLanding Component", () => {
 
       // A landing page whose buttons point at a removed screen is the failure
       // this guards: every destination has to be one the app can render.
-      const known = new Set(["becas", "guia", "planificador", "chat", "home"]);
+      const known = new Set(["becas", "guia", "chat", "home"]);
       container.querySelectorAll("button").forEach((button) => {
         setActiveTab.mockClear();
         fireEvent.click(button);
@@ -130,7 +128,7 @@ describe("HeroLanding Component", () => {
     it("still offers every destination", () => {
       const { container } = render(<HeroLanding setActiveTab={vi.fn()} />);
 
-      for (const id of ["hero-btn-becas", "hero-btn-guias", "hero-btn-planificador"]) {
+      for (const id of ["hero-btn-becas", "hero-btn-guias"]) {
         expect(container.querySelector(`#${id}`), id).toBeInTheDocument();
       }
     });
@@ -149,6 +147,55 @@ describe("HeroLanding Component", () => {
         const name = button.textContent?.trim() || button.getAttribute("aria-label");
         expect(name, `button#${button.id}`).toBeTruthy();
       });
+    });
+  });
+  /**
+   * The first screen says what the platform is and where to go. It used to
+   * also carry catalogue figures, and its actions read as stacked blocks on a
+   * phone.
+   */
+  describe("what the first screen offers", () => {
+    it("leads only to screens the navigation offers", () => {
+      const setActiveTab = vi.fn();
+      const { container } = render(<HeroLanding setActiveTab={setActiveTab} />);
+
+      // The planner is hidden, so a link to it from here is a dead end.
+      expect(container.querySelector("#hero-btn-planificador")).toBeNull();
+      expect(container.querySelector("#feature-btn-plan")).toBeNull();
+
+      container.querySelectorAll("button").forEach((button) => {
+        setActiveTab.mockClear();
+        fireEvent.click(button);
+        for (const call of setActiveTab.mock.calls) {
+          expect(call[0], button.id || button.textContent?.trim()).not.toBe("planificador");
+        }
+      });
+    });
+
+    it("makes no claim about the size of the catalogue", () => {
+      render(<HeroLanding setActiveTab={vi.fn()} />);
+
+      // The badge said "+5,000 Becas Activas" against a catalogue of 22.
+      expect(screen.queryByText(/\+5,000/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Becas Activas/i)).not.toBeInTheDocument();
+    });
+
+    it("puts its two destinations side by side rather than stacked", () => {
+      const { container } = render(<HeroLanding setActiveTab={vi.fn()} />);
+
+      const becas = container.querySelector("#hero-btn-becas");
+      const guias = container.querySelector("#hero-btn-guias");
+      expect(becas?.parentElement).toBe(guias?.parentElement);
+      // Two columns at every width, so neither becomes a full-bleed block.
+      expect(becas?.parentElement).toHaveClass("grid-cols-2");
+    });
+
+    it("keeps both actions at a thumb-sized target", () => {
+      const { container } = render(<HeroLanding setActiveTab={vi.fn()} />);
+
+      for (const id of ["hero-btn-becas", "hero-btn-guias"]) {
+        expect(container.querySelector(`#${id}`), id).toHaveClass("min-h-[48px]");
+      }
     });
   });
 });

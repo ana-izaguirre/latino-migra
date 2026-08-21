@@ -41,9 +41,11 @@ import {
   getUserMigrationPlan,
 } from "../lib/firebase";
 import { usePreferences } from "../lib/PreferencesContext";
+import { useLanguage } from "../lib/i18n";
 import { FilterChipGroup } from "./ui/FilterChipGroup";
 import { Modal } from "./ui/Modal";
 import { ImageWithFallback } from "./ui/ImageWithFallback";
+import { Disclosure } from "./ui/Disclosure";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card";
@@ -73,6 +75,13 @@ function daysUntil(deadline: string): number | null {
   today.setHours(0, 0, 0, 0);
   return Math.round((target.getTime() - today.getTime()) / 86_400_000);
 }
+
+/**
+ * The assistant cannot yet answer usefully about one specific call, so the
+ * button is hidden rather than removed: the handler, the prop and the path
+ * through `App` stay wired, and restoring it is this one word.
+ */
+const SHOW_ASK_AI_ABOUT_SCHOLARSHIP = false;
 
 /** How many convocatorias each "Cargar más" adds. */
 const LOAD_BATCH_SIZE = 6;
@@ -121,6 +130,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
   // that shared choice; widening back to "Todos" only relaxes this filter and
   // deliberately leaves the app-wide destination alone.
   const { destinationCountry, setDestinationCountry } = usePreferences();
+  const { t } = useLanguage();
   const [selectedCountry, setSelectedCountryState] = useState<string>(
     () => destinationCountry || "Todos"
   );
@@ -561,7 +571,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
   const renderFilterGroups = (scope: "sidebar" | "sheet") => (
     <>
       <FilterChipGroup
-        label="País Destino"
+        label={t("becas.countryLabel", "País Destino")}
         icon={<Globe2 className="w-3.5 h-3.5 text-secondary dark:text-teal-400" />}
         options={countryOptions}
         value={selectedCountry}
@@ -570,7 +580,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
         layout="wrap"
       />
       <FilterChipGroup
-        label="Nivel Educativo"
+        label={t("becas.levelLabel", "Nivel Educativo")}
         icon={<GraduationCap className="w-3.5 h-3.5 text-secondary dark:text-teal-400" />}
         options={educationOptions}
         value={selectedEducationLevel}
@@ -579,7 +589,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
         layout="wrap"
       />
       <FilterChipGroup
-        label="Área de Estudio"
+        label={t("becas.areaLabel", "Área de Estudio")}
         icon={<BookOpen className="w-3.5 h-3.5 text-secondary dark:text-teal-400" />}
         options={areaOptions}
         value={selectedArea}
@@ -588,7 +598,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
         layout="wrap"
       />
       <FilterChipGroup
-        label="Tipo de Apoyo"
+        label={t("becas.supportLabel", "Tipo de Apoyo")}
         icon={<Award className="w-3.5 h-3.5 text-secondary dark:text-teal-400" />}
         options={supportOptions}
         value={selectedSupportType}
@@ -597,7 +607,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
         layout="wrap"
       />
       <FilterChipGroup
-        label="Tipo de Entidad"
+        label={t("becas.institutionLabel", "Tipo de Entidad")}
         icon={<Building2 className="w-3.5 h-3.5 text-secondary dark:text-teal-400" />}
         options={institutionOptions}
         value={selectedInstitutionType}
@@ -606,7 +616,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
         layout="wrap"
       />
       <FilterChipGroup
-        label="Fecha de Cierre"
+        label={t("becas.deadlineLabel", "Fecha de Cierre")}
         icon={<CalendarIcon className="w-3.5 h-3.5 text-secondary dark:text-teal-400" />}
         options={dateOptions}
         value={selectedDateRange}
@@ -706,14 +716,18 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
         <div>
           <div className="flex items-center gap-2 text-secondary dark:text-teal-300 text-xs font-bold uppercase tracking-wider mb-1">
             <ShieldCheck className="w-4 h-4 text-emerald-500" />
-            <span>Convocatorias y Portales Oficiales Verificados 2026-2027</span>
+            <span>
+              {t("becas.eyebrow", "Convocatorias y Portales Oficiales Verificados 2026-2027")}
+            </span>
           </div>
           <h1 className="font-headline-lg text-3xl md:text-4xl font-extrabold text-primary dark:text-sky-300">
-            Directorio Oficial de Becas
+            {t("becas.title", "Directorio Oficial de Becas")}
           </h1>
           <p className="text-on-surface-variant dark:text-slate-300 text-sm md:text-base mt-1">
-            Encuentra becas directas de universidades internacionales, convenios gubernamentales y
-            organismos iberoamericanos.
+            {t(
+              "becas.subtitle",
+              "Encuentra becas directas de universidades internacionales, convenios gubernamentales y organismos iberoamericanos."
+            )}
           </p>
         </div>
 
@@ -742,7 +756,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
             className="inline-flex items-center gap-2 bg-secondary/10 dark:bg-teal-500/20 text-secondary dark:text-teal-300 hover:bg-secondary hover:text-white dark:hover:bg-teal-600 font-bold text-xs px-3.5 py-2.5 rounded-xl border border-secondary/30 dark:border-teal-500/30 transition-colors shrink-0 cursor-pointer"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>Sugerir Beca Oficial</span>
+            <span>{t("becas.suggest", "Sugerir Beca Oficial")}</span>
           </button>
 
           <div className="relative flex-1 min-w-[200px] md:w-64">
@@ -759,7 +773,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
 
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-on-surface-variant dark:text-slate-400 whitespace-nowrap">
-              Ordenar por:
+              {t("becas.sortBy", "Ordenar por:")}
             </span>
             <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
               <SelectTrigger
@@ -807,7 +821,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
               className="data-[state=active]:bg-primary data-[state=active]:text-white dark:data-[state=active]:bg-sky-600"
             >
               <Globe2 className="w-4 h-4" />
-              <span>Todas las Convocatorias</span>
+              <span>{t("becas.tabAll", "Todas las Convocatorias")}</span>
               <Badge
                 variant={viewModeTab === "all" ? "count" : "neutral"}
                 size="sm"
@@ -825,7 +839,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
               <Heart
                 className={`w-4 h-4 ${viewModeTab === "favorites" ? "fill-white" : "text-red-500"}`}
               />
-              <span>Mis Becas Favoritas</span>
+              <span>{t("becas.tabFavorites", "Mis Becas Favoritas")}</span>
               <Badge
                 variant={viewModeTab === "favorites" ? "count" : "neutral"}
                 size="sm"
@@ -936,7 +950,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 font-bold text-xs text-primary dark:text-sky-300">
               <SlidersHorizontal className="w-4 h-4 text-secondary dark:text-teal-400" />
-              <span>Filtros Rápidos</span>
+              <span>{t("becas.quickFilters", "Filtros Rápidos")}</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -957,7 +971,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                 className="inline-flex items-center gap-1.5 min-h-[44px] bg-primary dark:bg-sky-600 text-white text-xs font-bold py-2 px-3.5 rounded-xl shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 <Filter className="w-3.5 h-3.5" />
-                <span>Más Filtros</span>
+                <span>{t("becas.moreFilters", "Más Filtros")}</span>
                 {advancedFilterCount > 0 && (
                   <span className="bg-white/20 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
                     {advancedFilterCount}
@@ -968,7 +982,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
           </div>
 
           <FilterChipGroup
-            label="País Destino"
+            label={t("becas.countryLabel", "País Destino")}
             icon={<Globe2 className="w-4 h-4 text-secondary dark:text-teal-400" />}
             options={countryOptions}
             value={selectedCountry}
@@ -978,7 +992,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
           />
 
           <FilterChipGroup
-            label="Nivel Educativo"
+            label={t("becas.levelLabel", "Nivel Educativo")}
             icon={<GraduationCap className="w-4 h-4 text-secondary dark:text-teal-400" />}
             options={educationOptions}
             value={selectedEducationLevel}
@@ -997,21 +1011,23 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
           <Modal
             open={mobileFiltersOpen}
             onOpenChange={setMobileFiltersOpen}
-            title="Filtros de Búsqueda"
+            title={t("becas.searchFilters", "Filtros de Búsqueda")}
             size="md"
             id="mobile-filters-sheet"
             header={
               <div className="flex min-w-0 items-center justify-between gap-2">
                 <div className="flex items-center gap-2 font-bold text-base text-primary dark:text-sky-300">
                   <Filter className="w-5 h-5 shrink-0 text-secondary dark:text-teal-400" />
-                  <span className="truncate">Filtros de Búsqueda</span>
+                  <span className="truncate">
+                    {t("becas.searchFilters", "Filtros de Búsqueda")}
+                  </span>
                 </div>
                 <button
                   type="button"
                   onClick={clearFilters}
                   className="shrink-0 text-xs font-semibold text-secondary dark:text-teal-400 hover:underline px-2 py-1 active:scale-95"
                 >
-                  Limpiar todo
+                  {t("becas.clearAll", "Limpiar todo")}
                 </button>
               </div>
             }
@@ -1025,7 +1041,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                     className={`w-4 h-4 ${viewModeTab === "favorites" ? "fill-red-500 text-red-500" : "text-on-surface-variant"}`}
                   />
                   <span className="text-xs font-bold text-on-surface dark:text-slate-200">
-                    Ver solo mis favoritas
+                    {t("becas.onlyFavorites", "Ver solo mis favoritas")}
                   </span>
                 </div>
                 <button
@@ -1069,7 +1085,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 font-bold text-primary dark:text-sky-300">
                 <Filter className="w-5 h-5 text-secondary dark:text-teal-400" />
-                <span>Filtros Avanzados</span>
+                <span>{t("becas.advancedFilters", "Filtros Avanzados")}</span>
               </div>
               <button
                 onClick={clearFilters}
@@ -1084,7 +1100,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
             {/* Quick Filter for Favorites inside sidebar */}
             <div className="p-3 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/40 dark:border-slate-700 space-y-2">
               <label className="text-xs font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider block">
-                Vista Rápida
+                {t("becas.quickView", "Vista Rápida")}
               </label>
               <button
                 type="button"
@@ -1100,7 +1116,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                   <Heart
                     className={`w-3.5 h-3.5 ${viewModeTab === "favorites" ? "fill-white" : "fill-red-500"}`}
                   />
-                  <span>Solo mis favoritas</span>
+                  <span>{t("becas.onlyMine", "Solo mis favoritas")}</span>
                 </div>
                 <span className="text-xs bg-black/10 px-2 py-0.5 rounded-full font-mono">
                   {favorites.length}
@@ -1133,7 +1149,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                     className="flex items-center gap-2 text-xs text-on-surface-variant dark:text-slate-400"
                   >
                     <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
-                    Actualizando convocatorias…
+                    {t("becas.updating", "Actualizando convocatorias…")}
                   </p>
                 )}
                 {catalogueStatus === "bundled" && (
@@ -1142,8 +1158,10 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                     className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400"
                   >
                     <AlertCircle className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-                    No pudimos cargar las convocatorias más recientes. Estás viendo la lista
-                    incluida en la aplicación, que puede estar desactualizada.
+                    {t(
+                      "becas.bundledNotice",
+                      "No pudimos cargar las convocatorias más recientes. Estás viendo la lista incluida en la aplicación, que puede estar desactualizada."
+                    )}
                   </p>
                 )}
               </div>
@@ -1175,11 +1193,13 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                         <Heart className="w-8 h-8" />
                       </div>
                       <h3 className="font-headline-sm text-lg font-bold text-primary dark:text-sky-300">
-                        Aún no tienes becas en favoritos
+                        {t("becas.emptyFavoritesTitle", "Aún no tienes becas en favoritos")}
                       </h3>
                       <p className="text-sm text-on-surface-variant dark:text-slate-400 max-w-md mx-auto">
-                        Haz clic en el icono de corazón (♥) en cualquier convocatoria para guardarla
-                        y acceder a ella rápidamente aquí.
+                        {t(
+                          "becas.emptyFavoritesBody",
+                          "Haz clic en el icono de corazón (♥) en cualquier convocatoria para guardarla y acceder a ella rápidamente aquí."
+                        )}
                       </p>
                       <button
                         type="button"
@@ -1187,24 +1207,29 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                         id="empty-fav-explore-btn"
                         className="bg-primary dark:bg-sky-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-container"
                       >
-                        Ver Todas las Convocatorias
+                        {t("becas.seeAllCalls", "Ver Todas las Convocatorias")}
                       </button>
                     </>
                   ) : (
                     <>
                       <Search className="w-12 h-12 text-on-surface-variant mx-auto opacity-50" />
                       <h3 className="font-headline-sm text-lg font-bold text-primary dark:text-sky-300">
-                        No encontramos becas con los filtros seleccionados
+                        {t(
+                          "becas.emptyFilteredTitle",
+                          "No encontramos becas con los filtros seleccionados"
+                        )}
                       </h3>
                       <p className="text-sm text-on-surface-variant dark:text-slate-400 max-w-md mx-auto">
-                        Prueba ajustando los términos de búsqueda o haz clic en "Limpiar" para ver
-                        las 18+ becas disponibles.
+                        {t(
+                          "becas.emptyFilteredBody",
+                          "Prueba ajustando los términos de búsqueda, o limpia los filtros para ver el catálogo completo."
+                        )}
                       </p>
                       <button
                         onClick={clearFilters}
                         className="bg-primary text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-primary-container"
                       >
-                        Limpiar Filtros
+                        {t("becas.clearFilters", "Limpiar Filtros")}
                       </button>
                     </>
                   )}
@@ -1261,7 +1286,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                                   className="absolute bottom-3 right-3 rounded backdrop-blur-xs"
                                 >
                                   <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                                  <span>Oficial</span>
+                                  <span>{t("becas.official", "Oficial")}</span>
                                 </Badge>
                               )}
                             </CardHeader>
@@ -1305,7 +1330,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                               className="flex-1"
                             >
                               <BookOpen className="w-3.5 h-3.5" />
-                              <span>Ver Detalles</span>
+                              <span>{t("becas.viewDetails", "Ver Detalles")}</span>
                             </Button>
 
                             <Button variant="success" size="sm" asChild>
@@ -1344,7 +1369,9 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                       {/* Progress Bar */}
                       <div className="max-w-md mx-auto space-y-1.5">
                         <div className="flex items-center justify-between text-xs text-on-surface-variant dark:text-slate-400 font-medium">
-                          <span id="load-progress-label">Progreso de carga</span>
+                          <span id="load-progress-label">
+                            {t("becas.loadProgress", "Progreso de carga")}
+                          </span>
                           <span>
                             {displayedScholarships.length} de {filteredScholarships.length} (
                             {loadedPercentage}%)
@@ -1374,11 +1401,13 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                             className="btn-tactile inline-flex items-center gap-2 bg-secondary dark:bg-teal-600 hover:bg-secondary/90 text-white font-bold text-sm px-6 py-3 rounded-xl shadow-md hover:shadow-lg transition-all"
                           >
                             <ArrowDownCircle className="w-4 h-4" aria-hidden="true" />
-                            <span>Cargar Más Convocatorias (+{nextBatchSize})</span>
+                            <span>
+                              {t("becas.loadMore", "Cargar Más Convocatorias")} (+{nextBatchSize})
+                            </span>
                           </button>
                           <p className="text-xs text-on-surface-variant dark:text-slate-400">
                             Quedan {filteredScholarships.length - displayedScholarships.length}{" "}
-                            becas por mostrar
+                            {t("becas.remaining", "becas por mostrar")}
                           </p>
                         </div>
                       ) : (
@@ -1386,8 +1415,8 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                           <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-1.5">
                             <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
                             <span>
-                              Has llegado al final de las {filteredScholarships.length}{" "}
-                              convocatorias
+                              {t("becas.reachedEnd", "Has llegado al final de las")}{" "}
+                              {filteredScholarships.length} {t("becas.calls", "convocatorias")}
                             </span>
                           </p>
                           <button
@@ -1403,7 +1432,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                             }}
                             className="btn-tactile text-xs font-semibold text-secondary dark:text-teal-300 hover:underline inline-block py-1 px-2"
                           >
-                            Volver arriba del listado ↑
+                            {t("becas.backToTop", "Volver arriba del listado ↑")}
                           </button>
                         </div>
                       )}
@@ -1607,15 +1636,6 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                   <span>Portal Oficial Verificado: {selectedScholarship.officialPortalName}</span>
                 </p>
-                <a
-                  href={selectedScholarship.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-bold text-primary dark:text-sky-400 hover:underline bg-primary/10 dark:bg-sky-950/60 px-2.5 py-1 rounded-lg border border-primary/20"
-                >
-                  <ExternalLink className="w-3 h-3" />
-                  <span>Ir a la convocatoria oficial</span>
-                </a>
               </div>
             )}
           </div>
@@ -1624,81 +1644,101 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
             {selectedScholarship.description}
           </p>
 
-          {/* Requisitos */}
-          <div className="space-y-3 bg-surface dark:bg-slate-900 p-4 rounded-2xl border border-outline-variant/30 dark:border-slate-800">
-            <h4 className="font-bold text-sm text-primary dark:text-sky-300 uppercase tracking-wider">
-              Requisitos Principales
-            </h4>
-            <ul className="space-y-2">
-              {selectedScholarship.requirements.map((req, idx) => (
-                <li
-                  key={idx}
-                  className="flex items-start gap-2 text-sm text-on-surface-variant dark:text-slate-300"
-                >
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                  <span>{req}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Requisitos and beneficios collapse on a phone: together they are
+              the bulk of the panel, and they arrived as one wall of text. */}
+          <Disclosure
+            id="beca-requisitos"
+            label={t("becas.showRequirements", "Ver requisitos principales")}
+            labelWhenOpen={t("becas.hideRequirements", "Ocultar requisitos")}
+          >
+            <div className="space-y-3 bg-surface dark:bg-slate-900 p-4 rounded-2xl border border-outline-variant/30 dark:border-slate-800">
+              <h4 className="font-bold text-sm text-primary dark:text-sky-300 uppercase tracking-wider">
+                {t("becas.requirements", "Requisitos Principales")}
+              </h4>
+              <ul className="space-y-2">
+                {selectedScholarship.requirements.map((req, idx) => (
+                  <li
+                    key={idx}
+                    className="flex items-start gap-2 text-sm text-on-surface-variant dark:text-slate-300"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                    <span>{req}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Disclosure>
 
-          {/* Beneficios */}
-          <div className="space-y-3 bg-surface dark:bg-slate-900 p-4 rounded-2xl border border-outline-variant/30 dark:border-slate-800">
-            <h4 className="font-bold text-sm text-primary dark:text-sky-300 uppercase tracking-wider">
-              Beneficios Incluidos
-            </h4>
-            <ul className="space-y-2">
-              {selectedScholarship.benefits.map((ben, idx) => (
-                <li
-                  key={idx}
-                  className="flex items-start gap-2 text-sm text-on-surface-variant dark:text-slate-300"
-                >
-                  <Sparkles className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                  <span>{ben}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <Disclosure
+            id="beca-beneficios"
+            label={t("becas.showBenefits", "Ver beneficios incluidos")}
+            labelWhenOpen={t("becas.hideBenefits", "Ocultar beneficios")}
+          >
+            <div className="space-y-3 bg-surface dark:bg-slate-900 p-4 rounded-2xl border border-outline-variant/30 dark:border-slate-800">
+              <h4 className="font-bold text-sm text-primary dark:text-sky-300 uppercase tracking-wider">
+                {t("becas.benefits", "Beneficios Incluidos")}
+              </h4>
+              <ul className="space-y-2">
+                {selectedScholarship.benefits.map((ben, idx) => (
+                  <li
+                    key={idx}
+                    className="flex items-start gap-2 text-sm text-on-surface-variant dark:text-slate-300"
+                  >
+                    <Sparkles className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    <span>{ben}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Disclosure>
 
           {/* Modal Actions */}
-          <div className="flex flex-col sm:flex-row items-center gap-3 pt-4 border-t border-outline-variant/30 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 pt-4 border-t border-outline-variant/30 dark:border-slate-700">
             <a
+              id="beca-official-link"
               href={selectedScholarship.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-tactile w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 bg-primary dark:bg-sky-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-primary-container transition-all text-xs shadow-sm hover:shadow-md"
+              className="btn-tactile inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-primary dark:bg-sky-600 px-4 text-xs font-bold text-white transition-all hover:bg-primary-container"
             >
-              <ExternalLink className="w-4 h-4" />
-              <span>Link a la Convocatoria Oficial</span>
+              <ExternalLink className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>{t("becas.officialCall", "Convocatoria oficial")}</span>
             </a>
 
             <a
+              id="beca-calendar-reminder"
               href={generateGoogleCalendarUrl({
-                title: `Cierre de Convocatoria: ${selectedScholarship.title}`,
-                details: `Fecha límite para enviar expediente a ${selectedScholarship.title}. Requisitos: ${selectedScholarship.requirements.join(", ")}. Enlace oficial convocatoria: ${selectedScholarship.link}`,
+                // Says what it is. "Agendar" read as booking an appointment
+                // with somebody; nothing is booked with anyone — this puts a
+                // reminder in the reader's own calendar.
+                title: `Recordatorio: cierra la beca ${selectedScholarship.title}`,
+                details: `Último día para enviar tu expediente a ${selectedScholarship.title}.\n\nRequisitos: ${selectedScholarship.requirements.join(", ")}\n\nConvocatoria oficial: ${selectedScholarship.link}`,
                 startDate: selectedScholarship.deadlineDate,
                 location: selectedScholarship.country,
               })}
               target="_blank"
-              rel="noreferrer"
-              className="btn-tactile w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-all text-xs shadow-sm hover:shadow-md"
+              rel="noopener noreferrer"
+              className="btn-tactile inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white transition-all hover:bg-emerald-700"
             >
-              <CalendarIcon className="w-4 h-4" />
-              <span>Agendar en Google Calendar</span>
+              <CalendarIcon className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>{t("becas.remindMe", "Recordarme la fecha límite")}</span>
             </a>
 
-            <button
-              type="button"
-              onClick={() => {
-                const scholarshipToAsk = selectedScholarship;
-                setSelectedScholarship(null);
-                onAskAIAboutScholarship(scholarshipToAsk);
-              }}
-              className="btn-tactile w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-secondary dark:bg-teal-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-secondary-container hover:text-secondary-900 transition-all text-xs shadow-sm hover:shadow-md"
-            >
-              <Bot className="w-4 h-4" />
-              <span>Consultar IA</span>
-            </button>
+            {SHOW_ASK_AI_ABOUT_SCHOLARSHIP && (
+              <button
+                type="button"
+                id="beca-ask-ai"
+                onClick={() => {
+                  const scholarshipToAsk = selectedScholarship;
+                  setSelectedScholarship(null);
+                  onAskAIAboutScholarship(scholarshipToAsk);
+                }}
+                className="btn-tactile inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-secondary dark:bg-teal-600 px-4 text-xs font-bold text-white transition-all hover:bg-secondary-container"
+              >
+                <Bot className="w-4 h-4 shrink-0" aria-hidden="true" />
+                <span>Consultar IA</span>
+              </button>
+            )}
           </div>
         </Modal>
       )}
