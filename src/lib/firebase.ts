@@ -23,6 +23,7 @@ import {
   updateDoc,
   deleteDoc,
   increment,
+  getCountFromServer,
   QueryDocumentSnapshot,
   DocumentData,
 } from "firebase/firestore";
@@ -812,75 +813,71 @@ export async function triggerScholarshipSync(
 
 export interface VisaVotesData {
   helpfulVotes: number;
-  difficultyRating: number; // 1-5
-  totalReviews: number;
 }
 
 /**
- * Fetch persistent community votes and rating stats for visas of a country from Firestore
+ * How many people marked each visa of a country as useful.
+ *
+ * One document per (user, country, visa), with the document id built from all
+ * three — so the id itself enforces one vote per person and no rule has to
+ * check for a second one. The count is an aggregation over those documents
+ * rather than a stored counter: a counter any signed-in client may increment
+ * is a counter anyone can inflate, and there is no server here to hold it.
+ *
+ * Returns votes only for the visas that have any. A visa missing from the
+ * result has an unknown count, which the interface renders as unknown — it
+ * used to render as 18, a number nobody voted for.
  */
-/**
- * In-memory fallback used when Firestore is unavailable. Nothing is written to
- * localStorage, so the cache lives only for the current page session.
- */
-const visaVotesMemoryCache = new Map<string, Record<string, VisaVotesData>>();
-
 export async function fetchVisaGuideVotes(
   countryCode: string
 ): Promise<Record<string, VisaVotesData>> {
-  try {
-    if (!db) {
-      return visaVotesMemoryCache.get(countryCode) || {};
-    }
-    const q = collection(db, "visa_guide_votes", countryCode, "visas");
-    const snapshot = await getDocs(q);
-    const result: Record<string, VisaVotesData> = {};
-    snapshot.forEach((docSnap) => {
-      const data = docSnap.data();
-      result[docSnap.id] = {
-        helpfulVotes: data.helpfulVotes || 0,
-        difficultyRating: data.difficultyRating || 3,
-        totalReviews: data.totalReviews || 1,
-      };
-    });
-    visaVotesMemoryCache.set(countryCode, result);
-    return result;
-  } catch (err) {
-    console.warn("Could not fetch visa votes from Firestore, using in-memory fallback:", err);
-    return visaVotesMemoryCache.get(countryCode) || {};
-  }
+  if (!db) throw new Error("Firestore is not configured");
+
+  const snapshot = await getDocs(
+    query(collection(db, "visa_guide_votes"), where("countryCode", "==", countryCode))
+  );
+
+  const result: Record<string, VisaVotesData> = {};
+  snapshot.forEach((docSnap) => {
+    const visaId = docSnap.data().visaId;
+    if (typeof visaId !== "string") return;
+    result[visaId] = { helpfulVotes: (result[visaId]?.helpfulVotes ?? 0) + 1 };
+  });
+  return result;
+}
+
+/** Whether this user has already marked this visa as useful. */
+export function visaVoteId(userId: string, countryCode: string, visaId: string): string {
+  return `${userId}__${countryCode}__${visaId}`;
 }
 
 /**
- * Save / upvote a specific visa in Firestore with fallback
+ * Records one vote and returns the new count.
+ *
+ * Throws rather than falling back. The previous version answered a failed write
+ * with an invented number from an in-memory cache, so a denied write and a
+ * successful one looked identical on screen.
  */
-export async function voteVisaHelpful(countryCode: string, visaId: string): Promise<number> {
-  try {
-    if (db) {
-      const docRef = doc(db, "visa_guide_votes", countryCode, "visas", visaId);
-      await setDoc(
-        docRef,
-        {
-          helpfulVotes: increment(1),
-          lastVotedAt: new Date().toISOString(),
-        },
-        { merge: true }
-      );
-      const snap = await getDoc(docRef);
-      return snap.data()?.helpfulVotes || 1;
-    }
-  } catch (err) {
-    console.warn("Firestore vote failed, updating local store:", err);
-  }
+export async function voteVisaHelpful(
+  userId: string,
+  countryCode: string,
+  visaId: string
+): Promise<number> {
+  if (!db) throw new Error("Firestore is not configured");
 
-  // In-memory fallback for the current session.
-  const existing = visaVotesMemoryCache.get(countryCode) || {};
-  const current = existing[visaId]?.helpfulVotes || 12;
-  const updated = current + 1;
-  existing[visaId] = {
-    ...(existing[visaId] || { difficultyRating: 3, totalReviews: 5 }),
-    helpfulVotes: updated,
-  };
-  visaVotesMemoryCache.set(countryCode, existing);
-  return updated;
+  await setDoc(doc(db, "visa_guide_votes", visaVoteId(userId, countryCode, visaId)), {
+    userId,
+    countryCode,
+    visaId,
+    createdAt: new Date().toISOString(),
+  });
+
+  const counted = await getCountFromServer(
+    query(
+      collection(db, "visa_guide_votes"),
+      where("countryCode", "==", countryCode),
+      where("visaId", "==", visaId)
+    )
+  );
+  return counted.data().count;
 }

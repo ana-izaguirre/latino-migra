@@ -25,6 +25,7 @@ import { COUNTRY_ANTI_SCAM_DATA } from "../data/antiScamData";
 import { Disclosure } from "./ui/Disclosure";
 import { CalendarAgendaButton } from "./CalendarAgendaButton";
 import { fetchVisaGuideVotes, voteVisaHelpful, VisaVotesData } from "../lib/firebase";
+import { GoogleUser } from "../types";
 import { usePreferences } from "../lib/PreferencesContext";
 import { useCurrency } from "../lib/CurrencyContext";
 import { convertCostRange, formatCostRange } from "../lib/currency";
@@ -32,11 +33,16 @@ import { convertCostRange, formatCostRange } from "../lib/currency";
 interface GuiaMigracionProps {
   setActiveTab: (tab: NavigationTab) => void;
   onAskAIAboutGuide: (countryName: string, visaName?: string) => void;
+  /** Voting needs an identity: the vote document is keyed by it. */
+  currentUser?: GoogleUser | null;
+  onOpenAuthModal?: () => void;
 }
 
 export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
   setActiveTab,
   onAskAIAboutGuide,
+  currentUser,
+  onOpenAuthModal,
 }) => {
   const { t } = useLanguage();
   // Country selection is shared app-wide, so opening a guide for Alemania also
@@ -49,41 +55,64 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
   const [visaVotes, setVisaVotes] = useState<Record<string, VisaVotesData>>({});
   const [userVotedVisas, setUserVotedVisas] = useState<Record<string, boolean>>({});
 
+  /**
+   * How the vote counts are going.
+   *
+   * The counter used to print `helpfulVotes || 18` — so a country with no votes
+   * at all, which is every country while the collection is empty, claimed
+   * eighteen people had found each visa useful. A count that could not be read
+   * now renders as no count (#79).
+   */
+  const [votesStatus, setVotesStatus] = useState<"loading" | "loaded" | "failed">("loading");
+  const [voteError, setVoteError] = useState<string | null>(null);
+
   const guide = MIGRATION_GUIDES_DATA[selectedCountryCode] || MIGRATION_GUIDES_DATA["ES"];
 
-  // Fetch real-time votes & stats for the active country from Firestore DB
+  // Community vote counts for the active country.
   useEffect(() => {
     let isMounted = true;
-    async function loadVotes() {
-      try {
-        const data = await fetchVisaGuideVotes(selectedCountryCode);
-        if (isMounted) {
-          setVisaVotes(data);
-        }
-      } catch (e) {
+    setVotesStatus("loading");
+    fetchVisaGuideVotes(selectedCountryCode)
+      .then((data) => {
+        if (!isMounted) return;
+        setVisaVotes(data);
+        setVotesStatus("loaded");
+      })
+      .catch((e) => {
         console.warn("Could not load visa votes:", e);
-      }
-    }
-    loadVotes();
+        if (isMounted) setVotesStatus("failed");
+      });
     return () => {
       isMounted = false;
     };
   }, [selectedCountryCode]);
 
+  // A vote belongs to a person, so the tab change carries no votes with it.
+  useEffect(() => {
+    setUserVotedVisas({});
+  }, [selectedCountryCode, currentUser?.id]);
+
   const handleVoteVisa = async (visaId: string) => {
+    if (!currentUser?.id) {
+      onOpenAuthModal?.();
+      return;
+    }
     if (userVotedVisas[visaId]) return;
-    setUserVotedVisas((prev) => ({ ...prev, [visaId]: true }));
+
+    setVoteError(null);
     try {
-      const newCount = await voteVisaHelpful(selectedCountryCode, visaId);
-      setVisaVotes((prev) => ({
-        ...prev,
-        [visaId]: {
-          ...(prev[visaId] || { difficultyRating: 3, totalReviews: 1 }),
-          helpfulVotes: newCount,
-        },
-      }));
+      const newCount = await voteVisaHelpful(currentUser.id, selectedCountryCode, visaId);
+      setUserVotedVisas((prev) => ({ ...prev, [visaId]: true }));
+      setVisaVotes((prev) => ({ ...prev, [visaId]: { helpfulVotes: newCount } }));
+      setVotesStatus("loaded");
     } catch (e) {
+      // The write used to be answered with an invented number from an
+      // in-memory cache, so a denied write looked exactly like a successful
+      // one. A failure has to be visible somewhere.
       console.warn("Vote error:", e);
+      setVoteError(
+        t("guia.voteFailed", "No pudimos registrar tu voto. Inténtalo de nuevo más tarde.")
+      );
     }
   };
 
@@ -289,6 +318,35 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
             </button>
           </div>
 
+          {/*
+            Where the vote counts came from. A denied read used to be swallowed
+            by a catch and replaced with an invented 18 per visa, so a broken
+            collection and a working one looked identical (#79, #24).
+          */}
+          <div role="status" aria-live="polite" className="empty:hidden">
+            {votesStatus === "failed" && (
+              <p
+                id="visa-votes-failed-status"
+                className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400"
+              >
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                {t(
+                  "guia.votesUnavailable",
+                  "No pudimos cargar cuántas personas marcaron estas guías como útiles."
+                )}
+              </p>
+            )}
+            {voteError && (
+              <p
+                id="visa-vote-error"
+                className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400"
+              >
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                {voteError}
+              </p>
+            )}
+          </div>
+
           {/* Visa Category Filter Chips */}
           {availableCategories.length > 0 && (
             <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -442,8 +500,13 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
                       <button
                         onClick={() => handleVoteVisa(visa.id)}
                         disabled={userVotedVisas[visa.id]}
-                        title="Votar información útil"
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
+                        id={`visa-vote-${visa.id}`}
+                        title={
+                          currentUser
+                            ? t("guia.voteTitle", "Marcar esta información como útil")
+                            : t("guia.voteSignIn", "Inicia sesión para marcar esta guía como útil")
+                        }
+                        className={`inline-flex items-center gap-1.5 min-h-[44px] px-2.5 py-1 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
                           userVotedVisas[visa.id]
                             ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
                             : "bg-surface hover:bg-surface-container text-on-surface-variant dark:bg-slate-900 dark:text-slate-300 border-outline-variant/40 dark:border-slate-800"
@@ -452,7 +515,18 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
                         <ThumbsUp
                           className={`w-3.5 h-3.5 ${userVotedVisas[visa.id] ? "fill-current" : ""}`}
                         />
-                        <span>{visaVotes[visa.id]?.helpfulVotes || 18} útiles</span>
+                        {/*
+                          A count is shown only when one was read. No vote yet
+                          is "sé el primero", not a number — the control used to
+                          print 18 for every visa in the product.
+                        */}
+                        <span>
+                          {votesStatus === "loaded" && visaVotes[visa.id]
+                            ? `${visaVotes[visa.id].helpfulVotes} ${t("guia.voteCount", "útiles")}`
+                            : votesStatus === "loaded"
+                              ? t("guia.voteFirst", "Sé el primero en marcarla útil")
+                              : t("guia.voteUseful", "Marcar como útil")}
+                        </span>
                       </button>
                     </div>
 
