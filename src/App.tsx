@@ -88,8 +88,11 @@ export default function App() {
         }
       } else {
         detachUser();
-        // Only clear if not in temporary preview state
-        setCurrentUser((prev) => (prev?.id.startsWith("google-user-") ? prev : null));
+        // Firebase is the only source of a session. This used to keep any user
+        // whose id started with `google-user-` — the prefix of the fabricated
+        // "Invitada" identity AuthModal handed out when the popup failed — so
+        // the application held a session Firebase had never issued.
+        setCurrentUser(null);
       }
     });
 
