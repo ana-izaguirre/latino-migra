@@ -33,28 +33,103 @@ describe("BecasExplorer Component", () => {
   it("opens scholarship modal details when clicking on a card", () => {
     render(<BecasExplorer {...defaultProps} />);
 
-    // Find and click on the first scholarship "Ver Detalles" button
     const detailButtons = screen.getAllByRole("button", { name: /Ver Detalles/i });
     expect(detailButtons.length).toBeGreaterThan(0);
     fireEvent.click(detailButtons[0]);
 
-    // Check that modal details appear
-    expect(screen.getByText(/Requisitos Principales/i)).toBeInTheDocument();
-    expect(screen.getByText(/Beneficios Incluidos/i)).toBeInTheDocument();
+    // Requisitos and beneficios collapse on a phone, so the panel is
+    // addressed by its controls rather than by the headings inside them.
+    expect(document.getElementById("beca-requisitos")).toBeInTheDocument();
+    expect(document.getElementById("beca-beneficios")).toBeInTheDocument();
+    // The disclosure control reads "Ver requisitos principales", so match the
+    // heading by role rather than by a case-insensitive substring.
+    const dialog = screen.getByRole("dialog");
+    expect(
+      within(dialog).getByRole("heading", { name: "Requisitos Principales" })
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("heading", { name: "Beneficios Incluidos" })
+    ).toBeInTheDocument();
   });
 
-  it("calls onAskAIAboutScholarship when clicking Consultar IA in modal", () => {
-    render(<BecasExplorer {...defaultProps} />);
+  /**
+   * The panel arrived as one wall of text with three equally loud buttons,
+   * one of which offered an assistant that cannot yet answer about a specific
+   * call, and another of which said "Agendar" — which reads as booking an
+   * appointment with somebody.
+   */
+  describe("the scholarship detail panel", () => {
+    const openFirstDetail = () => {
+      const result = render(<BecasExplorer {...defaultProps} />);
+      fireEvent.click(screen.getAllByRole("button", { name: /Ver Detalles/i })[0]);
+      return result;
+    };
 
-    // Open modal
-    const detailButtons = screen.getAllByRole("button", { name: /Ver Detalles/i });
-    fireEvent.click(detailButtons[0]);
+    it("collapses requisitos and beneficios, closed to begin with", () => {
+      openFirstDetail();
 
-    // Click on "Consultar IA" button
-    const askAiBtn = screen.getByRole("button", { name: /Consultar IA/i });
-    fireEvent.click(askAiBtn);
+      for (const id of ["beca-requisitos", "beca-beneficios"]) {
+        expect(document.getElementById(id), id).toHaveAttribute("aria-expanded", "false");
+      }
+    });
 
-    expect(defaultProps.onAskAIAboutScholarship).toHaveBeenCalled();
+    it("opens a section when its control is used", () => {
+      openFirstDetail();
+
+      const control = document.getElementById("beca-requisitos") as HTMLElement;
+      fireEvent.click(control);
+
+      expect(control).toHaveAttribute("aria-expanded", "true");
+      expect(document.getElementById("beca-requisitos-panel")).not.toHaveClass("hidden");
+    });
+
+    it("says the calendar action creates a reminder, not an appointment", () => {
+      openFirstDetail();
+
+      const link = document.getElementById("beca-calendar-reminder");
+      expect(link).toHaveTextContent(/Recordarme la fecha límite/i);
+      expect(link).not.toHaveTextContent(/Agendar/i);
+
+      // The event that lands in the reader's calendar says so too.
+      // Query strings encode spaces as `+`, which decodeURIComponent leaves
+      // alone.
+      const href = decodeURIComponent(link?.getAttribute("href") ?? "").replace(/\+/g, " ");
+      expect(href).toMatch(/Recordatorio: cierra la beca/);
+      expect(href).not.toMatch(/Cierre de Convocatoria/);
+    });
+
+    it("links to the official call exactly once", () => {
+      const { container } = openFirstDetail();
+
+      // The header and the action row both linked to the same page.
+      const officialLinks = [...container.ownerDocument.querySelectorAll("a")].filter((a) =>
+        /convocatoria oficial/i.test(a.textContent || "")
+      );
+      expect(officialLinks).toHaveLength(1);
+      expect(document.getElementById("beca-official-link")).toHaveAttribute("target", "_blank");
+      expect(document.getElementById("beca-official-link")).toHaveAttribute(
+        "rel",
+        expect.stringContaining("noopener")
+      );
+    });
+
+    it("hides the assistant button without unwiring it", () => {
+      const onAskAIAboutScholarship = vi.fn();
+      render(<BecasExplorer {...defaultProps} onAskAIAboutScholarship={onAskAIAboutScholarship} />);
+      fireEvent.click(screen.getAllByRole("button", { name: /Ver Detalles/i })[0]);
+
+      expect(document.getElementById("beca-ask-ai")).toBeNull();
+      expect(screen.queryByRole("button", { name: /Consultar IA/i })).toBeNull();
+      expect(onAskAIAboutScholarship).not.toHaveBeenCalled();
+    });
+
+    it("keeps every action reachable by a thumb", () => {
+      openFirstDetail();
+
+      for (const id of ["beca-official-link", "beca-calendar-reminder"]) {
+        expect(document.getElementById(id), id).toHaveClass("min-h-[44px]");
+      }
+    });
   });
 
   it("opens suggest scholarship modal when clicking Sugerir Beca Oficial", () => {
@@ -387,6 +462,67 @@ describe("BecasExplorer Component", () => {
       // The sheet is portalled to `document.body`, so it is outside the
       // render container that the other assertions use.
       expect(sheet.querySelector("#sheet-country-España")).toBeInTheDocument();
+    });
+  });
+
+  /**
+   * The suggestion form. It is the only way a reader can add to a catalogue
+   * whose whole claim is that every entry is an official source, so its
+   * behaviour is worth pinning.
+   */
+  describe("suggesting an official scholarship", () => {
+    const openForm = () => {
+      const result = render(<BecasExplorer {...defaultProps} />);
+      fireEvent.click(document.getElementById("suggest-scholarship-btn") as HTMLElement);
+      return result;
+    };
+
+    it("asks for the institution, the country and the link", () => {
+      openForm();
+      const dialog = screen.getByRole("dialog");
+
+      expect(within(dialog).getByText(/Universidad o Institución/i)).toBeInTheDocument();
+      expect(within(dialog).getByText(/País Destino/i)).toBeInTheDocument();
+    });
+
+    it("will not submit without the institution", () => {
+      openForm();
+
+      const input = screen
+        .getByRole("dialog")
+        .querySelector('input[type="text"]') as HTMLInputElement;
+      // Required, so an empty form cannot reach the catalogue at all.
+      expect(input).toBeRequired();
+      expect(input.value).toBe("");
+    });
+
+    it("keeps what was typed while the form is open", () => {
+      openForm();
+
+      const input = screen
+        .getByRole("dialog")
+        .querySelector('input[type="text"]') as HTMLInputElement;
+      fireEvent.change(input, { target: { value: "Universidad Autónoma de Madrid" } });
+
+      expect(input.value).toBe("Universidad Autónoma de Madrid");
+    });
+
+    it("confirms the suggestion was sent for verification", () => {
+      openForm();
+
+      const form = screen.getByRole("dialog").querySelector("form") as HTMLFormElement;
+      const input = form.querySelector('input[type="text"]') as HTMLInputElement;
+      fireEvent.change(input, { target: { value: "Universidad de Salamanca" } });
+      fireEvent.submit(form);
+
+      // Verification is the point: nothing enters the catalogue unchecked.
+      expect(screen.getByText(/enviada para verificación/i)).toBeInTheDocument();
+    });
+
+    it("does not close the panel the moment it is opened", () => {
+      openForm();
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      expect(screen.getByText(/Sugerir Beca Universitaria/i)).toBeInTheDocument();
     });
   });
 });

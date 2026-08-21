@@ -53,8 +53,12 @@ test.describe("LatinoMigra - End to End Suite", () => {
       .first()
       .click();
 
-    // Check modal detail is displayed
-    await expect(page.locator("text=Requisitos Principales").first()).toBeVisible();
+    // Check modal detail is displayed. Matched by role: the panel also has a
+    // disclosure control reading "Ver requisitos principales", which a text
+    // substring match picks up first and which is hidden on this viewport.
+    await expect(
+      page.getByRole("heading", { name: "Requisitos Principales", exact: true })
+    ).toBeVisible();
 
     // Close the modal
     const closeButton = page
