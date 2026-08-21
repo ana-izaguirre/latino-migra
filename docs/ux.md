@@ -204,6 +204,18 @@ Recently addressed and verified by tests:
   answer usefully about one specific call, and the handler, the prop and the
   path through `App` stay wired so restoring it is one word.
 
+## Scholarship filters in the mobile sheet
+
+- Each of the six groups is one swipeable row of chips, the same as the quick
+  filters directly above the sheet. They used `wrap` in both the sidebar and the
+  sheet: on a phone that made every group a block — the country group alone was
+  356px — and the six ran to **1435px inside a 716px dialog**, so reaching the
+  last filter meant scrolling past five others.
+- The sidebar keeps `wrap`. There is vertical room on a desktop, and showing
+  every option at once is worth it there. The layout differs because the
+  surfaces do.
+- Measured after: 679px of content, which fits the sheet.
+
 ## Estudios (cursos, certificados y FP)
 
 - The Becas & Estudios screen carries a fourth tab, **Cursos, Certificados y
