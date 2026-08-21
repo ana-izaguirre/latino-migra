@@ -1,5 +1,6 @@
 import React from "react";
 import { Home, GraduationCap, BookOpen, Sparkles, Menu } from "lucide-react";
+import { isTabVisible } from "../lib/navigation";
 import { NavigationTab } from "../types";
 import { useLanguage } from "../lib/i18n";
 
@@ -24,12 +25,16 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const { language } = useLanguage();
   const es = language !== "en";
 
-  const items: { id: NavigationTab; label: string; icon: React.ReactNode }[] = [
+  const allItems: { id: NavigationTab; label: string; icon: React.ReactNode }[] = [
     { id: "home", label: es ? "Inicio" : "Home", icon: <Home className="w-5 h-5" /> },
     { id: "becas", label: es ? "Becas" : "Grants", icon: <GraduationCap className="w-5 h-5" /> },
     { id: "guia", label: es ? "Guías" : "Guides", icon: <BookOpen className="w-5 h-5" /> },
     { id: "chat", label: es ? "Chat IA" : "AI Chat", icon: <Sparkles className="w-5 h-5" /> },
   ];
+
+  // None of these four are hidden today, but the bar reads the same list
+  // as the rest of the navigation so it cannot drift from it.
+  const items = allItems.filter((item) => isTabVisible(item.id));
 
   const handleNavigate = (tab: NavigationTab) => {
     setActiveTab(tab);

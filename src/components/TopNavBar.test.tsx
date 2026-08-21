@@ -21,20 +21,35 @@ describe("TopNavBar Component", () => {
     expect(screen.getByText("LatinoMigra")).toBeInTheDocument();
     expect(screen.getByText(/Becas & Estudios/)).toBeInTheDocument();
     expect(screen.getByText("Guía de Migración")).toBeInTheDocument();
-    expect(screen.getByText("Mapa Consular")).toBeInTheDocument();
     expect(screen.getByText("Chat IA")).toBeInTheDocument();
   });
 
-  it("groups secondary destinations behind the tools menu", () => {
+  /**
+   * The product is narrowed to Becas and Guías. The tools menu held only
+   * hidden screens for a signed-out visitor, so it no longer renders at all
+   * rather than opening onto nothing.
+   */
+  it("offers no destination that the product has hidden", () => {
     render(<TopNavBar {...defaultProps} />);
 
-    // Not inline in the bar...
-    expect(screen.queryByText("Comunidad")).not.toBeInTheDocument();
+    for (const label of [
+      /Comunidad/i,
+      /Planificador/i,
+      /Calculadora/i,
+      /Voluntariados/i,
+      /Mapa Consular/i,
+    ]) {
+      expect(screen.queryByText(label), String(label)).not.toBeInTheDocument();
+    }
+    expect(screen.queryByRole("button", { name: /Herramientas/i })).not.toBeInTheDocument();
+  });
 
-    // ...but one click away.
-    fireEvent.click(screen.getByRole("button", { name: /Herramientas/i }));
-    expect(screen.getByText("Comunidad")).toBeInTheDocument();
-    expect(screen.getByText(/Planificador/i)).toBeInTheDocument();
+  it("still offers the three screens the product is built on", () => {
+    render(<TopNavBar {...defaultProps} />);
+
+    expect(screen.getAllByText(/Becas/).length).toBeGreaterThan(0);
+    expect(screen.getByText("Guía de Migración")).toBeInTheDocument();
+    expect(screen.getByText("Chat IA")).toBeInTheDocument();
   });
 
   /**
@@ -53,8 +68,16 @@ describe("TopNavBar Component", () => {
       ...overrides,
     });
 
-    const openToolsMenu = () =>
-      fireEvent.click(screen.getByRole("button", { name: /Herramientas/i }));
+    /**
+     * The tools menu only renders when it has something in it. For a
+     * non-administrator every entry behind it is now hidden, so the menu is
+     * absent — and "Panel de Control" is absent with it, which is what these
+     * cases are really about.
+     */
+    const openToolsMenu = () => {
+      const trigger = screen.queryByRole("button", { name: /Herramientas/i });
+      if (trigger) fireEvent.click(trigger);
+    };
 
     it("is hidden from a signed-in user with no admin entry", () => {
       render(<TopNavBar {...defaultProps} currentUser={signedIn()} />);
