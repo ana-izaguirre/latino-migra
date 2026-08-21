@@ -48,7 +48,6 @@ import {
 import { usePreferences } from "../lib/PreferencesContext";
 import { FilterChipGroup } from "./ui/FilterChipGroup";
 import { Modal } from "./ui/Modal";
-import { useBodyScrollLock } from "../lib/useBodyScrollLock";
 
 interface BecasExplorerProps {
   searchQuery: string;
@@ -974,63 +973,25 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
           <Modal
             open={mobileFiltersOpen}
             onOpenChange={setMobileFiltersOpen}
-            title="Filtros"
+            title="Filtros de Búsqueda"
             size="md"
             id="mobile-filters-sheet"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-outline-variant/30 dark:border-slate-800">
-              <div className="flex items-center gap-2 font-bold text-base text-primary dark:text-sky-300">
-                <Filter className="w-5 h-5 text-secondary dark:text-teal-400" />
-                <span>Filtros de Búsqueda</span>
-              </div>
-<div className="flex items-center gap-2">
-  <Filter className="w-5 h-5 text-secondary dark:text-teal-400" />
-  <span>Filtros de Búsqueda</span>
-</div>
-
-{/* Mobile Filter Controls */}
-<div className="space-y-4">
-  {/* Favoritas Toggle */}
-  <div className="p-3 bg-surface dark:bg-slate-800/80 rounded-xl border border-outline-variant/40 dark:border-slate-700 flex items-center justify-between">
-    <div className="flex items-center gap-2">
-      <Heart
-        className={`w-4 h-4 ${viewModeTab === "favorites" ? "fill-red-500 text-red-500" : "text-on-surface-variant"}`}
-      />
-      <span className="text-xs font-bold text-on-surface dark:text-slate-200">
-        Ver solo mis favoritas
-      </span>
-    </div>
-    <button
-      type="button"
-      onClick={() =>
-        setViewModeTab(viewModeTab === "favorites" ? "all" : "favorites")
-      }
-      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 ${
-        viewModeTab === "favorites"
-          ? "bg-red-500 text-white shadow-xs"
-          : "bg-surface-container dark:bg-slate-700 text-on-surface-variant dark:text-slate-300"
-      }`}
-    >
-      {viewModeTab === "favorites" ? "Activado" : "Desactivado"} ({favorites.length})
-    </button>
-  </div>
-
-  {renderFilterGroups("sheet")}
-</div>
-
-{/* Bottom Apply Action */}
-<div className="pt-3 border-t border-outline-variant/30 dark:border-slate-800 sticky bottom-0 bg-surface-container-lowest dark:bg-slate-900">
+            header={
+              <div className="flex min-w-0 items-center justify-between gap-2">
+                <div className="flex items-center gap-2 font-bold text-base text-primary dark:text-sky-300">
+                  <Filter className="w-5 h-5 shrink-0 text-secondary dark:text-teal-400" />
+                  <span className="truncate">Filtros de Búsqueda</span>
+                </div>
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="text-xs font-semibold text-secondary dark:text-teal-400 hover:underline px-2 py-1 active:scale-95"
+                  className="shrink-0 text-xs font-semibold text-secondary dark:text-teal-400 hover:underline px-2 py-1 active:scale-95"
                 >
                   Limpiar todo
                 </button>
               </div>
-            </div>
-
+            }
+          >
             {/* Mobile Filter Controls */}
             <div className="space-y-4">
               {/* Favoritas Toggle */}
@@ -1056,95 +1017,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                 </button>
               </div>
 
-              {/* País Destino Dropdown */}
-              <div>
-                <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1.5">
-                  País Destino
-                </label>
-                <select
-                  value={selectedCountry}
-                  onChange={(e) => setSelectedCountry(e.target.value)}
-                  className="w-full bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 text-on-surface dark:text-slate-200 text-xs font-semibold rounded-xl p-3 outline-none focus:ring-2 focus:ring-secondary"
-                >
-                  {countries.map((c) => (
-                    <option key={c} value={c}>
-                      {c === "Todos" ? "🌍 Todos los países" : c}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Área de Estudio */}
-              <div>
-                <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1.5">
-                  Área de Estudio
-                </label>
-                <select
-                  value={selectedArea}
-                  onChange={(e) => setSelectedArea(e.target.value)}
-                  className="w-full bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 text-on-surface dark:text-slate-200 text-xs font-semibold rounded-xl p-3 outline-none focus:ring-2 focus:ring-secondary"
-                >
-                  {areas.map((a) => (
-                    <option key={a} value={a}>
-                      {a === "Todas" ? "🎓 Todas las áreas" : a}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Tipo de Apoyo */}
-              <div>
-                <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1.5">
-                  Tipo de Apoyo
-                </label>
-                <select
-                  value={selectedSupportType}
-                  onChange={(e) => setSelectedSupportType(e.target.value)}
-                  className="w-full bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 text-on-surface dark:text-slate-200 text-xs font-semibold rounded-xl p-3 outline-none focus:ring-2 focus:ring-secondary"
-                >
-                  {supportTypes.map((t) => (
-                    <option key={t} value={t}>
-                      {t === "Todos" ? "🏆 Todos los apoyos" : t}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Tipo de Entidad */}
-              <div>
-                <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1.5">
-                  Tipo de Entidad
-                </label>
-                <select
-                  value={selectedInstitutionType}
-                  onChange={(e) => setSelectedInstitutionType(e.target.value)}
-                  className="w-full bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 text-on-surface dark:text-slate-200 text-xs font-semibold rounded-xl p-3 outline-none focus:ring-2 focus:ring-secondary"
-                >
-                  {institutionTypes.map((it) => (
-                    <option key={it} value={it}>
-                      {it === "Todas" ? "🏛️ Todas las entidades" : it}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Fecha Límite */}
-              <div>
-                <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1.5">
-                  Fecha de Cierre
-                </label>
-                <select
-                  value={selectedDateRange}
-                  onChange={(e) => setSelectedDateRange(e.target.value)}
-                  className="w-full bg-surface dark:bg-slate-800 border border-outline-variant/60 dark:border-slate-700 text-on-surface dark:text-slate-200 text-xs font-semibold rounded-xl p-3 outline-none focus:ring-2 focus:ring-secondary"
-                >
-                  {dateRanges.map((dr) => (
-                    <option key={dr.id} value={dr.id}>
-                      {dr.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {renderFilterGroups("sheet")}
             </div>
 
             {/* Bottom Apply Action */}

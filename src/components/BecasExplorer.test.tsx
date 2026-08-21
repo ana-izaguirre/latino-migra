@@ -335,14 +335,18 @@ describe("BecasExplorer Component", () => {
       const { container } = render(<BecasExplorer {...defaultProps} />);
 
       fireEvent.click(container.querySelector("#btn-open-mobile-filters")!);
-      const sheet = screen.getByText(/Filtros de Búsqueda/i).closest("div[class*='rounded-t-3xl']");
-      expect(sheet).not.toBeNull();
+      // The sheet is the shared `Modal`, so it is addressed by its role
+      // rather than by a class the panel happens to carry.
+      const sheet = screen.getByRole("dialog");
 
       // A phone's own picker cannot show how many results an option leads to,
       // and with most combinations empty that count is the point.
-      expect(within(sheet as HTMLElement).queryByRole("combobox")).toBeNull();
-      expect((sheet as HTMLElement).querySelectorAll("select")).toHaveLength(0);
-      expect(chip(container, "sheet-country-España")).toBeInTheDocument();
+      expect(within(sheet).queryByRole("combobox")).toBeNull();
+      expect(sheet.querySelectorAll("select")).toHaveLength(0);
+      expect(sheet).toHaveAccessibleName(/Filtros de Búsqueda/i);
+      // The sheet is portalled to `document.body`, so it is outside the
+      // render container that the other assertions use.
+      expect(sheet.querySelector("#sheet-country-España")).toBeInTheDocument();
     });
   });
 });
