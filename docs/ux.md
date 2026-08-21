@@ -78,6 +78,13 @@ Recently addressed and verified by tests:
   them in Firestore and nothing in the browser, so they follow the account to
   another device. Signing in migrates the cookie and deletes it. A **Clear my
   preferences** control in the preferences menu empties both.
+- Every dialog is one component, `src/components/ui/Modal.tsx`, built on
+  `@radix-ui/react-dialog`. A sheet rising from the bottom edge on a phone, a
+  centred dialog on a pointer device. Eleven of the twelve hand-written overlays
+  are gone; the twelfth is the navigation drawer, which is a different shape and
+  keeps its own implementation.
+- Focus is trapped inside an open dialog and returns to the control that opened
+  it. Neither was true of any overlay before.
 - The scholarship catalogue says where its list came from. The bundled dataset
   renders immediately and Firestore replaces it, which used to happen silently —
   and a failed load was indistinguishable from a successful one. A polite live
@@ -101,6 +108,19 @@ Recently addressed and verified by tests:
   `useBodyScrollLock` (`src/lib/`) pins the body and restores the reading
   position on close — the same mechanism the drawer already used, now shared by
   all ten overlays.
+- Overlays are positioned against the viewport, not against the page. `<main>`
+  carries `.animate-fade-in`, whose animation used to fill `both`; a filling
+  animation keeps contributing its final `transform`, and Chromium resolves the
+  keyword `none` to the identity matrix, which is still a transform. Any
+  transform makes the element the containing block for its `position: fixed`
+  descendants, so every overlay in the application was laid out against the
+  full height of the page. Measured at 375px: a filter sheet meant to sit at
+  the bottom of the screen was placed at y=3268 inside a 6583px-tall
+  "fixed inset-0" backdrop, which is why modals kept appearing far below the
+  fold on a phone. Every animation in `index.css` that touches `transform` now
+  fills `backwards`; the two opacity-only ones keep `both`, since opacity
+  creates no containing block. `tests/e2e/mobile.spec.ts` pins both the
+  position and the mechanism.
 - Overlays carry `.lm-overlay`, which gives them a scroll container. Flex
   centring clipped a panel taller than the viewport at both ends with no way to
   reach the overflow; `align-items: flex-start` plus auto margins centres it

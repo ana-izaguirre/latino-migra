@@ -14,7 +14,7 @@ import { NavigationTab, GoogleUser } from "../types";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { VOLUNTEERING_PROGRAMS_DATA, VolunteeringProgram } from "../data/volunteeringData";
 import { useLanguage } from "../lib/i18n";
-import { useBodyScrollLock } from "../lib/useBodyScrollLock";
+import { Modal } from "./ui/Modal";
 
 interface VoluntariadosExplorerProps {
   setActiveTab: (tab: NavigationTab) => void;
@@ -30,8 +30,6 @@ export const VoluntariadosExplorer: React.FC<VoluntariadosExplorerProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
   const [searchFilter, setSearchFilter] = useState<string>("");
   const [selectedProgram, setSelectedProgram] = useState<VolunteeringProgram | null>(null);
-
-  useBodyScrollLock(selectedProgram !== null);
 
   const categories = [
     "Todos",
@@ -237,9 +235,15 @@ Sé que este programa NO es para migrar de forma permanente, pero me gustaría s
 
       {/* Modal: Full Program Requirements */}
       {selectedProgram && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 lm-overlay">
-          <div className="bg-surface-container-lowest dark:bg-slate-900 max-w-2xl w-full rounded-3xl p-6 md:p-8 border border-outline-variant/40 dark:border-slate-800 max-h-[90vh] overflow-y-auto space-y-6 shadow-2xl">
-            <div className="flex items-start justify-between gap-4">
+        <Modal
+          open={selectedProgram !== null}
+          onOpenChange={(next) => {
+            if (!next) setSelectedProgram(null);
+          }}
+          title={t("volunteering.detail", "Detalle del programa")}
+          size="lg"
+          header={
+            <div className="">
               <div className="space-y-1">
                 <span className="text-[11px] font-bold text-secondary uppercase tracking-wider">
                   {selectedProgram.category} • {selectedProgram.country}
@@ -261,61 +265,61 @@ Sé que este programa NO es para migrar de forma permanente, pero me gustaría s
                 ✕
               </button>
             </div>
-
-            <div className="p-4 bg-amber-500/10 dark:bg-amber-950/40 rounded-2xl border border-amber-500/30 text-xs text-amber-900 dark:text-amber-200">
-              {selectedProgram.importantDisclaimer}
-            </div>
-
-            <div className="space-y-4">
-              <h4 className="font-bold text-sm text-primary dark:text-sky-300 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                <span>Requisitos de Admisión</span>
-              </h4>
-              <ul className="space-y-2 text-xs text-on-surface-variant dark:text-slate-300">
-                {selectedProgram.requirements.map((req, i) => (
-                  <li key={i} className="flex items-start gap-2">
-                    <span className="text-emerald-500 font-bold">•</span>
-                    <span>{req}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="space-y-4">
-              <h4 className="font-bold text-sm text-primary dark:text-sky-300 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-500" />
-                <span>Beneficios y Coberturas</span>
-              </h4>
-              <ul className="space-y-2 text-xs text-on-surface-variant dark:text-slate-300">
-                {selectedProgram.benefits.map((ben, i) => (
-                  <li key={i} className="flex items-start gap-2">
-                    <span className="text-amber-500 font-bold">✓</span>
-                    <span>{ben}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-outline-variant/20 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={() => setSelectedProgram(null)}
-                className="btn-tactile px-4 py-2 rounded-xl text-xs font-bold text-on-surface-variant dark:text-slate-400 hover:bg-surface-container transition-all"
-              >
-                Cerrar
-              </button>
-              <a
-                href={selectedProgram.link}
-                target="_blank"
-                rel="noreferrer"
-                className="btn-tactile inline-flex items-center gap-2 bg-secondary text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-secondary/90 transition-all shadow-md"
-              >
-                <span>Ir al Portal Oficial</span>
-                <ExternalLink className="w-4 h-4" />
-              </a>
-            </div>
+          }
+        >
+          <div className="p-4 bg-amber-500/10 dark:bg-amber-950/40 rounded-2xl border border-amber-500/30 text-xs text-amber-900 dark:text-amber-200">
+            {selectedProgram.importantDisclaimer}
           </div>
-        </div>
+
+          <div className="space-y-4">
+            <h4 className="font-bold text-sm text-primary dark:text-sky-300 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              <span>Requisitos de Admisión</span>
+            </h4>
+            <ul className="space-y-2 text-xs text-on-surface-variant dark:text-slate-300">
+              {selectedProgram.requirements.map((req, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="text-emerald-500 font-bold">•</span>
+                  <span>{req}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="font-bold text-sm text-primary dark:text-sky-300 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              <span>Beneficios y Coberturas</span>
+            </h4>
+            <ul className="space-y-2 text-xs text-on-surface-variant dark:text-slate-300">
+              {selectedProgram.benefits.map((ben, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="text-amber-500 font-bold">✓</span>
+                  <span>{ben}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-outline-variant/20 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={() => setSelectedProgram(null)}
+              className="btn-tactile px-4 py-2 rounded-xl text-xs font-bold text-on-surface-variant dark:text-slate-400 hover:bg-surface-container transition-all"
+            >
+              Cerrar
+            </button>
+            <a
+              href={selectedProgram.link}
+              target="_blank"
+              rel="noreferrer"
+              className="btn-tactile inline-flex items-center gap-2 bg-secondary text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-secondary/90 transition-all shadow-md"
+            >
+              <span>Ir al Portal Oficial</span>
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          </div>
+        </Modal>
       )}
     </div>
   );

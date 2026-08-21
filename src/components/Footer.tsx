@@ -8,7 +8,6 @@ import {
   Lock,
   MessageSquare,
   Mail,
-  X,
   Sparkles,
   Compass,
   Calculator,
@@ -21,7 +20,7 @@ import {
 } from "lucide-react";
 import { NavigationTab } from "../types";
 import { useLanguage } from "../lib/i18n";
-import { useBodyScrollLock } from "../lib/useBodyScrollLock";
+import { Modal } from "./ui/Modal";
 
 interface FooterProps {
   setActiveTab: (tab: NavigationTab) => void;
@@ -32,8 +31,6 @@ type ModalType = "terms" | "privacy" | "guidelines" | "contact" | null;
 export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
   const { language, t } = useLanguage();
   const [activeModal, setActiveModal] = useState<ModalType>(null);
-
-  useBodyScrollLock(activeModal !== null);
 
   const handleNavigate = (tab: NavigationTab) => {
     setActiveTab(tab);
@@ -251,9 +248,15 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
 
       {/* Interactive Information Modals */}
       {activeModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 lm-overlay">
-          <div className="bg-surface-container-lowest dark:bg-slate-800 rounded-3xl max-w-xl w-full p-6 md:p-8 space-y-4 shadow-2xl border border-outline-variant/40 dark:border-slate-700 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between border-b border-outline-variant/30 dark:border-slate-700 pb-3">
+        <Modal
+          open={activeModal !== null}
+          onOpenChange={(next) => {
+            if (!next) setActiveModal(null);
+          }}
+          title={language === "en" ? "Legal information" : "Información legal"}
+          size="lg"
+          header={
+            <div className="border-b border-outline-variant/30 dark:border-slate-700 pb-3">
               <h3 className="font-headline-sm text-lg md:text-xl font-bold text-primary dark:text-sky-300 flex items-center gap-2">
                 {activeModal === "terms" && <FileText className="w-5 h-5 text-secondary" />}
                 {activeModal === "privacy" && <Lock className="w-5 h-5 text-emerald-500" />}
@@ -274,127 +277,120 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                     (language === "en" ? "Contact & Support" : "Contacto y Asistencia")}
                 </span>
               </h3>
-              <button
-                onClick={() => setActiveModal(null)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-90 transition-all cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
             </div>
+          }
+        >
+          <div className="text-xs md:text-sm text-on-surface-variant dark:text-slate-300 space-y-3 leading-relaxed max-h-[60vh] overflow-y-auto pr-2">
+            {activeModal === "terms" && (
+              <>
+                <p className="font-semibold text-primary dark:text-sky-300">
+                  1. Naturaleza Informativa y Orientativa
+                </p>
+                <p>
+                  LatinoMigra es una plataforma digital de información pública, organizada y
+                  orientada a apoyar a postulantes latinoamericanos. LatinoMigra no es una agencia
+                  de cobro ni sustituye a los consulados, embajadas u organismos oficiales de
+                  inmigración.
+                </p>
+                <p className="font-semibold text-primary dark:text-sky-300">
+                  2. Verificación de Requisitos
+                </p>
+                <p>
+                  Todos los requisitos de visados, fondos económicos (como el IPREM o la Sperrkonto)
+                  y convocatorias de becas son revisados periódicamente, pero recomendamos siempre
+                  cotejar con las fuentes consulares oficiales de cada país de destino.
+                </p>
+              </>
+            )}
 
-            <div className="text-xs md:text-sm text-on-surface-variant dark:text-slate-300 space-y-3 leading-relaxed max-h-[60vh] overflow-y-auto pr-2">
-              {activeModal === "terms" && (
-                <>
-                  <p className="font-semibold text-primary dark:text-sky-300">
-                    1. Naturaleza Informativa y Orientativa
-                  </p>
-                  <p>
-                    LatinoMigra es una plataforma digital de información pública, organizada y
-                    orientada a apoyar a postulantes latinoamericanos. LatinoMigra no es una agencia
-                    de cobro ni sustituye a los consulados, embajadas u organismos oficiales de
-                    inmigración.
-                  </p>
-                  <p className="font-semibold text-primary dark:text-sky-300">
-                    2. Verificación de Requisitos
-                  </p>
-                  <p>
-                    Todos los requisitos de visados, fondos económicos (como el IPREM o la
-                    Sperrkonto) y convocatorias de becas son revisados periódicamente, pero
-                    recomendamos siempre cotejar con las fuentes consulares oficiales de cada país
-                    de destino.
-                  </p>
-                </>
-              )}
+            {activeModal === "privacy" && (
+              <>
+                <p className="font-semibold text-primary dark:text-sky-300">
+                  Protección y Privacidad de tus Datos
+                </p>
+                <p>
+                  En LatinoMigra valoramos la privacidad de los migrantes y estudiantes. No vendemos
+                  ni compartimos tus datos de contacto con terceros ni agencias con fines de
+                  publicidad invasiva.
+                </p>
+                <p>
+                  Tus planes guardados y preferencias de simulación se almacenan de manera segura
+                  bajo tu perfil de usuario para permitirte sincronizar tus calculadoras y agendas
+                  consulares entre dispositivos.
+                </p>
+              </>
+            )}
 
-              {activeModal === "privacy" && (
-                <>
-                  <p className="font-semibold text-primary dark:text-sky-300">
-                    Protección y Privacidad de tus Datos
-                  </p>
-                  <p>
-                    En LatinoMigra valoramos la privacidad de los migrantes y estudiantes. No
-                    vendemos ni compartimos tus datos de contacto con terceros ni agencias con fines
-                    de publicidad invasiva.
-                  </p>
-                  <p>
-                    Tus planes guardados y preferencias de simulación se almacenan de manera segura
-                    bajo tu perfil de usuario para permitirte sincronizar tus calculadoras y agendas
-                    consulares entre dispositivos.
-                  </p>
-                </>
-              )}
+            {activeModal === "guidelines" && (
+              <>
+                <p className="font-semibold text-primary dark:text-sky-300">
+                  1. Respeto y Empatía Mutua
+                </p>
+                <p>
+                  Todos los miembros de la comunidad se encuentran en procesos migratorios o de
+                  estudio que requieren paciencia y apoyo. No se tolera discriminación,
+                  desinformación intencional ni venta de servicios no autorizados.
+                </p>
+                <p className="font-semibold text-primary dark:text-sky-300">
+                  2. Búsqueda y Prevención de Preguntas Duplicadas
+                </p>
+                <p>
+                  Antes de publicar una duda, te sugerimos utilizar la barra de búsqueda para
+                  verificar si otro compañero ya recibió una respuesta detallada con enlaces y
+                  consejos.
+                </p>
+              </>
+            )}
 
-              {activeModal === "guidelines" && (
-                <>
-                  <p className="font-semibold text-primary dark:text-sky-300">
-                    1. Respeto y Empatía Mutua
+            {activeModal === "contact" && (
+              <>
+                <p className="font-semibold text-primary dark:text-sky-300">
+                  Equipo de LatinoMigra
+                </p>
+                <p>
+                  ¿Tienes dudas sobre una beca, encontraste un enlace consular desactualizado o
+                  deseas colaborar con la comunidad?
+                </p>
+                <div className="p-3 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/50 space-y-1">
+                  <p className="font-bold text-xs text-primary dark:text-sky-300">
+                    📧 Correo de soporte:
                   </p>
-                  <p>
-                    Todos los miembros de la comunidad se encuentran en procesos migratorios o de
-                    estudio que requieren paciencia y apoyo. No se tolera discriminación,
-                    desinformación intencional ni venta de servicios no autorizados.
+                  <a
+                    href="mailto:latinomigra@gmail.com"
+                    className="text-xs text-secondary font-mono hover:underline"
+                  >
+                    latinomigra@gmail.com
+                  </a>
+                  <p className="font-bold text-xs text-primary dark:text-sky-300 pt-1">
+                    💡 Sugerencias directas:
                   </p>
-                  <p className="font-semibold text-primary dark:text-sky-300">
-                    2. Búsqueda y Prevención de Preguntas Duplicadas
-                  </p>
-                  <p>
-                    Antes de publicar una duda, te sugerimos utilizar la barra de búsqueda para
-                    verificar si otro compañero ya recibió una respuesta detallada con enlaces y
-                    consejos.
-                  </p>
-                </>
-              )}
-
-              {activeModal === "contact" && (
-                <>
-                  <p className="font-semibold text-primary dark:text-sky-300">
-                    Equipo de LatinoMigra
-                  </p>
-                  <p>
-                    ¿Tienes dudas sobre una beca, encontraste un enlace consular desactualizado o
-                    deseas colaborar con la comunidad?
-                  </p>
-                  <div className="p-3 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/50 space-y-1">
-                    <p className="font-bold text-xs text-primary dark:text-sky-300">
-                      📧 Correo de soporte:
-                    </p>
-                    <a
-                      href="mailto:latinomigra@gmail.com"
-                      className="text-xs text-secondary font-mono hover:underline"
+                  <p className="text-xs">
+                    Puedes publicar en la sección de{" "}
+                    <button
+                      onClick={() => {
+                        setActiveModal(null);
+                        handleNavigate("feedback");
+                      }}
+                      className="underline font-bold text-secondary cursor-pointer"
                     >
-                      latinomigra@gmail.com
-                    </a>
-                    <p className="font-bold text-xs text-primary dark:text-sky-300 pt-1">
-                      💡 Sugerencias directas:
-                    </p>
-                    <p className="text-xs">
-                      Puedes publicar en la sección de{" "}
-                      <button
-                        onClick={() => {
-                          setActiveModal(null);
-                          handleNavigate("feedback");
-                        }}
-                        className="underline font-bold text-secondary cursor-pointer"
-                      >
-                        Sugerencias Comunitarias
-                      </button>{" "}
-                      para que el equipo priorice nuevas integraciones.
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div className="pt-2 flex justify-end">
-              <button
-                onClick={() => setActiveModal(null)}
-                className="px-5 py-2 rounded-xl bg-primary dark:bg-sky-600 text-white font-bold text-xs hover:bg-primary-container transition-all active:scale-95 cursor-pointer shadow-sm"
-              >
-                {language === "en" ? "Close" : "Entendido y Cerrar"}
-              </button>
-            </div>
+                      Sugerencias Comunitarias
+                    </button>{" "}
+                    para que el equipo priorice nuevas integraciones.
+                  </p>
+                </div>
+              </>
+            )}
           </div>
-        </div>
+
+          <div className="pt-2 flex justify-end">
+            <button
+              onClick={() => setActiveModal(null)}
+              className="px-5 py-2 rounded-xl bg-primary dark:bg-sky-600 text-white font-bold text-xs hover:bg-primary-container transition-all active:scale-95 cursor-pointer shadow-sm"
+            >
+              {language === "en" ? "Close" : "Entendido y Cerrar"}
+            </button>
+          </div>
+        </Modal>
       )}
     </footer>
   );

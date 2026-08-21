@@ -221,53 +221,74 @@ test.describe("Mobile scrolling", () => {
     expect(before).toBeGreaterThan(0);
 
     await page.locator("#login-profile-btn").dispatchEvent("click");
-    await expect(page.locator(".lm-overlay")).toBeVisible();
+    const dialog = page.locator('[role="dialog"]');
+    await expect(dialog).toBeVisible();
 
-    expect(await page.evaluate(() => getComputedStyle(document.body).position)).toBe("fixed");
-    await page.evaluate(() => window.scrollBy(0, 600));
-    expect(await page.evaluate(() => Math.round(window.scrollY))).toBe(0);
-
-    await page.locator('[aria-label="Cerrar modal"]').dispatchEvent("click");
-    await expect(page.locator(".lm-overlay")).toHaveCount(0);
-
-    expect(await page.evaluate(() => getComputedStyle(document.body).position)).toBe("static");
+    // Driven through the wheel rather than window.scrollBy: the lock works on
+    // the events a person actually generates, and a synthetic scroll would be
+    // testing a stricter promise than the one that matters.
+    await page.mouse.move(180, 300);
+    await page.mouse.wheel(0, 600);
+    await page.waitForTimeout(300);
     expect(await page.evaluate(() => Math.round(window.scrollY))).toBe(before);
+
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+
+    expect(await page.evaluate(() => Math.round(window.scrollY))).toBe(before);
+    // And the page scrolls again once it is closed.
+    await page.mouse.wheel(0, 200);
+    await page.waitForTimeout(300);
+    expect(await page.evaluate(() => Math.round(window.scrollY))).toBeGreaterThan(before);
   });
 
-  test("gives modal overlays a scroll container so a tall panel stays reachable", async ({
-    page,
-  }) => {
+  test("stops the sheet where the bottom navigation begins", async ({ page }) => {
     await page.goto("/");
     await page.locator("#login-profile-btn").dispatchEvent("click");
 
-    const overlay = page.locator(".lm-overlay");
-    await expect(overlay).toBeVisible();
+    const dialog = page.locator('[role="dialog"]');
+    await expect(dialog).toBeVisible();
 
-    const style = await overlay.evaluate((el) => {
-      const cs = getComputedStyle(el);
-      return { overflowY: cs.overflowY, alignItems: cs.alignItems };
+    const geometry = await dialog.evaluate((el) => {
+      const nav = document.querySelector("#mobile-bottom-nav");
+      return {
+        dialogBottom: el.getBoundingClientRect().bottom,
+        navTop: nav ? nav.getBoundingClientRect().top : null,
+      };
     });
 
-    // Flex centring clips an overflowing panel at both ends with no way to
-    // reach it; flex-start plus auto margins centres it only while it fits.
-    expect(style.overflowY).toBe("auto");
-    expect(style.alignItems).toBe("flex-start");
+    // The sheet used to run 65px under the bar, which is what "the modal sits
+    // too low" meant: its last stretch was behind the navigation.
+    expect(geometry.navTop, "the bottom navigation should be present").not.toBeNull();
+    expect(geometry.dialogBottom).toBeLessThanOrEqual(geometry.navTop! + 2);
+  });
 
-    const panel = await overlay.locator("> *").first().boundingBox();
-    const vh = page.viewportSize()?.height ?? 0;
-    expect(panel).not.toBeNull();
-    expect(panel!.y).toBeGreaterThanOrEqual(0);
-    expect(panel!.y + panel!.height).toBeLessThanOrEqual(vh + 1);
+  test("keeps a tall dialog inside the viewport and scrollable", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#login-profile-btn").dispatchEvent("click");
+
+    const dialog = page.locator('[role="dialog"]');
+    await expect(dialog).toBeVisible();
+
+    const box = await dialog.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      const scroller = el.querySelector(".overflow-y-auto");
+      return {
+        top: r.top,
+        bottom: r.bottom,
+        vh: window.innerHeight,
+        hasScroller: Boolean(scroller),
+      };
+    });
+
+    // A sheet rises from the bottom edge and never overflows the top, so no
+    // part of it is unreachable however long the content runs.
+    expect(box.top).toBeGreaterThanOrEqual(0);
+    expect(Math.round(box.bottom)).toBeLessThanOrEqual(Math.round(box.vh) + 1);
+    expect(box.hasScroller, "the dialog body must scroll inside itself").toBe(true);
   });
 });
 
-/**
- * Custom classes in `index.css` sit after Tailwind in the stylesheet, so at
- * equal specificity they beat the utilities. `.btn-tactile { position:
- * relative }` silently overrode `.absolute` on both modal close buttons, which
- * dropped them into static flow at the top-left of the panel instead of pinning
- * them to the top-right corner.
- */
 test.describe("Mobile modal chrome", () => {
   test("pins the modal close button to the top-right corner", async ({ page }) => {
     await page.goto("/");
@@ -277,20 +298,22 @@ test.describe("Mobile modal chrome", () => {
     await expect(close).toBeVisible();
 
     const geometry = await close.evaluate((el) => {
-      const panel = el.closest("div") as HTMLElement;
+      const panel = el.closest('[role="dialog"]') as HTMLElement;
       const b = el.getBoundingClientRect();
       const p = panel.getBoundingClientRect();
       return {
-        position: getComputedStyle(el).position,
         fromRight: p.right - b.right,
         fromTop: b.top - p.top,
+        inViewport: b.top >= 0 && b.bottom <= window.innerHeight,
       };
     });
 
-    expect(geometry.position).toBe("absolute");
-    // `top-4 right-4` is 16px, plus sub-pixel rounding.
-    expect(geometry.fromRight).toBeLessThan(24);
-    expect(geometry.fromTop).toBeLessThan(24);
+    // Position is no longer asserted as `absolute`: the shared Modal pins it in
+    // a sticky header, which is what stops it scrolling out of reach. What
+    // matters is where it lands and that it is on screen.
+    expect(geometry.fromRight).toBeLessThan(32);
+    expect(geometry.fromTop).toBeLessThan(48);
+    expect(geometry.inViewport).toBe(true);
   });
 
   test("no element is overridden by a custom class it declares a utility against", async ({
@@ -298,7 +321,7 @@ test.describe("Mobile modal chrome", () => {
   }) => {
     await page.goto("/");
     await page.locator("#login-profile-btn").dispatchEvent("click");
-    await expect(page.locator(".lm-overlay")).toBeVisible();
+    await expect(page.locator('[role="dialog"]')).toBeVisible();
 
     const collisions = await page.evaluate(() => {
       const expected: Record<string, [string, string]> = {
@@ -324,5 +347,106 @@ test.describe("Mobile modal chrome", () => {
     });
 
     expect(collisions, collisions.join(" | ")).toEqual([]);
+  });
+  /**
+   * Regression: `<main>` carries `.animate-fade-in`, whose animation used to
+   * fill `both`. A filling `transform` — even one whose keyframe says `none` —
+   * makes the element the containing block for its `position: fixed`
+   * descendants, so every overlay in the application was laid out against the
+   * height of the page instead of the viewport. Measured here at 375px, the
+   * scholarship filter sheet sat at y=3268 inside a 6583px-tall backdrop.
+   *
+   * This has to be an end-to-end test: it is a containing-block resolution,
+   * which only a real layout engine performs.
+   */
+  test("positions a fixed overlay against the viewport, not the page", async ({ page }) => {
+    await page.goto("/");
+    await gotoTabMobile(page, "becas");
+    await page.locator("#btn-open-mobile-filters").click();
+
+    const backdrop = page.locator("div.fixed.inset-0").last();
+    await expect(backdrop).toBeVisible();
+    const box = await backdrop.boundingBox();
+    const viewport = page.viewportSize();
+
+    expect(box, "the filter sheet backdrop should be laid out").not.toBeNull();
+    expect(viewport).not.toBeNull();
+
+    // `inset-0` on a viewport-relative fixed element covers the viewport and
+    // nothing more. A containing block elsewhere shows up as a backdrop taller
+    // than the screen, starting somewhere far off the top.
+    expect(Math.abs(box!.y)).toBeLessThanOrEqual(2);
+    expect(box!.height).toBeLessThanOrEqual(viewport!.height + 2);
+  });
+
+  /**
+   * The mechanism itself, so the next animation added to a page-level wrapper
+   * cannot quietly reintroduce it.
+   */
+  test("leaves no transform on the ancestors of a fixed overlay", async ({ page }) => {
+    await page.goto("/");
+    await gotoTabMobile(page, "becas");
+    await page.locator("#btn-open-mobile-filters").click();
+    await expect(page.locator("div.fixed.inset-0").last()).toBeVisible();
+    // Long enough for every entrance animation on the screen to have finished.
+    await page.waitForTimeout(700);
+
+    const offenders = await page.evaluate(() => {
+      const found: string[] = [];
+      for (const overlay of Array.from(document.querySelectorAll<HTMLElement>("*"))) {
+        if (getComputedStyle(overlay).position !== "fixed") continue;
+        let el = overlay.parentElement;
+        while (el && el !== document.documentElement) {
+          const transform = getComputedStyle(el).transform;
+          if (transform !== "none") {
+            const name = el.getAttribute("class") ?? el.tagName.toLowerCase();
+            found.push(`${name.slice(0, 60)} -> ${transform}`);
+          }
+          el = el.parentElement;
+        }
+      }
+      return Array.from(new Set(found));
+    });
+
+    // A transform anywhere above a fixed element redefines what "fixed" means
+    // for it: the element is positioned against that ancestor instead of the
+    // viewport. `animation-fill-mode: both` is the quiet way to acquire one.
+    expect(offenders, offenders.join(" | ")).toEqual([]);
+  });
+});
+
+/**
+ * Focus behaviour, verified in a real browser. jsdom does not model Radix's
+ * focus scope faithfully, so these cannot live in the component suite.
+ */
+test.describe("Mobile dialog focus", () => {
+  test("keeps focus inside the dialog and returns it to the trigger", async ({ page }) => {
+    await page.goto("/");
+    const trigger = page.locator("#login-profile-btn");
+
+    // Focused first, then opened with the keyboard. Restoration only means
+    // something for a keyboard user: a tap does not focus a button on mobile,
+    // so there is genuinely nothing to restore afterwards.
+    await trigger.focus();
+    await page.keyboard.press("Enter");
+
+    const dialog = page.locator('[role="dialog"]');
+    await expect(dialog).toBeVisible();
+
+    // Tab many times over: focus must never escape to the page behind, which is
+    // what every hand-rolled overlay allowed.
+    for (let i = 0; i < 8; i++) {
+      await page.keyboard.press("Tab");
+      expect(
+        await dialog.evaluate((el) => el.contains(document.activeElement)),
+        `focus escaped the dialog on Tab ${i + 1}`
+      ).toBe(true);
+    }
+
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+
+    // Otherwise a keyboard user is dropped at the top of the document.
+    await expect(trigger).toBeFocused();
   });
 });

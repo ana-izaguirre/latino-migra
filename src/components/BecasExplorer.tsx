@@ -46,7 +46,7 @@ import {
   getUserMigrationPlan,
 } from "../lib/firebase";
 import { usePreferences } from "../lib/PreferencesContext";
-import { useBodyScrollLock } from "../lib/useBodyScrollLock";
+import { Modal } from "./ui/Modal";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card";
@@ -298,10 +298,6 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
   const [showSuggestModal, setShowSuggestModal] = useState<boolean>(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
 
-  // `mobileFiltersOpen` is absent on purpose: that panel is a Radix dialog
-  // now and locks the background scroll itself. Locking it here as well would
-  // leave the lock held by whichever owner released last.
-  useBodyScrollLock(selectedScholarship !== null || showSuggestModal);
   const [suggestForm, setSuggestForm] = useState({
     university: "",
     country: "España",
@@ -1730,303 +1726,289 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
 
       {/* Suggest Official Scholarship Modal */}
       {showSuggestModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto lm-overlay">
-          <div className="bg-surface-container-lowest dark:bg-slate-800 rounded-3xl max-w-lg w-full shadow-2xl border border-outline-variant/40 dark:border-slate-700 p-6 md:p-8 space-y-6 relative">
-            <button
-              onClick={() => setShowSuggestModal(false)}
-              className="absolute top-4 right-4 p-2 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700 rounded-full"
-            >
-              <X className="w-6 h-6" />
-            </button>
+        <Modal
+          open={showSuggestModal}
+          onOpenChange={(next) => {
+            if (!next) setShowSuggestModal(false);
+          }}
+          title="Sugerir una convocatoria oficial"
+          size="md"
+          id="suggest-scholarship-modal"
+        >
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-secondary dark:text-teal-300 text-xs font-bold uppercase">
+              <ShieldCheck className="w-4 h-4 text-emerald-500" />
+              <span>Verificación de Fuentes Oficiales</span>
+            </div>
+            <h2 className="font-headline-md text-2xl font-extrabold text-primary dark:text-sky-300">
+              Sugerir Beca Universitaria
+            </h2>
+            <p className="text-xs text-on-surface-variant dark:text-slate-300">
+              Agrega becas y ayudas publicadas directamente en portales universitarios (.edu, .es,
+              .de, etc.) para que nuestro equipo y la IA las verifiquen e incorporen al directorio.
+            </p>
+          </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-secondary dark:text-teal-300 text-xs font-bold uppercase">
-                <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                <span>Verificación de Fuentes Oficiales</span>
-              </div>
-              <h2 className="font-headline-md text-2xl font-extrabold text-primary dark:text-sky-300">
-                Sugerir Beca Universitaria
-              </h2>
-              <p className="text-xs text-on-surface-variant dark:text-slate-300">
-                Agrega becas y ayudas publicadas directamente en portales universitarios (.edu, .es,
-                .de, etc.) para que nuestro equipo y la IA las verifiquen e incorporen al
-                directorio.
+          {suggestSuccess ? (
+            <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30 text-emerald-800 dark:text-emerald-200 p-4 rounded-2xl text-center space-y-2">
+              <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
+              <h4 className="font-bold text-sm">¡Beca enviada para verificación!</h4>
+              <p className="text-xs">
+                Revisaremos el enlace institucional para integrarla al catálogo oficial de
+                LatinoMigra.
               </p>
             </div>
-
-            {suggestSuccess ? (
-              <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30 text-emerald-800 dark:text-emerald-200 p-4 rounded-2xl text-center space-y-2">
-                <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
-                <h4 className="font-bold text-sm">¡Beca enviada para verificación!</h4>
-                <p className="text-xs">
-                  Revisaremos el enlace institucional para integrarla al catálogo oficial de
-                  LatinoMigra.
-                </p>
+          ) : (
+            <form onSubmit={handleSuggestSubmit} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1">
+                  Universidad o Institución *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={suggestForm.university}
+                  onChange={(e) => setSuggestForm({ ...suggestForm, university: e.target.value })}
+                  placeholder="Ej. Universidad Autónoma de Madrid, Sorbonne..."
+                  className="w-full px-3.5 py-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs outline-none focus:ring-2 focus:ring-secondary"
+                />
               </div>
-            ) : (
-              <form onSubmit={handleSuggestSubmit} className="space-y-4">
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1">
-                    Universidad o Institución *
+                    País Destino *
+                  </label>
+                  <select
+                    value={suggestForm.country}
+                    onChange={(e) => setSuggestForm({ ...suggestForm, country: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs outline-none focus:ring-2 focus:ring-secondary"
+                  >
+                    {countries
+                      .filter((c) => c !== "Todos")
+                      .map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1">
+                    Nombre de la Beca *
                   </label>
                   <input
                     type="text"
                     required
-                    value={suggestForm.university}
-                    onChange={(e) => setSuggestForm({ ...suggestForm, university: e.target.value })}
-                    placeholder="Ej. Universidad Autónoma de Madrid, Sorbonne..."
-                    className="w-full px-3.5 py-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs outline-none focus:ring-2 focus:ring-secondary"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1">
-                      País Destino *
-                    </label>
-                    <select
-                      value={suggestForm.country}
-                      onChange={(e) => setSuggestForm({ ...suggestForm, country: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs outline-none focus:ring-2 focus:ring-secondary"
-                    >
-                      {countries
-                        .filter((c) => c !== "Todos")
-                        .map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1">
-                      Nombre de la Beca *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={suggestForm.scholarshipName}
-                      onChange={(e) =>
-                        setSuggestForm({ ...suggestForm, scholarshipName: e.target.value })
-                      }
-                      placeholder="Ej. Ayuda de Matrícula Máster..."
-                      className="w-full px-3.5 py-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs outline-none focus:ring-2 focus:ring-secondary"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1">
-                    Enlace de la Página Oficial (.edu, .es, .org, .de, .ca) *
-                  </label>
-                  <input
-                    type="url"
-                    required
-                    value={suggestForm.officialUrl}
+                    value={suggestForm.scholarshipName}
                     onChange={(e) =>
-                      setSuggestForm({ ...suggestForm, officialUrl: e.target.value })
+                      setSuggestForm({ ...suggestForm, scholarshipName: e.target.value })
                     }
-                    placeholder="https://www.universidad.es/becas/internacional..."
+                    placeholder="Ej. Ayuda de Matrícula Máster..."
                     className="w-full px-3.5 py-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs outline-none focus:ring-2 focus:ring-secondary"
                   />
                 </div>
+              </div>
 
-                <div>
-                  <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1">
-                    Notas o Requisitos Relevantes
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={suggestForm.notes}
-                    onChange={(e) => setSuggestForm({ ...suggestForm, notes: e.target.value })}
-                    placeholder="Fechas de cierre, si cubre manutención o exención..."
-                    className="w-full px-3.5 py-2 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs outline-none focus:ring-2 focus:ring-secondary"
-                  />
-                </div>
+              <div>
+                <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1">
+                  Enlace de la Página Oficial (.edu, .es, .org, .de, .ca) *
+                </label>
+                <input
+                  type="url"
+                  required
+                  value={suggestForm.officialUrl}
+                  onChange={(e) => setSuggestForm({ ...suggestForm, officialUrl: e.target.value })}
+                  placeholder="https://www.universidad.es/becas/internacional..."
+                  className="w-full px-3.5 py-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs outline-none focus:ring-2 focus:ring-secondary"
+                />
+              </div>
 
-                <div className="flex items-center justify-end gap-3 pt-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowSuggestModal(false)}
-                    className="btn-tactile px-4 py-2.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container rounded-xl transition-all"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn-tactile inline-flex items-center gap-2 px-5 py-2.5 bg-primary dark:bg-sky-600 hover:bg-primary-container text-white text-xs font-bold rounded-xl transition-all shadow-sm"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>Enviar Convocatoria</span>
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
+              <div>
+                <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1">
+                  Notas o Requisitos Relevantes
+                </label>
+                <textarea
+                  rows={2}
+                  value={suggestForm.notes}
+                  onChange={(e) => setSuggestForm({ ...suggestForm, notes: e.target.value })}
+                  placeholder="Fechas de cierre, si cubre manutención o exención..."
+                  className="w-full px-3.5 py-2 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs outline-none focus:ring-2 focus:ring-secondary"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowSuggestModal(false)}
+                  className="btn-tactile px-4 py-2.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container rounded-xl transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="btn-tactile inline-flex items-center gap-2 px-5 py-2.5 bg-primary dark:bg-sky-600 hover:bg-primary-container text-white text-xs font-bold rounded-xl transition-all shadow-sm"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Enviar Convocatoria</span>
+                </button>
+              </div>
+            </form>
+          )}
+        </Modal>
       )}
 
       {/* Scholarship Details Modal */}
       {selectedScholarship && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto lm-overlay">
-          <div className="bg-surface-container-lowest dark:bg-slate-800 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-outline-variant/40 dark:border-slate-700 p-6 md:p-8 space-y-6 relative animate-in fade-in zoom-in-95 duration-200">
-            {/* Sticky, not absolute: this panel scrolls internally, so an
-                absolutely positioned button scrolls away with the content and
-                the only way out of a long scholarship is to scroll back up.
-                The zero-height wrapper keeps it out of the flow, so the layout
-                is unchanged. */}
-            <div className="sticky top-0 z-10 flex h-0 justify-end">
-              <button
-                type="button"
-                onClick={() => setSelectedScholarship(null)}
-                aria-label="Cerrar modal"
-                className="btn-tactile p-2 text-on-surface-variant dark:text-slate-300 bg-surface-container-lowest/90 dark:bg-slate-800/90 backdrop-blur-xs hover:bg-surface-container dark:hover:bg-slate-700 rounded-full transition-all"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="space-y-2 pr-8">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="bg-secondary-container/40 dark:bg-teal-500/20 text-secondary dark:text-teal-300 text-xs px-3 py-1 rounded-full font-bold">
-                  {selectedScholarship.supportType}
+        <Modal
+          open={selectedScholarship !== null}
+          onOpenChange={(next) => {
+            if (!next) setSelectedScholarship(null);
+          }}
+          title={selectedScholarship?.title ?? "Detalle de la convocatoria"}
+          size="lg"
+          id="scholarship-detail-modal"
+        >
+          <div className="space-y-2 pr-8">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="bg-secondary-container/40 dark:bg-teal-500/20 text-secondary dark:text-teal-300 text-xs px-3 py-1 rounded-full font-bold">
+                {selectedScholarship.supportType}
+              </span>
+              <span className="bg-primary/10 dark:bg-sky-900/40 text-primary dark:text-sky-300 text-xs px-3 py-1 rounded-full font-bold">
+                {selectedScholarship.country}
+              </span>
+              {selectedScholarship.institutionType && (
+                <span className="bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs px-3 py-1 rounded-full font-bold flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  {selectedScholarship.institutionType}
                 </span>
-                <span className="bg-primary/10 dark:bg-sky-900/40 text-primary dark:text-sky-300 text-xs px-3 py-1 rounded-full font-bold">
-                  {selectedScholarship.country}
-                </span>
-                {selectedScholarship.institutionType && (
-                  <span className="bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs px-3 py-1 rounded-full font-bold flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                    {selectedScholarship.institutionType}
-                  </span>
-                )}
-                <button
-                  type="button"
-                  onClick={() => toggleFavorite(selectedScholarship.id)}
-                  id="modal-toggle-favorite-btn"
-                  className={`btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ml-auto shadow-xs ${
-                    favorites.includes(selectedScholarship.id)
-                      ? "bg-red-500 text-white"
-                      : "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-300 border border-red-300 dark:border-red-800"
-                  }`}
-                >
-                  <Heart
-                    className={`w-3.5 h-3.5 ${favorites.includes(selectedScholarship.id) ? "fill-white" : ""}`}
-                  />
-                  <span>
-                    {favorites.includes(selectedScholarship.id) ? "Guardada" : "Guardar Beca"}
-                  </span>
-                </button>
-              </div>
-
-              <h2 className="font-headline-md text-2xl font-extrabold text-primary dark:text-sky-300">
-                {selectedScholarship.title}
-              </h2>
-              <p className="text-sm font-semibold text-on-surface-variant dark:text-slate-300">
-                {selectedScholarship.institution}
-              </p>
-              {selectedScholarship.officialPortalName && (
-                <div className="flex flex-wrap items-center gap-3 pt-1">
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>Portal Oficial Verificado: {selectedScholarship.officialPortalName}</span>
-                  </p>
-                  <a
-                    href={selectedScholarship.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-bold text-primary dark:text-sky-400 hover:underline bg-primary/10 dark:bg-sky-950/60 px-2.5 py-1 rounded-lg border border-primary/20"
-                  >
-                    <ExternalLink className="w-3 h-3" />
-                    <span>Ir a la convocatoria oficial</span>
-                  </a>
-                </div>
               )}
-            </div>
-
-            <p className="text-sm text-on-surface-variant dark:text-slate-300 leading-relaxed">
-              {selectedScholarship.description}
-            </p>
-
-            {/* Requisitos */}
-            <div className="space-y-3 bg-surface dark:bg-slate-900 p-4 rounded-2xl border border-outline-variant/30 dark:border-slate-800">
-              <h4 className="font-bold text-sm text-primary dark:text-sky-300 uppercase tracking-wider">
-                Requisitos Principales
-              </h4>
-              <ul className="space-y-2">
-                {selectedScholarship.requirements.map((req, idx) => (
-                  <li
-                    key={idx}
-                    className="flex items-start gap-2 text-sm text-on-surface-variant dark:text-slate-300"
-                  >
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                    <span>{req}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Beneficios */}
-            <div className="space-y-3 bg-surface dark:bg-slate-900 p-4 rounded-2xl border border-outline-variant/30 dark:border-slate-800">
-              <h4 className="font-bold text-sm text-primary dark:text-sky-300 uppercase tracking-wider">
-                Beneficios Incluidos
-              </h4>
-              <ul className="space-y-2">
-                {selectedScholarship.benefits.map((ben, idx) => (
-                  <li
-                    key={idx}
-                    className="flex items-start gap-2 text-sm text-on-surface-variant dark:text-slate-300"
-                  >
-                    <Sparkles className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                    <span>{ben}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Modal Actions */}
-            <div className="flex flex-col sm:flex-row items-center gap-3 pt-4 border-t border-outline-variant/30 dark:border-slate-700">
-              <a
-                href={selectedScholarship.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-tactile w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 bg-primary dark:bg-sky-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-primary-container transition-all text-xs shadow-sm hover:shadow-md"
-              >
-                <ExternalLink className="w-4 h-4" />
-                <span>Link a la Convocatoria Oficial</span>
-              </a>
-
-              <a
-                href={generateGoogleCalendarUrl({
-                  title: `Cierre de Convocatoria: ${selectedScholarship.title}`,
-                  details: `Fecha límite para enviar expediente a ${selectedScholarship.title}. Requisitos: ${selectedScholarship.requirements.join(", ")}. Enlace oficial convocatoria: ${selectedScholarship.link}`,
-                  startDate: selectedScholarship.deadlineDate,
-                  location: selectedScholarship.country,
-                })}
-                target="_blank"
-                rel="noreferrer"
-                className="btn-tactile w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-all text-xs shadow-sm hover:shadow-md"
-              >
-                <CalendarIcon className="w-4 h-4" />
-                <span>Agendar en Google Calendar</span>
-              </a>
-
               <button
                 type="button"
-                onClick={() => {
-                  const scholarshipToAsk = selectedScholarship;
-                  setSelectedScholarship(null);
-                  onAskAIAboutScholarship(scholarshipToAsk);
-                }}
-                className="btn-tactile w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-secondary dark:bg-teal-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-secondary-container hover:text-secondary-900 transition-all text-xs shadow-sm hover:shadow-md"
+                onClick={() => toggleFavorite(selectedScholarship.id)}
+                id="modal-toggle-favorite-btn"
+                className={`btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ml-auto shadow-xs ${
+                  favorites.includes(selectedScholarship.id)
+                    ? "bg-red-500 text-white"
+                    : "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-300 border border-red-300 dark:border-red-800"
+                }`}
               >
-                <Bot className="w-4 h-4" />
-                <span>Consultar IA</span>
+                <Heart
+                  className={`w-3.5 h-3.5 ${favorites.includes(selectedScholarship.id) ? "fill-white" : ""}`}
+                />
+                <span>
+                  {favorites.includes(selectedScholarship.id) ? "Guardada" : "Guardar Beca"}
+                </span>
               </button>
             </div>
+
+            <h2 className="font-headline-md text-2xl font-extrabold text-primary dark:text-sky-300">
+              {selectedScholarship.title}
+            </h2>
+            <p className="text-sm font-semibold text-on-surface-variant dark:text-slate-300">
+              {selectedScholarship.institution}
+            </p>
+            {selectedScholarship.officialPortalName && (
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>Portal Oficial Verificado: {selectedScholarship.officialPortalName}</span>
+                </p>
+                <a
+                  href={selectedScholarship.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-primary dark:text-sky-400 hover:underline bg-primary/10 dark:bg-sky-950/60 px-2.5 py-1 rounded-lg border border-primary/20"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  <span>Ir a la convocatoria oficial</span>
+                </a>
+              </div>
+            )}
           </div>
-        </div>
+
+          <p className="text-sm text-on-surface-variant dark:text-slate-300 leading-relaxed">
+            {selectedScholarship.description}
+          </p>
+
+          {/* Requisitos */}
+          <div className="space-y-3 bg-surface dark:bg-slate-900 p-4 rounded-2xl border border-outline-variant/30 dark:border-slate-800">
+            <h4 className="font-bold text-sm text-primary dark:text-sky-300 uppercase tracking-wider">
+              Requisitos Principales
+            </h4>
+            <ul className="space-y-2">
+              {selectedScholarship.requirements.map((req, idx) => (
+                <li
+                  key={idx}
+                  className="flex items-start gap-2 text-sm text-on-surface-variant dark:text-slate-300"
+                >
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                  <span>{req}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Beneficios */}
+          <div className="space-y-3 bg-surface dark:bg-slate-900 p-4 rounded-2xl border border-outline-variant/30 dark:border-slate-800">
+            <h4 className="font-bold text-sm text-primary dark:text-sky-300 uppercase tracking-wider">
+              Beneficios Incluidos
+            </h4>
+            <ul className="space-y-2">
+              {selectedScholarship.benefits.map((ben, idx) => (
+                <li
+                  key={idx}
+                  className="flex items-start gap-2 text-sm text-on-surface-variant dark:text-slate-300"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                  <span>{ben}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Modal Actions */}
+          <div className="flex flex-col sm:flex-row items-center gap-3 pt-4 border-t border-outline-variant/30 dark:border-slate-700">
+            <a
+              href={selectedScholarship.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-tactile w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 bg-primary dark:bg-sky-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-primary-container transition-all text-xs shadow-sm hover:shadow-md"
+            >
+              <ExternalLink className="w-4 h-4" />
+              <span>Link a la Convocatoria Oficial</span>
+            </a>
+
+            <a
+              href={generateGoogleCalendarUrl({
+                title: `Cierre de Convocatoria: ${selectedScholarship.title}`,
+                details: `Fecha límite para enviar expediente a ${selectedScholarship.title}. Requisitos: ${selectedScholarship.requirements.join(", ")}. Enlace oficial convocatoria: ${selectedScholarship.link}`,
+                startDate: selectedScholarship.deadlineDate,
+                location: selectedScholarship.country,
+              })}
+              target="_blank"
+              rel="noreferrer"
+              className="btn-tactile w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-all text-xs shadow-sm hover:shadow-md"
+            >
+              <CalendarIcon className="w-4 h-4" />
+              <span>Agendar en Google Calendar</span>
+            </a>
+
+            <button
+              type="button"
+              onClick={() => {
+                const scholarshipToAsk = selectedScholarship;
+                setSelectedScholarship(null);
+                onAskAIAboutScholarship(scholarshipToAsk);
+              }}
+              className="btn-tactile w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-secondary dark:bg-teal-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-secondary-container hover:text-secondary-900 transition-all text-xs shadow-sm hover:shadow-md"
+            >
+              <Bot className="w-4 h-4" />
+              <span>Consultar IA</span>
+            </button>
+          </div>
+        </Modal>
       )}
     </div>
   );
