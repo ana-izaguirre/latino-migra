@@ -78,9 +78,11 @@ test.describe("Mobile navigation", () => {
     await page.locator("#bottom-nav-menu").click();
     await expect(page.locator("#mobile-nav-drawer")).toBeVisible();
 
-    await page.locator("#drawer-nav-item-calculadora").click();
+    // Every secondary destination is hidden now, so the drawer holds only
+    // the primary ones — see `src/lib/navigation.ts`.
+    await page.locator("#drawer-nav-item-guia").click();
     await expect(page.locator("#mobile-nav-drawer")).toBeHidden();
-    await expect(page.locator("h1").first()).toContainText("Calculadora de Costo de Vida");
+    await expect(page.locator("h1").first()).toContainText(/Migra/i);
   });
 
   test("closes the drawer with Escape", async ({ page }) => {
