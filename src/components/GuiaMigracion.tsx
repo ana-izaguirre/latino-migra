@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Compass,
   Clock,
@@ -23,6 +23,7 @@ import { Breadcrumbs } from "./Breadcrumbs";
 import { MIGRATION_GUIDES_DATA } from "../data/migrationGuides";
 import { COUNTRY_ANTI_SCAM_DATA } from "../data/antiScamData";
 import { Disclosure } from "./ui/Disclosure";
+import { FilterChipGroup } from "./ui/FilterChipGroup";
 import { CalendarAgendaButton } from "./CalendarAgendaButton";
 import { fetchVisaGuideVotes, voteVisaHelpful, VisaVotesData } from "../lib/firebase";
 import { GoogleUser } from "../types";
@@ -115,6 +116,31 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
       );
     }
   };
+
+  /**
+   * Moving to another country resets the category filter and reloads the
+   * checklist: the document ids differ per country, so keeping the old state
+   * would tick boxes for documents the new country does not ask for.
+   */
+  const selectCountry = (code: string) => {
+    const next = MIGRATION_GUIDES_DATA[code];
+    if (!next) return;
+    setSelectedCountryCode(code);
+    setSelectedCategory("todos");
+    const newDocs: Record<string, boolean> = {};
+    next.documents.forEach((d) => (newDocs[d.id] = d.completed));
+    setDocState(newDocs);
+  };
+
+  const countryOptions = useMemo(
+    () =>
+      Object.values(MIGRATION_GUIDES_DATA).map((item) => ({
+        id: item.id,
+        label: `${item.flag} ${item.country}`,
+        count: item.visas.length,
+      })),
+    []
+  );
 
   const [docState, setDocState] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
@@ -209,33 +235,27 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
             )}
           </div>
 
-          {/* Country Selector Buttons */}
-          <div className="flex flex-wrap items-center gap-2">
-            {Object.values(MIGRATION_GUIDES_DATA).map((item) => {
-              const isSelected = item.id === selectedCountryCode;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setSelectedCountryCode(item.id);
-                    setSelectedCategory("todos");
-                    const newDocs: Record<string, boolean> = {};
-                    item.documents.forEach((d) => (newDocs[d.id] = d.completed));
-                    setDocState(newDocs);
-                  }}
-                  id={`guide-country-${item.id}`}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs md:text-sm font-bold transition-all cursor-pointer ${
-                    isSelected
-                      ? "bg-primary dark:bg-sky-600 text-white shadow-md scale-105"
-                      : "bg-surface dark:bg-slate-700 text-on-surface dark:text-slate-200 hover:bg-surface-container border border-outline-variant/30 dark:border-slate-600"
-                  }`}
-                >
-                  <span className="text-base">{item.flag}</span>
-                  <span>{item.country}</span>
-                </button>
-              );
-            })}
-          </div>
+          {/*
+            One swipeable row, not a wrapped grid of blocks.
+
+            Seven full-size buttons in a `flex-wrap` row took three lines at
+            375px, sat between the title and the content, and the selected one
+            carried `scale-105`, so it overlapped its neighbours. The chips are
+            the pattern the scholarship filters already use (#50); a third
+            pattern for the same job is the problem, not the styling.
+
+            The count is the number of visa routes for that country — the same
+            list the selection leads to, so the chip cannot promise a screen
+            the guide does not have.
+          */}
+          <FilterChipGroup
+            label={t("guia.countryLabel", "País de destino")}
+            icon={<Compass className="w-4 h-4 text-secondary dark:text-teal-400" />}
+            options={countryOptions}
+            value={selectedCountryCode}
+            onChange={selectCountry}
+            idPrefix="guide-country"
+          />
         </div>
       </div>
 

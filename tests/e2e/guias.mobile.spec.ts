@@ -22,6 +22,44 @@ test.describe("Migration guides on a phone", () => {
     await expect(page.locator("#roadmap-step-1")).toBeVisible();
   });
 
+  /**
+   * The seven destinations were seven full-size buttons in a `flex-wrap` row:
+   * three lines of blocks between the title and the content, with the selected
+   * one scaled up so it overlapped its neighbours (#81).
+   */
+  test("keeps the country picker on one swipeable row", async ({ page }) => {
+    const chips = page.locator('button[id^="guide-country-"]');
+    const count = await chips.count();
+    expect(count).toBeGreaterThan(1);
+
+    const boxes = await chips.evaluateAll((els) =>
+      els.map((el) => {
+        const rect = el.getBoundingClientRect();
+        return { top: Math.round(rect.top), height: Math.round(rect.height) };
+      })
+    );
+
+    // One row: every chip shares a top edge, and the row scrolls sideways
+    // instead of wrapping.
+    expect(new Set(boxes.map((b) => b.top)).size).toBe(1);
+    for (const box of boxes) expect(box.height).toBeGreaterThanOrEqual(44);
+
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth
+    );
+    expect(overflow).toBeLessThanOrEqual(1);
+  });
+
+  test("switches country from the picker and says which is selected", async ({ page }) => {
+    await expect(page.locator("#guide-country-ES")).toHaveAttribute("aria-pressed", "true");
+
+    await page.locator("#guide-country-DE").click();
+
+    await expect(page.locator("#guide-country-DE")).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator("#guide-country-ES")).toHaveAttribute("aria-pressed", "false");
+    await expect(page.getByText(/Tipos de Visado en Alemania/)).toBeVisible();
+  });
+
   test("collapses the heavy sections", async ({ page }) => {
     for (const id of GUIDE_DISCLOSURES) {
       const control = page.locator(`#${id}`);

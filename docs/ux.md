@@ -240,6 +240,12 @@ Recently addressed and verified by tests:
   The breakpoint sits on a wrapper rather than on the control itself:
   `lg:hidden` and a display utility on one element let the emitted order pick
   the winner, and it picked `inline-flex`.
+- The country picker is one swipeable row of chips with a count of visa routes
+  per country, through the same `FilterChipGroup` the scholarship filters use.
+  It was seven full-size buttons in a `flex-wrap` row: three lines of blocks at
+  375px between the title and the content, with the selected one carrying
+  `scale-105` so it overlapped its neighbours. Measured after: one row, 44px
+  targets, no sideways scroll.
 - The usefulness counter shows a number only when one was read. It printed
   `helpfulVotes || 18` for every visa, so a country with no votes claimed
   eighteen people had found each visa useful; a failed read now says so and a
