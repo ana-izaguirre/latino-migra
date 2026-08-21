@@ -4,6 +4,18 @@ import { renderWithProviders as render } from "../test/renderWithProviders";
 import { AuthModal, describeSignInError } from "./AuthModal";
 import * as firebase from "../lib/firebase";
 import { GoogleUser } from "../types";
+import { TRANSLATIONS, useLanguage } from "../lib/i18n";
+import React from "react";
+
+/** Flips the shared language from inside the provider tree. */
+const LanguageSwitch: React.FC = () => {
+  const { setLanguage } = useLanguage();
+  return (
+    <button type="button" onClick={() => setLanguage("en")}>
+      switch-to-english
+    </button>
+  );
+};
 
 describe("AuthModal Component", () => {
   const defaultProps = {
@@ -167,29 +179,98 @@ describe("AuthModal Component", () => {
    * through four more renders.
    */
   describe("describeSignInError", () => {
+    /** Stands in for `useLanguage().t`, which resolves to the fallback in `es`. */
+    const es = (_key: string, fallback?: string) => fallback ?? _key;
+
     it("explains a blocked popup, which the visitor can act on", () => {
-      expect(describeSignInError({ code: "auth/popup-blocked" })).toMatch(/ventanas emergentes/i);
+      expect(describeSignInError({ code: "auth/popup-blocked" }, es)).toMatch(
+        /ventanas emergentes/i
+      );
     });
 
     it("does not blame the visitor for closing the window", () => {
-      expect(describeSignInError({ code: "auth/popup-closed-by-user" })).toMatch(/Cerraste/i);
-      expect(describeSignInError({ code: "auth/cancelled-popup-request" })).toMatch(/Cerraste/i);
+      expect(describeSignInError({ code: "auth/popup-closed-by-user" }, es)).toMatch(/Cerraste/i);
+      expect(describeSignInError({ code: "auth/cancelled-popup-request" }, es)).toMatch(
+        /Cerraste/i
+      );
     });
 
     it("points at the connection when that is the cause", () => {
-      expect(describeSignInError({ code: "auth/network-request-failed" })).toMatch(/conexión/i);
+      expect(describeSignInError({ code: "auth/network-request-failed" }, es)).toMatch(/conexión/i);
     });
 
     it("falls back to a generic message rather than showing the raw error", () => {
-      const message = describeSignInError(new Error("FirebaseError: internal-error"));
+      const message = describeSignInError(new Error("FirebaseError: internal-error"), es);
       expect(message).toMatch(/No pudimos completar/i);
       expect(message).not.toMatch(/Firebase/i);
     });
 
     it("survives an error that is not an object", () => {
-      expect(describeSignInError("boom")).toMatch(/No pudimos completar/i);
-      expect(describeSignInError(null)).toMatch(/No pudimos completar/i);
-      expect(describeSignInError(undefined)).toMatch(/No pudimos completar/i);
+      expect(describeSignInError("boom", es)).toMatch(/No pudimos completar/i);
+      expect(describeSignInError(null, es)).toMatch(/No pudimos completar/i);
+      expect(describeSignInError(undefined, es)).toMatch(/No pudimos completar/i);
+    });
+  });
+
+  /**
+   * Regression for #80. The modal rendered entirely in Spanish whatever the
+   * chosen language — including the strings it asks for personal data with.
+   */
+  describe("in English", () => {
+    const en = (key: string) => TRANSLATIONS[key]?.en ?? key;
+
+    it("translates the sign-in errors", () => {
+      expect(describeSignInError({ code: "auth/popup-blocked" }, en)).toMatch(/pop-ups/i);
+      expect(describeSignInError({ code: "auth/network-request-failed" }, en)).toMatch(
+        /could not reach Google/i
+      );
+      expect(describeSignInError("boom", en)).toMatch(/could not complete/i);
+    });
+
+    it("has an English entry for every string the modal renders", () => {
+      const keys = [
+        "auth.titleSignIn",
+        "auth.titleAccount",
+        "auth.descSignIn",
+        "auth.descAccount",
+        "auth.continueWithGoogle",
+        "auth.signOut",
+        "auth.verifiedAccount",
+        "auth.roleLabel",
+        "auth.roleAdmin",
+        "auth.roleStandard",
+        "auth.roleAdminBody",
+        "auth.roleStandardBody",
+        "auth.syncBookmarks",
+        "auth.syncCalendar",
+        "auth.syncChat",
+        "auth.originCountry",
+        "auth.privacyNotice",
+        "auth.errorPopupBlocked",
+        "auth.errorPopupClosed",
+        "auth.errorNetwork",
+        "auth.errorGeneric",
+      ];
+
+      for (const key of keys) {
+        expect(TRANSLATIONS[key], key).toBeDefined();
+        expect(TRANSLATIONS[key].en, key).not.toBe(TRANSLATIONS[key].es);
+      }
+    });
+
+    it("renders the modal in English when the language is English", () => {
+      render(
+        <>
+          <LanguageSwitch />
+          <AuthModal {...defaultProps} />
+        </>
+      );
+
+      fireEvent.click(screen.getByText("switch-to-english"));
+
+      expect(screen.getByText(/Continue with Google/i)).toBeInTheDocument();
+      expect(screen.getByText(/Country of origin/i)).toBeInTheDocument();
+      expect(screen.queryByText(/Continuar con Google/i)).not.toBeInTheDocument();
     });
   });
 

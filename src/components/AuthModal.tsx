@@ -4,6 +4,7 @@ import { GoogleUser } from "../types";
 import { signInWithGoogle, isUserAdmin } from "../lib/firebase";
 import { getSafeImageUrl } from "../lib/sanitize";
 import { Modal } from "./ui/Modal";
+import { useLanguage } from "../lib/i18n";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -13,25 +14,44 @@ interface AuthModalProps {
   onSignOut: () => void;
 }
 
+/** Resolves a key to the visitor's language. `useLanguage().t`, in practice. */
+type Translate = (key: string, fallback?: string) => string;
+
 /**
  * What to tell the visitor when sign-in did not complete.
  *
  * Firebase reports the common cases by code. Everything else gets the generic
  * message rather than the raw error, which is English and mentions Firebase.
+ *
+ * The translator is passed in rather than the strings being written here: the
+ * whole modal rendered in Spanish regardless of the chosen language, and this
+ * function held four of those strings (#80).
  */
-export function describeSignInError(err: unknown): string {
+export function describeSignInError(err: unknown, t: Translate): string {
   const code = typeof err === "object" && err !== null && "code" in err ? String(err.code) : "";
 
   if (code === "auth/popup-blocked") {
-    return "Tu navegador bloqueó la ventana de Google. Permite las ventanas emergentes de este sitio e inténtalo de nuevo.";
+    return t(
+      "auth.errorPopupBlocked",
+      "Tu navegador bloqueó la ventana de Google. Permite las ventanas emergentes de este sitio e inténtalo de nuevo."
+    );
   }
   if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
-    return "Cerraste la ventana de Google antes de terminar. Inténtalo de nuevo cuando quieras.";
+    return t(
+      "auth.errorPopupClosed",
+      "Cerraste la ventana de Google antes de terminar. Inténtalo de nuevo cuando quieras."
+    );
   }
   if (code === "auth/network-request-failed") {
-    return "No pudimos conectar con Google. Revisa tu conexión e inténtalo de nuevo.";
+    return t(
+      "auth.errorNetwork",
+      "No pudimos conectar con Google. Revisa tu conexión e inténtalo de nuevo."
+    );
   }
-  return "No pudimos completar el inicio de sesión con Google. Inténtalo de nuevo.";
+  return t(
+    "auth.errorGeneric",
+    "No pudimos completar el inicio de sesión con Google. Inténtalo de nuevo."
+  );
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -41,9 +61,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onSignIn,
   onSignOut,
 }) => {
+  const { t } = useLanguage();
   const [selectedCountry, setSelectedCountry] = useState<string>("Colombia");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  /** Spanish message shown when sign-in did not complete. */
+  /** Message shown, in the visitor's language, when sign-in did not complete. */
   const [signInError, setSignInError] = useState<string | null>(null);
 
   const handleFirebaseGoogleSignIn = async () => {
@@ -80,7 +101,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       // saved went under an id that changed on every attempt — and vanished
       // on the next reload, because Firebase had never heard of it.
       console.warn("Google sign-in did not complete:", err);
-      setSignInError(describeSignInError(err));
+      setSignInError(describeSignInError(err, t));
     } finally {
       setIsLoading(false);
     }
@@ -92,11 +113,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
-      title={currentUser ? "Tu Cuenta LatinoMigra" : "Inicia Sesión con Google"}
+      title={
+        currentUser
+          ? t("auth.titleAccount", "Tu Cuenta LatinoMigra")
+          : t("auth.titleSignIn", "Inicia Sesión con Google")
+      }
       description={
         currentUser
-          ? "Tus becas guardadas, progreso de visas y recordatorios están sincronizados."
-          : "Guarda tu progreso de postulación, recordatorios en Google Calendar e historial de IA."
+          ? t(
+              "auth.descAccount",
+              "Tus becas guardadas, progreso de visas y recordatorios están sincronizados."
+            )
+          : t(
+              "auth.descSignIn",
+              "Guarda tu progreso de postulación, recordatorios en Google Calendar e historial de IA."
+            )
       }
       size="md"
       id="auth-modal"
@@ -121,7 +152,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <div className="flex items-center gap-2 mt-1">
                 <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3" />
-                  Cuenta Google Verificada
+                  {t("auth.verifiedAccount", "Cuenta Google Verificada")}
                 </span>
               </div>
             </div>
@@ -135,7 +166,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <div className="p-3 bg-surface dark:bg-slate-800/90 rounded-2xl border border-outline-variant/40 dark:border-slate-700 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-on-surface dark:text-slate-200">
-                Rol de Cuenta:
+                {t("auth.roleLabel", "Rol de Cuenta:")}
               </span>
               <span
                 className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -144,13 +175,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     : "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700"
                 }`}
               >
-                {currentUser.isAdmin ? "🔑 Administrador" : "👤 Usuario Estándar"}
+                {currentUser.isAdmin
+                  ? t("auth.roleAdmin", "🔑 Administrador")
+                  : t("auth.roleStandard", "👤 Usuario Estándar")}
               </span>
             </div>
             <p className="text-[11px] text-on-surface-variant dark:text-slate-400">
               {currentUser.isAdmin
-                ? "Como administrador puedes gestionar convocatorias, acceder al Panel Admin y sincronizar la base de datos."
-                : "Como usuario estándar ves la plataforma limpia sin herramientas técnicas ni botones de administración."}
+                ? t(
+                    "auth.roleAdminBody",
+                    "Como administrador puedes gestionar convocatorias, acceder al Panel Admin y sincronizar la base de datos."
+                  )
+                : t(
+                    "auth.roleStandardBody",
+                    "Como usuario estándar ves la plataforma limpia sin herramientas técnicas ni botones de administración."
+                  )}
             </p>
           </div>
 
@@ -158,15 +197,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <div className="space-y-2 text-xs text-on-surface-variant dark:text-slate-300">
             <div className="flex items-center gap-2 p-2.5 bg-surface dark:bg-slate-800 rounded-xl">
               <Bookmark className="w-4 h-4 text-primary dark:text-sky-400" />
-              <span>Sincronización activa de Becas Guardadas</span>
+              <span>{t("auth.syncBookmarks", "Sincronización activa de Becas Guardadas")}</span>
             </div>
             <div className="flex items-center gap-2 p-2.5 bg-surface dark:bg-slate-800 rounded-xl">
               <Calendar className="w-4 h-4 text-emerald-500" />
-              <span>Conexión directa con Google Calendar</span>
+              <span>{t("auth.syncCalendar", "Conexión directa con Google Calendar")}</span>
             </div>
             <div className="flex items-center gap-2 p-2.5 bg-surface dark:bg-slate-800 rounded-xl">
               <Sparkles className="w-4 h-4 text-amber-500" />
-              <span>Historial del Asistente LatinoMigra IA</span>
+              <span>{t("auth.syncChat", "Historial del Asistente LatinoMigra IA")}</span>
             </div>
           </div>
 
@@ -178,7 +217,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             className="btn-tactile w-full flex items-center justify-center gap-2 py-3 border border-red-500/30 text-red-600 dark:text-red-400 font-bold text-xs rounded-xl hover:bg-red-50 dark:hover:bg-red-950/30 transition-all shadow-xs"
           >
             <LogOut className="w-4 h-4" />
-            <span>Cerrar Sesión</span>
+            <span>{t("auth.signOut", "Cerrar Sesión")}</span>
           </button>
         </div>
       ) : (
@@ -189,7 +228,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             onClick={handleFirebaseGoogleSignIn}
             disabled={isLoading}
             id="google-signin-btn"
-            aria-label="Continuar con Google"
+            aria-label={t("auth.continueWithGoogle", "Continuar con Google")}
             className="btn-tactile w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-800 font-bold text-sm py-3 px-4 rounded-xl border border-slate-300 shadow-sm transition-all hover:shadow-md disabled:opacity-50"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -210,7 +249,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
               />
             </svg>
-            <span>Continuar con Google</span>
+            <span>{t("auth.continueWithGoogle", "Continuar con Google")}</span>
           </button>
 
           {/* A failed sign-in has to be visible: it used to close the modal and
@@ -229,7 +268,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {/* Country Selection */}
           <div className="space-y-1.5 pt-2">
             <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block">
-              País de origen (para personalización de visas):
+              {t("auth.originCountry", "País de origen (para personalización de visas):")}
             </label>
             <select
               value={selectedCountry}
@@ -249,7 +288,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </div>
 
           <div className="pt-2 text-center text-[11px] text-on-surface-variant dark:text-slate-400 space-y-1">
-            <p>Protegido por Google OAuth 2.0. No compartiremos tu información personal.</p>
+            <p>
+              {t(
+                "auth.privacyNotice",
+                "Protegido por Google OAuth 2.0. No compartiremos tu información personal."
+              )}
+            </p>
           </div>
         </div>
       )}
