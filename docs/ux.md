@@ -204,6 +204,28 @@ Recently addressed and verified by tests:
   answer usefully about one specific call, and the handler, the prop and the
   path through `App` stay wired so restoring it is one word.
 
+## Estudios (cursos, certificados y FP)
+
+- The Becas & Estudios screen carries a fourth tab, **Cursos, Certificados y
+  FP**, holding the study routes that do not depend on funding (#56).
+  `src/components/EstudiosSection.tsx`.
+- Selecting it hides the scholarship chrome — search, sort, the filter sidebar
+  and the mobile quick filters — because none of it filters what is on screen.
+  A sort control that sorts nothing is an interface lying about its behaviour.
+- Each entry is a `Card`, and the requirements and qualification collapse below
+  `lg` behind the same `Disclosure` the guides and the scholarship detail use.
+  The official-source button is never inside the collapse: it is why the entry
+  exists.
+- The list pages in sixes through one control, matching the scholarship list
+  beside it. Measured at 375px it is 5390px against the catalogue's 5403px;
+  rendering all thirteen at once was 9463px.
+- The tab badge counts what the section will render, not what the dataset
+  holds: an entry without an official source does not appear, and a badge
+  counting entries rather than results is a defect this screen already had.
+- An entry that fails the official-source check is reported above the list, not
+  dropped. `src/lib/studyProgrammes.ts` holds the rule and the domain
+  allowlist. Spec: `specs/estudios-catalogue.md`.
+
 ## Migration guides
 
 - The guide collapses its heavy blocks below `lg` and leaves them open above

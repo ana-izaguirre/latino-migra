@@ -20,7 +20,7 @@ Ten screens, defined by the `NavigationTab` union in `src/types.ts`.
 | Tab | Screen | What it does |
 |---|---|---|
 | `home` | Hero + catalogue | Landing hero, feature cards, then the **full** scholarship explorer |
-| `becas` | Scholarship catalogue | Filter by country, education level, area, support type, institution, deadline; favourites; detail modal; suggest a scholarship |
+| `becas` | Scholarship catalogue and study routes | Filter by country, education level, area, support type, institution, deadline; favourites; detail modal; suggest a scholarship; a **Cursos, Certificados y FP** tab with official courses, language certifications and vocational training, each linking to its official source and to any scholarship that funds it |
 | `guia` | Migration guides | Per-country visa guides: requirements, costs, timelines, document checklist, anti-scam section |
 | `mapa` | Consular directory | Map + list of consulates, embassies and campuses; GPS detection; filter by origin and destination |
 | `chat` | AI assistant | Full-screen chat backed by Gemini; conversation list; profile diagnosis form |

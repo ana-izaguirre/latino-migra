@@ -115,6 +115,43 @@ export interface Scholarship {
   officialPortalName?: string;
 }
 
+/** What kind of study route an entry describes. */
+export type StudyProgrammeKind = "curso" | "certificado" | "fp";
+
+/**
+ * A study route that is not a scholarship: a course, a certificate or a
+ * vocational qualification.
+ *
+ * `country` and `countryCode` carry the same strings as `Scholarship`, so the
+ * two halves of the Becas & Estudios screen name a country identically and
+ * `relatedScholarshipIds` can be resolved against the catalogue.
+ */
+export interface StudyProgramme {
+  id: string;
+  /** The programme's own name, as its institution writes it. */
+  title: string;
+  kind: StudyProgrammeKind;
+  /** Who runs it. */
+  institution: string;
+  /** What the reader will see when the official link opens. */
+  officialPortalName: string;
+  /** https, on the institution's own domain. See OFFICIAL_STUDY_DOMAINS. */
+  officialUrl: string;
+  country: string;
+  countryCode: string;
+  /** "Presencial", "En línea" or "Mixta". */
+  modality: string;
+  duration: string;
+  /** Including "Gratuito". Never blank: silence about cost reads as free. */
+  cost: string;
+  description: string;
+  /** What the reader holds at the end — a title, a certificate, credits. */
+  outcome: string;
+  requirements: string[];
+  /** Ids in the scholarship catalogue that fund this route. */
+  relatedScholarshipIds?: string[];
+}
+
 export interface VisaType {
   id: string;
   name: string;

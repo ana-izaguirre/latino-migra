@@ -51,6 +51,15 @@ of the suite. Each test pins a defect that actually shipped:
 - The floating chat button is inside the viewport, clickable, and clear of the
   bottom bar.
 
+**Studies section** (`estudios.mobile.spec.ts`,
+`src/components/EstudiosSection.test.tsx`,
+`src/lib/studyProgrammes.test.ts`) — every entry links to an official source
+over https; the scholarship chrome is hidden on the tab it does not filter;
+the details collapse below `lg` with a 44px control and stay open above it;
+the page does not scroll sideways at 375px. The unit suite is the load-bearing
+one: it validates the shipped catalogue itself, so an entry added without an
+official source fails the build rather than reaching a reader.
+
 **Cross-screen consistency** (`consistency.spec.ts`) — a destination picked in
 the guides propagates to the planner and the consular map; the catalogue is not
 pre-filtered before the user chooses; nothing is written to browser storage;
