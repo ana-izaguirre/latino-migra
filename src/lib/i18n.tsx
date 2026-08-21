@@ -167,6 +167,84 @@ export const TRANSLATIONS: TranslationDictionary = {
     en: "Background Tasks Status (Cron Job)",
   },
 
+  // Migration guides (Guías)
+  "guia.eyebrow": {
+    es: "Guías Oficiales Paso a Paso • Fuentes Gubernamentales",
+    en: "Official Step-by-Step Guides • Government Sources",
+  },
+  "guia.routeTitle": {
+    es: "Ruta Migratoria y Cronograma Realista",
+    en: "Migration Route and Realistic Timeline",
+  },
+  "guia.routeIntro": {
+    es: "Las cuatro fases, en orden, desde la preparación en tu país hasta tus primeros días en destino. Es la ruta que vas a recorrer, no un registro de tu avance.",
+    en: "The four phases, in order, from preparing at home to your first days abroad. This is the route ahead, not a record of your progress.",
+  },
+  "guia.phase": { es: "Fase", en: "Phase" },
+  "guia.averageTime": { es: "Tiempo promedio total:", en: "Typical total time:" },
+  "guia.visaTypesIn": { es: "Tipos de Visado en", en: "Visa Types in" },
+  "guia.visaTypesIntro": {
+    es: "Explora estudios, cursos de idiomas, trabajo express, nómadas y residencia.",
+    en: "Study, language courses, fast-track work, digital nomad and residency routes.",
+  },
+  "guia.requirements": { es: "Requisitos Indispensables", en: "Essential Requirements" },
+  "guia.officialPortal": { es: "Portal oficial", en: "Official portal" },
+  "guia.noOfficialLink": {
+    es: "Todavía no tenemos el enlace oficial de esta visa.",
+    en: "We do not have the official link for this visa yet.",
+  },
+  "guia.showVisaDetails": { es: "Ver requisitos y trámites", en: "See requirements and paperwork" },
+  "guia.hideVisaDetails": {
+    es: "Ocultar requisitos y trámites",
+    en: "Hide requirements and paperwork",
+  },
+  "guia.askAI": { es: "Consultar con IA", en: "Ask the assistant" },
+  "guia.askAIWhich": {
+    es: "Preguntar a IA cuál me conviene",
+    en: "Ask the assistant which suits me",
+  },
+  "guia.costTitle": { es: "Costo de Vida Estimado", en: "Estimated Cost of Living" },
+  "guia.openCalculator": { es: "Abrir Calculadora", en: "Open Calculator" },
+  "guia.checklistTitle": { es: "Documentación Clave Requerida", en: "Key Documents Required" },
+  "guia.checklistIntro": {
+    es: "Marca las casillas conforme reúnas cada documento para tu cita consular o trámites de llegada.",
+    en: "Tick each document off as you gather it for your consular appointment or on arrival.",
+  },
+  "guia.downloadChecklist": { es: "Descargar Checklist (.txt)", en: "Download Checklist (.txt)" },
+  "guia.showChecklist": { es: "Ver la lista de documentos", en: "See the document list" },
+  "guia.hideChecklist": { es: "Ocultar la lista de documentos", en: "Hide the document list" },
+  "guia.antiScamBadge": {
+    es: "Protocolo de Protección & Prevención de Fraudes",
+    en: "Protection and Fraud Prevention",
+  },
+  "guia.antiScamTitle": {
+    es: "Guía Anti-Estafas Oficial para",
+    en: "Official Anti-Scam Guide for",
+  },
+  "guia.antiScamIntro": {
+    es: "Estafas más frecuentes reportadas por migrantes y estudiantes en este país, cómo detectarlas y canales directos de denuncia oficial.",
+    en: "The scams migrants and students report most often in this country, how to spot them, and where to report them officially.",
+  },
+  "guia.showAntiScam": {
+    es: "Ver estafas frecuentes y cómo denunciar",
+    en: "See common scams and how to report them",
+  },
+  "guia.hideAntiScam": { es: "Ocultar estafas frecuentes", en: "Hide common scams" },
+  "guia.emergencyPhone": {
+    es: "Teléfono de Emergencia / Denuncia:",
+    en: "Emergency / Reporting Phone:",
+  },
+  "guia.policePortal": { es: "Portal de Denuncias Telemáticas", en: "Online Reporting Portal" },
+  "guia.warningSign": { es: "Señal de Alerta:", en: "Warning Sign:" },
+  "guia.howToProtect": { es: "Cómo Protegerte:", en: "How to Protect Yourself:" },
+  "guia.directSource": { es: "Fuente directa:", en: "Direct source:" },
+  "guia.consumerAgency": {
+    es: "Organismo oficial de defensa al consumidor:",
+    en: "Official consumer protection body:",
+  },
+  "guia.communityTip": { es: "Consejo Real de la Comunidad", en: "Real Advice from the Community" },
+  "guia.openForum": { es: "Ver Foro", en: "Open the Forum" },
+
   // Footer
   "footer.tools": { es: "Herramientas", en: "Tools" },
   "footer.community": { es: "Comunidad & Recursos", en: "Community & Resources" },
