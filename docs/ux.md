@@ -148,6 +148,22 @@ Recently addressed and verified by tests:
   failure: the browser would otherwise resolve it against the page URL and
   fetch the document itself.
 
+## Scholarship detail
+
+- Requisitos and beneficios collapse below `lg` through the same `Disclosure`
+  the guides use. Together they are the bulk of the panel and arrived as one
+  wall of text.
+- The calendar action says what it does. "Agendar en Google Calendar" read as
+  booking an appointment with somebody; nothing is booked with anyone, so it
+  is "Recordarme la fecha límite", and the event that lands in the reader's
+  calendar is titled "Recordatorio: cierra la beca …".
+- One link to the official call, not two. The header and the action row both
+  pointed at the same page.
+- The "Consultar IA" button is hidden behind
+  `SHOW_ASK_AI_ABOUT_SCHOLARSHIP`, not deleted: the assistant cannot yet
+  answer usefully about one specific call, and the handler, the prop and the
+  path through `App` stay wired so restoring it is one word.
+
 ## Migration guides
 
 - The guide collapses its heavy blocks below `lg` and leaves them open above

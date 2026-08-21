@@ -42,7 +42,7 @@ export default defineConfig({
       thresholds: {
         statements: 54,
         branches: 49,
-        functions: 48,
+        functions: 49,
         lines: 54,
         "src/lib/PreferencesContext.tsx": {
           statements: 95,
