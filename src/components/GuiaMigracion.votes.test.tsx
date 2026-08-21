@@ -24,7 +24,13 @@ describe("Visa usefulness votes", () => {
     onAskAIAboutGuide: vi.fn(),
   };
 
-  const user = { id: "user-1", name: "Ana", email: "ana@example.com", picture: "" };
+  const user = {
+    id: "user-1",
+    name: "Ana",
+    email: "ana@example.com",
+    avatar: "",
+    signedInAt: new Date().toISOString(),
+  };
 
   beforeEach(() => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
