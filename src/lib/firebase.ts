@@ -1,4 +1,5 @@
 import { initializeApp } from "firebase/app";
+import { FavouriteKey, FavouriteKind, bookmarkToKey, favouriteKey } from "./favourites";
 import {
   getAuth,
   GoogleAuthProvider,
@@ -231,45 +232,56 @@ export async function fetchUserBookmarks(userId: string): Promise<string[]> {
   try {
     const q = query(collection(db, path), where("userId", "==", userId));
     const snap = await getDocs(q);
-    return snap.docs.map((d) => d.data().scholarshipId as string);
+    return snap.docs
+      .map((d) => bookmarkToKey(d.data()))
+      .filter((key): key is FavouriteKey => key !== null);
   } catch (err) {
     handleFirestoreError(err, OperationType.LIST, path);
     return [];
   }
 }
 
-// Firestore Helper: Save Scholarship Bookmark
-export async function toggleBookmarkScholarship(
+/**
+ * Saves or removes one favourite, of either catalogue.
+ *
+ * The collection is still called `savedScholarships`. Renaming it means copying
+ * every document and deleting the originals, and there is no backup or restore
+ * capability yet (#18), so the name stays wrong and this comment carries the
+ * reason. New documents carry `itemType` and `itemId`; the ones written before
+ * #82 carry `scholarshipId` and are read as scholarships, which is what all of
+ * them are.
+ */
+export async function toggleBookmark(
   userId: string,
-  scholarshipId: string,
+  kind: FavouriteKind,
+  itemId: string,
   title: string,
   country: string
-) {
+): Promise<boolean> {
   const path = "savedScholarships";
   try {
-    const q = query(
-      collection(db, path),
-      where("userId", "==", userId),
-      where("scholarshipId", "==", scholarshipId)
-    );
-    const snapshot = await getDocs(q);
+    const existing = await getDocs(query(collection(db, path), where("userId", "==", userId)));
+    const wanted = favouriteKey(kind, itemId);
+    const match = existing.docs.find((d) => bookmarkToKey(d.data()) === wanted);
 
-    if (!snapshot.empty) {
-      // Remove bookmark
-      const docId = snapshot.docs[0].id;
-      await deleteDoc(doc(db, path, docId));
-      return false; // Now unbookmarked
-    } else {
-      // Add bookmark
-      await addDoc(collection(db, path), {
-        userId,
-        scholarshipId,
-        scholarshipTitle: title,
-        country,
-        savedAt: new Date().toISOString(),
-      });
-      return true; // Now bookmarked
+    if (match) {
+      await deleteDoc(doc(db, path, match.id));
+      return false;
     }
+
+    await addDoc(collection(db, path), {
+      userId,
+      itemType: kind,
+      itemId,
+      // Kept for anything still reading the old field, and only for the kind it
+      // can describe: writing a programme id into `scholarshipId` would make a
+      // course look like a scholarship to every existing query.
+      ...(kind === "scholarship" ? { scholarshipId: itemId } : {}),
+      title,
+      country,
+      savedAt: new Date().toISOString(),
+    });
+    return true;
   } catch (err) {
     handleFirestoreError(err, OperationType.WRITE, path);
     throw err;
