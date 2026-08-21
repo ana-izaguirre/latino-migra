@@ -64,51 +64,86 @@ describe("BecasExplorer Component", () => {
     expect(screen.getByText(/Sugerir Beca Universitaria/i)).toBeInTheDocument();
   });
 
-  it("renders pagination controls and navigates between pages", () => {
-    render(<BecasExplorer {...defaultProps} />);
+  /**
+   * The screen used to carry a numbered pager and a "load more" button behind
+   * a mode switch, plus a page-size selector — three controls doing one job.
+   * On a phone the numbered pager was a row of tap targets nobody asked for.
+   */
+  describe("paging through the catalogue", () => {
+    it("offers exactly one way to see more", () => {
+      const { container } = render(<BecasExplorer {...defaultProps} />);
 
-    // Page 1 should be active initially with 6 cards displayed
-    const page1Btn = screen.getByRole("button", { name: "1" });
-    expect(page1Btn).toHaveAttribute("aria-current", "page");
+      expect(container.querySelector("#btn-load-more-scholarships")).toBeInTheDocument();
+      expect(container.querySelector("#pagination-first-page")).toBeNull();
+      expect(container.querySelector("#pagination-prev-page")).toBeNull();
+      expect(container.querySelector("#mode-paginated-btn")).toBeNull();
+      expect(container.querySelector("#mode-lazy-btn")).toBeNull();
+      expect(container.querySelector('[id^="items-per-page-"]')).toBeNull();
+    });
 
-    // Check next page button
-    const nextBtn = screen.getByRole("button", { name: /Siguiente/i });
-    expect(nextBtn).toBeInTheDocument();
-    expect(nextBtn).not.toBeDisabled();
+    it("starts with one batch and says how much of the catalogue that is", () => {
+      render(<BecasExplorer {...defaultProps} />);
 
-    // Click next page
-    fireEvent.click(nextBtn);
-    const page2Btn = screen.getByRole("button", { name: "2" });
-    expect(page2Btn).toHaveAttribute("aria-current", "page");
-  });
+      expect(screen.getByText(/Mostrando/)).toHaveTextContent(/6.*de.*22 convocatorias/);
+      expect(screen.getAllByRole("button", { name: /Ver Detalles/i })).toHaveLength(6);
+    });
 
-  it("supports lazy loading / carga diferida mode and loading more items", () => {
-    render(<BecasExplorer {...defaultProps} />);
+    it("adds a batch on each request and says how many that will be", () => {
+      const { container } = render(<BecasExplorer {...defaultProps} />);
 
-    // Switch to Carga Diferida mode
-    const lazyModeBtn = screen.getByRole("button", { name: /Carga Diferida/i });
-    fireEvent.click(lazyModeBtn);
+      const loadMore = container.querySelector("#btn-load-more-scholarships") as HTMLElement;
+      expect(loadMore).toHaveTextContent(/\+6/);
 
-    // Look for the "Cargar Más Convocatorias" button
-    const loadMoreBtn = screen.getByRole("button", { name: /Cargar Más Convocatorias/i });
-    expect(loadMoreBtn).toBeInTheDocument();
+      fireEvent.click(loadMore);
+      expect(screen.getAllByRole("button", { name: /Ver Detalles/i })).toHaveLength(12);
+    });
 
-    // Click load more
-    fireEvent.click(loadMoreBtn);
-    expect(screen.getByText(/Progreso de carga/i)).toBeInTheDocument();
-  });
+    it("never promises more than is left", () => {
+      const { container } = render(<BecasExplorer {...defaultProps} />);
 
-  it("changes items per page when selecting size option", () => {
-    const { container } = render(<BecasExplorer {...defaultProps} />);
+      // 22 scholarships: the first batch is 6, two more take it to 18, and
+      // the button then has to offer the remaining 4 rather than a full batch.
+      for (let i = 0; i < 2; i += 1) {
+        fireEvent.click(container.querySelector("#btn-load-more-scholarships") as HTMLElement);
+      }
+      expect(container.querySelector("#btn-load-more-scholarships")).toHaveTextContent(/\+4/);
+    });
 
-    // Click on "Todas" items per page button by ID
-    const allBtn = container.querySelector("#items-per-page-all");
-    expect(allBtn).toBeInTheDocument();
-    if (allBtn) {
-      fireEvent.click(allBtn);
-    }
+    it("reports the end instead of a button that would add nothing", () => {
+      const { container } = render(<BecasExplorer {...defaultProps} />);
 
-    expect(screen.getByText(/Mostrando todas las/i)).toBeInTheDocument();
+      for (let i = 0; i < 4; i += 1) {
+        const more = container.querySelector("#btn-load-more-scholarships");
+        if (more) fireEvent.click(more as HTMLElement);
+      }
+
+      expect(container.querySelector("#btn-load-more-scholarships")).toBeNull();
+      expect(screen.getByText(/Has llegado al final de las 22 convocatorias/i)).toBeInTheDocument();
+      expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "22");
+    });
+
+    it("goes back to the first batch when the filters change", () => {
+      const { container } = render(<BecasExplorer {...defaultProps} />);
+
+      fireEvent.click(container.querySelector("#btn-load-more-scholarships") as HTMLElement);
+      expect(screen.getAllByRole("button", { name: /Ver Detalles/i })).toHaveLength(12);
+
+      // What was loaded before a filter changed says nothing about what
+      // matches after it.
+      fireEvent.click(container.querySelector("#country-chip-España") as HTMLElement);
+      expect(screen.getAllByRole("button", { name: /Ver Detalles/i }).length).toBeLessThanOrEqual(
+        6
+      );
+    });
+
+    it("announces loading progress rather than only drawing a bar", () => {
+      render(<BecasExplorer {...defaultProps} />);
+
+      const bar = screen.getByRole("progressbar");
+      expect(bar).toHaveAccessibleName(/Progreso de carga/i);
+      expect(bar).toHaveAttribute("aria-valuenow", "6");
+      expect(bar).toHaveAttribute("aria-valuemax", "22");
+    });
   });
 
   it("toggles favorites in memory and filters by My Favorites section", async () => {
