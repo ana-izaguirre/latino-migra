@@ -312,6 +312,148 @@ verified instead, and whether manual QA is required.
 
 ---
 
+## A test must prove its own premise
+
+A test that never triggers the thing it asserts passes for the wrong reason,
+and reports safety it does not provide. This has happened here more than once.
+
+**Before keeping a regression test, break the fix and watch the test fail.**
+If it still passes, it is not testing what its name says.
+
+Where a test depends on a precondition it sets up itself — an intercepted
+request, a mocked rejection, a fake clock — assert the precondition too:
+
+```ts
+// The covers are Unsplash URLs with no file extension, so a
+// `**/*.{png,jpg}` pattern matched nothing and the route never fired.
+let imagesBlocked = 0;
+await page.route("**/*", (route) => {
+  if (route.request().resourceType() !== "image") return route.continue();
+  imagesBlocked += 1;
+  return route.abort();
+});
+await expect.poll(() => imagesBlocked).toBeGreaterThan(0);
+```
+
+Two local conditions make false passes easy here, and neither exists in CI:
+
+- **The sandbox blocks outbound requests.** Anything remote fails on its own,
+  so a test that expects a failed fetch passes without arranging one.
+- **Piping a command to `tail` or `head` masks its exit code.** `npm test |
+  tail -5` reports success from `tail`. Never read a pass/fail from a pipeline.
+
+---
+
+## Measure in a browser; do not reason about layout
+
+Three defects this project shipped were invisible in the source and obvious in
+one measurement:
+
+- `<main>` carried an animation filling `both`, which left an identity
+  `transform` on it forever. That makes the element the containing block for
+  every `position: fixed` descendant, so a sheet meant to sit at the bottom of
+  a 812px screen was laid out at y=3268 inside a 6583px-tall backdrop. Three
+  rounds of patching individual modals had not touched the cause.
+- `lg:hidden` and `inline-flex` on the same element both set `display`, so the
+  winner was whichever Tailwind emitted last. It emitted `inline-flex`, and a
+  control meant to be mobile-only stayed on desktop.
+- A guide "too dense for mobile" was 9857px tall at 375px — twelve screens.
+  Knowing the number decided what to collapse and proved the fix worked.
+
+So: when the question is about position, size, visibility or breakpoints, open
+a browser and read the numbers.
+
+```bash
+npm run build && node dist/server.cjs &     # background; the dev server
+                                            # reloads on every file write
+PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium npx playwright test
+```
+
+`page.evaluate(() => el.getBoundingClientRect())` answers in one call what a
+paragraph of reasoning about CSS does not.
+
+**Never put a breakpoint utility next to another utility that sets the same
+property.** Give the breakpoint its own wrapper element.
+
+---
+
+## Silent fallbacks, again
+
+Constraint 5 says do not add them. They keep appearing in the same shape: code
+that answers a question it could not really answer, and looks fine doing it.
+
+Found here, all with the same signature:
+
+| Where | What it did instead of failing |
+| --- | --- |
+| `AuthModal` catch branch | fabricated a signed-in user when the popup failed |
+| Deadline filter | read `daysLeft`, a field no record carries, and matched everything |
+| Option counts | counted the whole catalogue while the list was filtered |
+| `isUrgent` | a flag written once at creation, still calling closed calls urgent |
+| Calculator currency | hardcoded `COP`, ignoring the currency the visitor chose |
+
+The tell is a value produced from the wrong source, or from no source, where
+the interface then presents it with full confidence. When you touch a screen,
+check where each number and each string on it actually comes from.
+
+**Never fabricate an identity, a session, or a record.** If authentication did
+not happen, the visitor is anonymous — which is already a supported state.
+
+---
+
+## Clean code in every pull request
+
+Leave the code you touched better than you found it, within the scope you were
+given:
+
+- Delete what the change makes dead — state, helpers, imports, whole files.
+  A removed feature that leaves its icons imported fails lint as an *error*,
+  not a warning, and blocks CI.
+- Extract a shared unit when the second copy appears, not the first.
+- Name the thing after what it is for. `LOAD_BATCH_SIZE`, not `6`.
+- One definition of a rule. When a predicate is written twice — once for the
+  list and once for the counts beside it — they drift, and the interface starts
+  lying about its own behaviour.
+- Comment the surprise, never the syntax. "Why `backwards` and not `both`"
+  earns its lines; "increment the counter" does not.
+
+This does not license unrelated refactoring. The scope is still the scope.
+
+---
+
+## Raise coverage with every pull request
+
+Coverage is a ratchet, not a target — but the ratchet has to move.
+
+Every pull request that adds behaviour also raises the thresholds in
+`vitest.config.ts` to what the suite now reaches. Never lower them to make a
+build pass; write the test instead.
+
+Cover the component you touched properly rather than sprinkling assertions
+widely. The screens still thin: `Footer`, `HeroLanding`, `ChatIA`,
+`MapaConsulados`, `Comunidad`.
+
+---
+
+## Two branches on the same region
+
+Branch per unit of work is not enough on its own: two branches can still be
+open against the same component, and a clean `git merge` will interleave them
+into something that compiles and is wrong. It has happened twice here — once
+producing a filter panel that rendered chips *and* the native selects they
+replaced.
+
+- Before starting, check what is open against the file you are about to change.
+- When two branches rewrite the same region, **stop and decide which lands
+  first**, rather than resolving conflicts hunk by hunk. Say plainly which is
+  more correct and why.
+- Resolve a structural conflict by rewriting the region as one piece from the
+  version that should win — not by picking sides line by line.
+- After any merge into a component, open it in a browser. A merge that git
+  called clean can still render two interfaces at once.
+
+---
+
 ## Definition of Done
 
 Written code is not done.
@@ -441,5 +583,25 @@ npm run test:coverage    # Unit tests + thresholds
 npm run test:e2e         # Playwright, desktop + mobile
 npm run build
 ```
+
+### Running Playwright in the agent container
+
+The pinned Chromium is not downloadable here; the container ships its own.
+
+```bash
+npm run build
+node dist/server.cjs &   # not `npm run dev`: Vite watches the test files and
+                         # reloads the page mid-run, failing the suite
+PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium npx playwright test
+```
+
+`playwright.config.ts` reads `PLAYWRIGHT_CHROMIUM_PATH` and passes it as
+`executablePath`. It is unset in CI, where `npx playwright install` runs.
+Do **not** add a second Playwright config to the tree for this; it was tried,
+and the `any`s it introduced pushed the lint budget over its ratchet.
+
+Specs matching `*.mobile.spec.ts` run on the phone project. A desktop
+assertion inside one goes in its own `describe` with
+`test.use({ viewport: … })`.
 
 Merge gates and branch protection: `CONTRIBUTING.md`
