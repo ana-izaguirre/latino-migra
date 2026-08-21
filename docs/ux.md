@@ -216,6 +216,10 @@ Recently addressed and verified by tests:
   `lg` behind the same `Disclosure` the guides and the scholarship detail use.
   The official-source button is never inside the collapse: it is why the entry
   exists.
+- Four filters and a name search, migration route first: whether a programme
+  opens a way to migrate is why someone is on this platform rather than on a
+  course aggregator. An entry nobody has checked shows "sin verificar" rather
+  than borrowing an answer, and that is one of the filter's options.
 - The list pages in sixes through one control, matching the scholarship list
   beside it. Measured at 375px it is 5390px against the catalogue's 5403px;
   rendering all thirteen at once was 9463px.

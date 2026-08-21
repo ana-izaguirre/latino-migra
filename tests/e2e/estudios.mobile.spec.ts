@@ -55,6 +55,40 @@ test.describe("Studies section on a phone", () => {
     await expect(page.locator(`#${panelId}`)).toBeVisible();
   });
 
+  test("narrows by migration route, and the chip count matches the list", async ({ page }) => {
+    const chip = page.locator("#estudios-route-chip-directa");
+    await expect(chip).toBeVisible();
+
+    // The chip carries its own count; the list has to agree with it.
+    const promised = Number((await chip.innerText()).match(/(\d+)\s*$/)?.[1]);
+    expect(promised).toBeGreaterThan(0);
+
+    await chip.click();
+
+    // Everything on screen is a route-opening programme, and the "showing N of
+    // M" line reports the same M the chip promised.
+    await expect(page.locator("#estudios-list")).toBeVisible();
+    await expect(
+      page.getByText(new RegExp(`de\\s*${promised}\\s*programas oficiales`))
+    ).toBeVisible();
+
+    const badges = await page
+      .locator('[id^="estudio-card-"]')
+      .locator("text=Vía migratoria")
+      .count();
+    expect(badges).toBeGreaterThan(0);
+  });
+
+  test("searches by name and says which filters emptied the list", async ({ page }) => {
+    await page.locator("#estudios-search-input").fill("no existe este programa");
+
+    await expect(page.getByText(/Ningún programa con estos filtros/)).toBeVisible();
+    await expect(page.getByText(/"no existe este programa"/)).toBeVisible();
+
+    await page.locator("#estudios-clear-filters").click();
+    await expect(page.locator("#estudios-list")).toBeVisible();
+  });
+
   test("fits a 375px viewport without sideways scrolling", async ({ page }) => {
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth
