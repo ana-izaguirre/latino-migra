@@ -131,6 +131,31 @@ Recently addressed and verified by tests:
 - Dismissing the drawer restores the reading position instead of jumping to the
   top.
 
+## Migration guides
+
+- The guide collapses its heavy blocks below `lg` and leaves them open above
+  it. Measured at 375px, the screen ran to 9857px — twelve screens of
+  scrolling to reach the anti-scam section at the bottom; it is 6519px now.
+  Three blocks collapse: each visa card's requirements and actions, the
+  document checklist, and the anti-scam guide.
+- The split is done in CSS, not by measuring the viewport in JavaScript. The
+  panel is always in the DOM and always shown at `lg`; the control that
+  toggles it is hidden there, so `aria-expanded` never claims something is
+  collapsed on a screen where it is not. `src/components/ui/Disclosure.tsx`.
+  The breakpoint sits on a wrapper rather than on the control itself:
+  `lg:hidden` and a display utility on one element let the emitted order pick
+  the winner, and it picked `inline-flex`.
+- The migration route no longer marks a phase as the one you are on.
+  `activeRoadmapStep` started at 2, so phase two was flagged as current for
+  every visitor on every load, and tapping a card moved a marker that meant
+  nothing — the application does not know where anyone is in their process.
+  It renders as an ordered list, with the phase number in the heading for a
+  screen reader and the digit badge left decorative.
+- Each visa carries a visible link to its official source. It used to be a
+  grey text link between a vote counter and an AI button, on a screen whose
+  whole claim is that it points at official sources. A visa with no source
+  says so rather than showing nothing.
+
 ## Visual hierarchy
 
 - Type scale and spacing are consistent within screens.

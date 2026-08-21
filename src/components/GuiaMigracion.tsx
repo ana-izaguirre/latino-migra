@@ -8,6 +8,7 @@ import {
   Download,
   Bot,
   Sparkles,
+  AlertTriangle,
   ChevronRight,
   ShieldCheck,
   Building,
@@ -20,6 +21,7 @@ import { NavigationTab } from "../types";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { MIGRATION_GUIDES_DATA } from "../data/migrationGuides";
 import { COUNTRY_ANTI_SCAM_DATA } from "../data/antiScamData";
+import { Disclosure } from "./ui/Disclosure";
 import { CalendarAgendaButton } from "./CalendarAgendaButton";
 import { fetchVisaGuideVotes, voteVisaHelpful, VisaVotesData } from "../lib/firebase";
 import { usePreferences } from "../lib/PreferencesContext";
@@ -39,7 +41,6 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
   const selectedCountryCode = destinationCountryCode || "ES";
   const setSelectedCountryCode = setDestinationCountryByCode;
   const [selectedCategory, setSelectedCategory] = useState<string>("todos");
-  const [activeRoadmapStep, setActiveRoadmapStep] = useState<number>(2);
   const [visaVotes, setVisaVotes] = useState<Record<string, VisaVotesData>>({});
   const [userVotedVisas, setUserVotedVisas] = useState<Record<string, boolean>>({});
 
@@ -210,8 +211,8 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
               Ruta Migratoria y Cronograma Realista
             </h2>
             <p className="text-xs text-on-surface-variant dark:text-slate-400">
-              Fases indispensables desde la preparación en tu país hasta tus primeros días en
-              destino.
+              Las cuatro fases, en orden, desde la preparación en tu país hasta tus primeros días en
+              destino. Es la ruta que vas a recorrer, no un registro de tu avance.
             </p>
           </div>
           <div className="inline-flex items-center gap-2 bg-amber-500/10 text-amber-800 dark:text-amber-300 px-3.5 py-1.5 rounded-full text-xs font-bold self-start sm:self-auto">
@@ -221,39 +222,38 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
         </div>
 
         {/* Roadmap Steps */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {roadmapSteps.map((step) => {
-            const isActive = activeRoadmapStep === step.num;
-            return (
-              <button
-                key={step.num}
-                onClick={() => setActiveRoadmapStep(step.num)}
-                className={`p-4 rounded-2xl text-left border transition-all cursor-pointer ${
-                  isActive
-                    ? "bg-primary/10 dark:bg-sky-900/40 border-primary dark:border-sky-400 shadow-sm"
-                    : "bg-surface dark:bg-slate-900 border-outline-variant/30 dark:border-slate-800 hover:border-outline-variant"
-                }`}
+        {/*
+          An ordered list, not a set of buttons. These are four phases in a
+          fixed order, and the order is the information — but the interface
+          used to mark phase two as the current one on every load, for
+          everyone, because `activeRoadmapStep` started at 2. Tapping a card
+          moved the highlight, which meant nothing: the application does not
+          know where anyone is in their process. A marker that cannot be true
+          is worse than no marker.
+        */}
+        <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {roadmapSteps.map((step) => (
+            <li
+              key={step.num}
+              id={`roadmap-step-${step.num}`}
+              className="p-4 rounded-2xl border bg-surface dark:bg-slate-900 border-outline-variant/30 dark:border-slate-800"
+            >
+              <span
+                className="w-8 h-8 mb-2 rounded-full flex items-center justify-center font-bold text-xs bg-surface-container dark:bg-slate-800 text-on-surface-variant dark:text-slate-300 tabular-nums"
+                aria-hidden="true"
               >
-                <div className="flex items-center justify-between mb-2">
-                  <span
-                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
-                      isActive
-                        ? "bg-primary dark:bg-sky-500 text-white"
-                        : "bg-surface-container dark:bg-slate-800 text-on-surface-variant"
-                    }`}
-                  >
-                    0{step.num}
-                  </span>
-                  {isActive && <Sparkles className="w-4 h-4 text-primary dark:text-sky-400" />}
-                </div>
-                <h4 className="font-bold text-sm text-primary dark:text-sky-300">{step.title}</h4>
-                <p className="text-xs text-on-surface-variant dark:text-slate-400 mt-1 leading-relaxed">
-                  {step.desc}
-                </p>
-              </button>
-            );
-          })}
-        </div>
+                0{step.num}
+              </span>
+              <h4 className="font-bold text-sm text-primary dark:text-sky-300">
+                <span className="sr-only">Fase {step.num}: </span>
+                {step.title}
+              </h4>
+              <p className="text-xs text-on-surface-variant dark:text-slate-400 mt-1 leading-relaxed">
+                {step.desc}
+              </p>
+            </li>
+          ))}
+        </ol>
       </div>
 
       {/* Visas Section & Cost of Living */}
@@ -349,101 +349,125 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
                   {visa.description}
                 </p>
 
-                {/* Key Facts: Cost & Funds */}
-                {(visa.estimatedCostOfVisa || visa.proofOfFundsRequired) && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-surface/80 dark:bg-slate-900/60 p-3.5 rounded-2xl text-xs border border-outline-variant/20 dark:border-slate-800">
-                    {visa.proofOfFundsRequired && (
-                      <div className="space-y-0.5">
-                        <span className="text-on-surface-variant dark:text-slate-400 font-medium">
-                          💰 Fondos Mínimos Exigidos:
-                        </span>
-                        <p className="font-bold text-primary dark:text-sky-300">
-                          {visa.proofOfFundsRequired}
-                        </p>
-                      </div>
-                    )}
-                    {visa.estimatedCostOfVisa && (
-                      <div className="space-y-0.5">
-                        <span className="text-on-surface-variant dark:text-slate-400 font-medium">
-                          🏷️ Tasa Oficial del Trámite:
-                        </span>
-                        <p className="font-bold text-on-surface dark:text-slate-200">
-                          {visa.estimatedCostOfVisa}
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                {visa.officialSourceUrl ? (
+                  <a
+                    id={`visa-official-source-${visa.id}`}
+                    href={visa.officialSourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-[44px] w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-primary/10 dark:bg-sky-900/40 px-4 py-2 text-xs font-bold text-primary dark:text-sky-300 hover:bg-primary hover:text-white transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4 shrink-0" aria-hidden="true" />
+                    <span>
+                      {visa.officialSourceLabel || "Portal oficial"}
+                      <span className="sr-only">
+                        {" "}
+                        de la visa {visa.name} (se abre en otra pestaña)
+                      </span>
+                    </span>
+                  </a>
+                ) : (
+                  // Visible rather than silent: a guide that claims official
+                  // sources has to say when one is missing.
+                  <p
+                    id={`visa-missing-source-${visa.id}`}
+                    className="inline-flex items-center gap-2 text-xs font-semibold text-amber-700 dark:text-amber-400"
+                  >
+                    <AlertTriangle className="w-4 h-4 shrink-0" aria-hidden="true" />
+                    Todavía no tenemos el enlace oficial de esta visa.
+                  </p>
                 )}
 
-                {/* Key Requirements List */}
-                <div className="space-y-2 bg-surface dark:bg-slate-900 p-4 rounded-2xl border border-outline-variant/20 dark:border-slate-800">
-                  <span className="text-xs font-bold text-primary dark:text-sky-300 uppercase tracking-wider block">
-                    Requisitos Indispensables
-                  </span>
-                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-on-surface-variant dark:text-slate-300">
-                    {visa.keyRequirements.map((req, idx) => (
-                      <li key={idx} className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                        <span className="leading-snug">{req}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                {/* Funds, requirements and actions: the bulk of the card. */}
+                <Disclosure
+                  id={`visa-details-${visa.id}`}
+                  label="Ver requisitos y trámites"
+                  labelWhenOpen="Ocultar requisitos y trámites"
+                >
+                  {/* Key Facts: Cost & Funds */}
+                  {(visa.estimatedCostOfVisa || visa.proofOfFundsRequired) && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-surface/80 dark:bg-slate-900/60 p-3.5 rounded-2xl text-xs border border-outline-variant/20 dark:border-slate-800">
+                      {visa.proofOfFundsRequired && (
+                        <div className="space-y-0.5">
+                          <span className="text-on-surface-variant dark:text-slate-400 font-medium">
+                            💰 Fondos Mínimos Exigidos:
+                          </span>
+                          <p className="font-bold text-primary dark:text-sky-300">
+                            {visa.proofOfFundsRequired}
+                          </p>
+                        </div>
+                      )}
+                      {visa.estimatedCostOfVisa && (
+                        <div className="space-y-0.5">
+                          <span className="text-on-surface-variant dark:text-slate-400 font-medium">
+                            🏷️ Tasa Oficial del Trámite:
+                          </span>
+                          <p className="font-bold text-on-surface dark:text-slate-200">
+                            {visa.estimatedCostOfVisa}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-                {/* Action Buttons: Official Source, DB Votes, Calendar & AI */}
-                <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-outline-variant/30 dark:border-slate-700">
-                  <div className="flex flex-wrap items-center gap-3">
-                    {visa.officialSourceUrl && (
-                      <a
-                        href={visa.officialSourceUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs font-semibold text-on-surface-variant dark:text-slate-400 hover:text-primary dark:hover:text-sky-300 flex items-center gap-1"
+                  {/* Key Requirements List */}
+                  <div className="space-y-2 bg-surface dark:bg-slate-900 p-4 rounded-2xl border border-outline-variant/20 dark:border-slate-800">
+                    <span className="text-xs font-bold text-primary dark:text-sky-300 uppercase tracking-wider block">
+                      Requisitos Indispensables
+                    </span>
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-on-surface-variant dark:text-slate-300">
+                      {visa.keyRequirements.map((req, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                          <span className="leading-snug">{req}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Action Buttons: Official Source, DB Votes, Calendar & AI */}
+                  <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-outline-variant/30 dark:border-slate-700">
+                    <div className="flex flex-wrap items-center gap-3">
+                      {/* Community Upvotes */}
+                      <button
+                        onClick={() => handleVoteVisa(visa.id)}
+                        disabled={userVotedVisas[visa.id]}
+                        title="Votar información útil"
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
+                          userVotedVisas[visa.id]
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                            : "bg-surface hover:bg-surface-container text-on-surface-variant dark:bg-slate-900 dark:text-slate-300 border-outline-variant/40 dark:border-slate-800"
+                        }`}
                       >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        <span>{visa.officialSourceLabel || "Portal Oficial"}</span>
-                      </a>
-                    )}
+                        <ThumbsUp
+                          className={`w-3.5 h-3.5 ${userVotedVisas[visa.id] ? "fill-current" : ""}`}
+                        />
+                        <span>{visaVotes[visa.id]?.helpfulVotes || 18} útiles</span>
+                      </button>
+                    </div>
 
-                    {/* Community Upvotes */}
-                    <button
-                      onClick={() => handleVoteVisa(visa.id)}
-                      disabled={userVotedVisas[visa.id]}
-                      title="Votar información útil"
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
-                        userVotedVisas[visa.id]
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
-                          : "bg-surface hover:bg-surface-container text-on-surface-variant dark:bg-slate-900 dark:text-slate-300 border-outline-variant/40 dark:border-slate-800"
-                      }`}
-                    >
-                      <ThumbsUp
-                        className={`w-3.5 h-3.5 ${userVotedVisas[visa.id] ? "fill-current" : ""}`}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {/* Calendar Agenda Button */}
+                      <CalendarAgendaButton
+                        variant="compact"
+                        label="Agendar Cita"
+                        event={{
+                          title: `Cita / Trámite Visa: ${visa.name} (${guide.country})`,
+                          details: `Recordatorio de cita y entrega de expediente para la visa ${visa.name} en ${guide.country}.\n\nRequisitos clave: \n- ${visa.keyRequirements.join("\n- ")}\n\nFondos requeridos: ${visa.proofOfFundsRequired || "N/A"}\nPortal oficial: ${visa.officialSourceUrl || "LatinoMigra"}`,
+                          location: `Consulado / Centro de Visas de ${guide.country}`,
+                        }}
                       />
-                      <span>{visaVotes[visa.id]?.helpfulVotes || 18} útiles</span>
-                    </button>
-                  </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
-                    {/* Calendar Agenda Button */}
-                    <CalendarAgendaButton
-                      variant="compact"
-                      label="Agendar Cita"
-                      event={{
-                        title: `Cita / Trámite Visa: ${visa.name} (${guide.country})`,
-                        details: `Recordatorio de cita y entrega de expediente para la visa ${visa.name} en ${guide.country}.\n\nRequisitos clave: \n- ${visa.keyRequirements.join("\n- ")}\n\nFondos requeridos: ${visa.proofOfFundsRequired || "N/A"}\nPortal oficial: ${visa.officialSourceUrl || "LatinoMigra"}`,
-                        location: `Consulado / Centro de Visas de ${guide.country}`,
-                      }}
-                    />
-
-                    <button
-                      onClick={() => onAskAIAboutGuide(guide.country, visa.name)}
-                      className="inline-flex items-center gap-1.5 text-xs font-bold bg-primary/10 dark:bg-sky-900/40 text-primary dark:text-sky-300 hover:bg-primary hover:text-white px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer"
-                    >
-                      <Bot className="w-3.5 h-3.5" />
-                      <span>Consultar con IA</span>
-                    </button>
+                      <button
+                        onClick={() => onAskAIAboutGuide(guide.country, visa.name)}
+                        className="inline-flex items-center gap-1.5 text-xs font-bold bg-primary/10 dark:bg-sky-900/40 text-primary dark:text-sky-300 hover:bg-primary hover:text-white px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <Bot className="w-3.5 h-3.5" />
+                        <span>Consultar con IA</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
+                </Disclosure>
               </div>
             ))}
           </div>
@@ -547,43 +571,49 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
           </button>
         </div>
 
-        {/* Interactive Checklist Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {guide.documents.map((doc) => {
-            const isChecked = docState[doc.id] ?? false;
-            return (
-              <div
-                key={doc.id}
-                onClick={() => toggleDoc(doc.id)}
-                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 ${
-                  isChecked
-                    ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-950 dark:text-emerald-200"
-                    : "bg-surface dark:bg-slate-900 border-outline-variant/30 dark:border-slate-800 hover:border-outline-variant"
-                }`}
-              >
-                <div className="pt-0.5 shrink-0">
-                  {isChecked ? (
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                  ) : (
-                    <Circle className="w-5 h-5 text-on-surface-variant dark:text-slate-500" />
-                  )}
+        <Disclosure
+          id="checklist-details"
+          label="Ver la lista de documentos"
+          labelWhenOpen="Ocultar la lista de documentos"
+        >
+          {/* Interactive Checklist Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {guide.documents.map((doc) => {
+              const isChecked = docState[doc.id] ?? false;
+              return (
+                <div
+                  key={doc.id}
+                  onClick={() => toggleDoc(doc.id)}
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 ${
+                    isChecked
+                      ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-950 dark:text-emerald-200"
+                      : "bg-surface dark:bg-slate-900 border-outline-variant/30 dark:border-slate-800 hover:border-outline-variant"
+                  }`}
+                >
+                  <div className="pt-0.5 shrink-0">
+                    {isChecked ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    ) : (
+                      <Circle className="w-5 h-5 text-on-surface-variant dark:text-slate-500" />
+                    )}
+                  </div>
+                  <div className="space-y-0.5">
+                    <h4
+                      className={`font-bold text-sm ${
+                        isChecked ? "line-through opacity-80" : "text-primary dark:text-sky-300"
+                      }`}
+                    >
+                      {doc.title}
+                    </h4>
+                    <p className="text-xs text-on-surface-variant dark:text-slate-400 leading-relaxed">
+                      {doc.subtitle}
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-0.5">
-                  <h4
-                    className={`font-bold text-sm ${
-                      isChecked ? "line-through opacity-80" : "text-primary dark:text-sky-300"
-                    }`}
-                  >
-                    {doc.title}
-                  </h4>
-                  <p className="text-xs text-on-surface-variant dark:text-slate-400 leading-relaxed">
-                    {doc.subtitle}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        </Disclosure>
       </div>
 
       {/* Dynamic Country-Specific Anti-Scam Guide Section */}
@@ -624,60 +654,66 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
             </div>
           </div>
 
-          {/* Housing & Rental Safety Advice */}
-          <div className="p-4 bg-white/80 dark:bg-slate-900/80 rounded-2xl border border-rose-200 dark:border-slate-800 text-xs space-y-1.5">
-            <h4 className="font-bold text-primary dark:text-sky-300 flex items-center gap-2">
-              <Building className="w-4 h-4 text-secondary" />
-              <span>
-                Reglas de Oro para Alquiler Seguro en{" "}
-                {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].country}:
-              </span>
-            </h4>
-            <p className="text-on-surface-variant dark:text-slate-300 leading-relaxed">
-              {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].officialRentalPortalInfo}
-            </p>
-          </div>
+          <Disclosure
+            id="antiscam-details"
+            label="Ver estafas frecuentes y cómo denunciar"
+            labelWhenOpen="Ocultar estafas frecuentes"
+          >
+            {/* Housing & Rental Safety Advice */}
+            <div className="p-4 bg-white/80 dark:bg-slate-900/80 rounded-2xl border border-rose-200 dark:border-slate-800 text-xs space-y-1.5">
+              <h4 className="font-bold text-primary dark:text-sky-300 flex items-center gap-2">
+                <Building className="w-4 h-4 text-secondary" />
+                <span>
+                  Reglas de Oro para Alquiler Seguro en{" "}
+                  {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].country}:
+                </span>
+              </h4>
+              <p className="text-on-surface-variant dark:text-slate-300 leading-relaxed">
+                {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].officialRentalPortalInfo}
+              </p>
+            </div>
 
-          {/* Common Scams Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].keyScamAlerts.map((scam, i) => (
-              <div
-                key={i}
-                className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-rose-200/80 dark:border-rose-900/40 space-y-3 shadow-xs"
-              >
-                <div className="font-bold text-sm text-rose-950 dark:text-rose-200 flex items-start gap-2">
-                  <span className="text-rose-600 font-black">⚠️</span>
-                  <span>{scam.scamType}</span>
-                </div>
-
-                <div className="space-y-1 text-xs">
-                  <div className="font-bold text-on-surface dark:text-slate-200">
-                    Señal de Alerta:
+            {/* Common Scams Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].keyScamAlerts.map((scam, i) => (
+                <div
+                  key={i}
+                  className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-rose-200/80 dark:border-rose-900/40 space-y-3 shadow-xs"
+                >
+                  <div className="font-bold text-sm text-rose-950 dark:text-rose-200 flex items-start gap-2">
+                    <span className="text-rose-600 font-black">⚠️</span>
+                    <span>{scam.scamType}</span>
                   </div>
-                  <p className="text-on-surface-variant dark:text-slate-400 leading-relaxed italic">
-                    "{scam.warningSign}"
-                  </p>
-                </div>
 
-                <div className="space-y-1 text-xs pt-1 border-t border-rose-100 dark:border-slate-800">
-                  <div className="font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    <span>Cómo Protegerte:</span>
+                  <div className="space-y-1 text-xs">
+                    <div className="font-bold text-on-surface dark:text-slate-200">
+                      Señal de Alerta:
+                    </div>
+                    <p className="text-on-surface-variant dark:text-slate-400 leading-relaxed italic">
+                      "{scam.warningSign}"
+                    </p>
                   </div>
-                  <p className="text-on-surface dark:text-slate-300 leading-relaxed font-medium">
-                    {scam.howToProtect}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
 
-          <div className="text-xs text-on-surface-variant dark:text-slate-400 flex items-center gap-1.5 pt-1">
-            <span>Organismo oficial de defensa al consumidor: </span>
-            <strong className="text-primary dark:text-sky-300">
-              {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].officialConsumerProtectionAgency}
-            </strong>
-          </div>
+                  <div className="space-y-1 text-xs pt-1 border-t border-rose-100 dark:border-slate-800">
+                    <div className="font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <span>Cómo Protegerte:</span>
+                    </div>
+                    <p className="text-on-surface dark:text-slate-300 leading-relaxed font-medium">
+                      {scam.howToProtect}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="text-xs text-on-surface-variant dark:text-slate-400 flex items-center gap-1.5 pt-1">
+              <span>Organismo oficial de defensa al consumidor: </span>
+              <strong className="text-primary dark:text-sky-300">
+                {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].officialConsumerProtectionAgency}
+              </strong>
+            </div>
+          </Disclosure>
         </div>
       )}
     </div>
