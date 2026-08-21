@@ -8,7 +8,7 @@ import { NavigationTab } from "../types";
  */
 describe("navigation visibility", () => {
   it("keeps the screens the product is built on", () => {
-    for (const tab of ["home", "becas", "guia"] as NavigationTab[]) {
+    for (const tab of ["home", "becas", "guia", "chat"] as NavigationTab[]) {
       expect(isTabVisible(tab), tab).toBe(true);
     }
   });
@@ -20,6 +20,7 @@ describe("navigation visibility", () => {
       "voluntariados",
       "comunidad",
       "feedback",
+      "mapa",
     ] as NavigationTab[]) {
       expect(isTabVisible(tab), tab).toBe(false);
     }
@@ -29,6 +30,7 @@ describe("navigation visibility", () => {
     // A hidden Becas or Guías would leave the application with no way in.
     expect(HIDDEN_TABS).not.toContain("becas");
     expect(HIDDEN_TABS).not.toContain("guia");
+    expect(HIDDEN_TABS).not.toContain("chat");
     expect(HIDDEN_TABS).not.toContain("home");
   });
 

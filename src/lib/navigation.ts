@@ -3,7 +3,7 @@ import { NavigationTab } from "../types";
 /**
  * Screens the navigation does not offer.
  *
- * The product is being narrowed to Becas and Guías. These screens exist and
+ * The product is being narrowed to Becas, Guías and the assistant. These screens exist and
  * still compile — their components, data and tests are untouched — but
  * nothing links to them, so the navigation reflects what is actually
  * finished.
@@ -18,6 +18,7 @@ export const HIDDEN_TABS: readonly NavigationTab[] = [
   "voluntariados",
   "comunidad",
   "feedback",
+  "mapa",
 ] as const;
 
 /** Whether the navigation should offer this screen. */

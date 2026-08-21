@@ -125,15 +125,17 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                   </button>
                 </li>
               )}
-              <li>
-                <button
-                  onClick={() => handleNavigate("mapa")}
-                  className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
-                >
-                  <MapPin className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                  <span>{t("nav.mapa", "Mapa Consular & Visados")}</span>
-                </button>
-              </li>
+              {isTabVisible("mapa") && (
+                <li>
+                  <button
+                    onClick={() => handleNavigate("mapa")}
+                    className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
+                  >
+                    <MapPin className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                    <span>{t("nav.mapa", "Mapa Consular & Visados")}</span>
+                  </button>
+                </li>
+              )}
               <li>
                 <button
                   onClick={() => handleNavigate("guia")}
@@ -375,19 +377,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                   <p className="font-bold text-xs text-primary dark:text-sky-300 pt-1">
                     💡 Sugerencias directas:
                   </p>
-                  <p className="text-xs">
-                    Puedes publicar en la sección de{" "}
-                    <button
-                      onClick={() => {
-                        setActiveModal(null);
-                        handleNavigate("feedback");
-                      }}
-                      className="underline font-bold text-secondary cursor-pointer"
-                    >
-                      Sugerencias Comunitarias
-                    </button>{" "}
-                    para que el equipo priorice nuevas integraciones.
-                  </p>
+                  <p className="text-xs">Escríbenos y el equipo priorizará nuevas integraciones.</p>
                 </div>
               </>
             )}

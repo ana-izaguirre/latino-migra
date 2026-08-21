@@ -44,6 +44,7 @@ import { usePreferences } from "../lib/PreferencesContext";
 import { FilterChipGroup } from "./ui/FilterChipGroup";
 import { Modal } from "./ui/Modal";
 import { ImageWithFallback } from "./ui/ImageWithFallback";
+import { Disclosure } from "./ui/Disclosure";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card";
@@ -73,6 +74,13 @@ function daysUntil(deadline: string): number | null {
   today.setHours(0, 0, 0, 0);
   return Math.round((target.getTime() - today.getTime()) / 86_400_000);
 }
+
+/**
+ * The assistant cannot yet answer usefully about one specific call, so the
+ * button is hidden rather than removed: the handler, the prop and the path
+ * through `App` stay wired, and restoring it is this one word.
+ */
+const SHOW_ASK_AI_ABOUT_SCHOLARSHIP = false;
 
 /** How many convocatorias each "Cargar más" adds. */
 const LOAD_BATCH_SIZE = 6;
@@ -1607,15 +1615,6 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                   <span>Portal Oficial Verificado: {selectedScholarship.officialPortalName}</span>
                 </p>
-                <a
-                  href={selectedScholarship.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-bold text-primary dark:text-sky-400 hover:underline bg-primary/10 dark:bg-sky-950/60 px-2.5 py-1 rounded-lg border border-primary/20"
-                >
-                  <ExternalLink className="w-3 h-3" />
-                  <span>Ir a la convocatoria oficial</span>
-                </a>
               </div>
             )}
           </div>
@@ -1624,81 +1623,101 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
             {selectedScholarship.description}
           </p>
 
-          {/* Requisitos */}
-          <div className="space-y-3 bg-surface dark:bg-slate-900 p-4 rounded-2xl border border-outline-variant/30 dark:border-slate-800">
-            <h4 className="font-bold text-sm text-primary dark:text-sky-300 uppercase tracking-wider">
-              Requisitos Principales
-            </h4>
-            <ul className="space-y-2">
-              {selectedScholarship.requirements.map((req, idx) => (
-                <li
-                  key={idx}
-                  className="flex items-start gap-2 text-sm text-on-surface-variant dark:text-slate-300"
-                >
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                  <span>{req}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Requisitos and beneficios collapse on a phone: together they are
+              the bulk of the panel, and they arrived as one wall of text. */}
+          <Disclosure
+            id="beca-requisitos"
+            label="Ver requisitos principales"
+            labelWhenOpen="Ocultar requisitos"
+          >
+            <div className="space-y-3 bg-surface dark:bg-slate-900 p-4 rounded-2xl border border-outline-variant/30 dark:border-slate-800">
+              <h4 className="font-bold text-sm text-primary dark:text-sky-300 uppercase tracking-wider">
+                Requisitos Principales
+              </h4>
+              <ul className="space-y-2">
+                {selectedScholarship.requirements.map((req, idx) => (
+                  <li
+                    key={idx}
+                    className="flex items-start gap-2 text-sm text-on-surface-variant dark:text-slate-300"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                    <span>{req}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Disclosure>
 
-          {/* Beneficios */}
-          <div className="space-y-3 bg-surface dark:bg-slate-900 p-4 rounded-2xl border border-outline-variant/30 dark:border-slate-800">
-            <h4 className="font-bold text-sm text-primary dark:text-sky-300 uppercase tracking-wider">
-              Beneficios Incluidos
-            </h4>
-            <ul className="space-y-2">
-              {selectedScholarship.benefits.map((ben, idx) => (
-                <li
-                  key={idx}
-                  className="flex items-start gap-2 text-sm text-on-surface-variant dark:text-slate-300"
-                >
-                  <Sparkles className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                  <span>{ben}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <Disclosure
+            id="beca-beneficios"
+            label="Ver beneficios incluidos"
+            labelWhenOpen="Ocultar beneficios"
+          >
+            <div className="space-y-3 bg-surface dark:bg-slate-900 p-4 rounded-2xl border border-outline-variant/30 dark:border-slate-800">
+              <h4 className="font-bold text-sm text-primary dark:text-sky-300 uppercase tracking-wider">
+                Beneficios Incluidos
+              </h4>
+              <ul className="space-y-2">
+                {selectedScholarship.benefits.map((ben, idx) => (
+                  <li
+                    key={idx}
+                    className="flex items-start gap-2 text-sm text-on-surface-variant dark:text-slate-300"
+                  >
+                    <Sparkles className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    <span>{ben}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Disclosure>
 
           {/* Modal Actions */}
-          <div className="flex flex-col sm:flex-row items-center gap-3 pt-4 border-t border-outline-variant/30 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 pt-4 border-t border-outline-variant/30 dark:border-slate-700">
             <a
+              id="beca-official-link"
               href={selectedScholarship.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-tactile w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 bg-primary dark:bg-sky-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-primary-container transition-all text-xs shadow-sm hover:shadow-md"
+              className="btn-tactile inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-primary dark:bg-sky-600 px-4 text-xs font-bold text-white transition-all hover:bg-primary-container"
             >
-              <ExternalLink className="w-4 h-4" />
-              <span>Link a la Convocatoria Oficial</span>
+              <ExternalLink className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>Convocatoria oficial</span>
             </a>
 
             <a
+              id="beca-calendar-reminder"
               href={generateGoogleCalendarUrl({
-                title: `Cierre de Convocatoria: ${selectedScholarship.title}`,
-                details: `Fecha límite para enviar expediente a ${selectedScholarship.title}. Requisitos: ${selectedScholarship.requirements.join(", ")}. Enlace oficial convocatoria: ${selectedScholarship.link}`,
+                // Says what it is. "Agendar" read as booking an appointment
+                // with somebody; nothing is booked with anyone — this puts a
+                // reminder in the reader's own calendar.
+                title: `Recordatorio: cierra la beca ${selectedScholarship.title}`,
+                details: `Último día para enviar tu expediente a ${selectedScholarship.title}.\n\nRequisitos: ${selectedScholarship.requirements.join(", ")}\n\nConvocatoria oficial: ${selectedScholarship.link}`,
                 startDate: selectedScholarship.deadlineDate,
                 location: selectedScholarship.country,
               })}
               target="_blank"
-              rel="noreferrer"
-              className="btn-tactile w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-all text-xs shadow-sm hover:shadow-md"
+              rel="noopener noreferrer"
+              className="btn-tactile inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white transition-all hover:bg-emerald-700"
             >
-              <CalendarIcon className="w-4 h-4" />
-              <span>Agendar en Google Calendar</span>
+              <CalendarIcon className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>Recordarme la fecha límite</span>
             </a>
 
-            <button
-              type="button"
-              onClick={() => {
-                const scholarshipToAsk = selectedScholarship;
-                setSelectedScholarship(null);
-                onAskAIAboutScholarship(scholarshipToAsk);
-              }}
-              className="btn-tactile w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-secondary dark:bg-teal-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-secondary-container hover:text-secondary-900 transition-all text-xs shadow-sm hover:shadow-md"
-            >
-              <Bot className="w-4 h-4" />
-              <span>Consultar IA</span>
-            </button>
+            {SHOW_ASK_AI_ABOUT_SCHOLARSHIP && (
+              <button
+                type="button"
+                id="beca-ask-ai"
+                onClick={() => {
+                  const scholarshipToAsk = selectedScholarship;
+                  setSelectedScholarship(null);
+                  onAskAIAboutScholarship(scholarshipToAsk);
+                }}
+                className="btn-tactile inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-secondary dark:bg-teal-600 px-4 text-xs font-bold text-white transition-all hover:bg-secondary-container"
+              >
+                <Bot className="w-4 h-4 shrink-0" aria-hidden="true" />
+                <span>Consultar IA</span>
+              </button>
+            )}
           </div>
         </Modal>
       )}

@@ -9,18 +9,6 @@ test.describe("Country selection consistency", () => {
   // Uses Alemania rather than Portugal on purpose: LOCATIONS_DATA only covers
   // Alemania, Canadá, EE.UU., España, Reino Unido and Suiza, so a destination
   // outside that set has no consular entries for the map to select.
-  test("a destination picked in the guides carries over to the consular map", async ({ page }) => {
-    await page.goto("/");
-
-    await page.locator("#nav-item-guia").click();
-    await page
-      .getByRole("button", { name: /Alemania/i })
-      .first()
-      .click();
-
-    await page.locator("#nav-item-mapa").click();
-    await expect(page.locator("#map-destination-filter")).toHaveValue("Alemania");
-  });
 
   test("the scholarship catalogue is not pre-filtered before the user chooses", async ({
     page,
@@ -82,6 +70,7 @@ test.describe("Desktop navigation", () => {
     await expect(page.locator("#nav-item-calculadora")).toHaveCount(0);
     await expect(page.locator("#nav-item-comunidad")).toHaveCount(0);
     await expect(page.locator("#nav-item-voluntariados")).toHaveCount(0);
+    await expect(page.locator("#nav-item-mapa")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Herramientas/i })).toHaveCount(0);
   });
 

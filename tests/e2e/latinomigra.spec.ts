@@ -19,13 +19,13 @@ test.describe("LatinoMigra - End to End Suite", () => {
     await expect(page.locator("#nav-item-becas")).toBeVisible();
     await expect(page.locator("#nav-item-guia")).toBeVisible();
     await expect(page.locator("#nav-item-chat")).toBeVisible();
-    await expect(page.locator("#nav-item-mapa")).toBeVisible();
     // The tools menu held only screens the product has hidden, so it no
     // longer renders — see `src/lib/navigation.ts`.
     await expect(page.locator("#nav-tools-menu-btn")).toHaveCount(0);
 
-    // Check metrics / trust badges exist
-    await expect(page.locator("text=+5,000 Becas Activas").first()).toBeVisible();
+    // No catalogue figures on the first screen: the badge claimed "+5,000
+    // Becas Activas" against a catalogue of 22.
+    await expect(page.getByText(/\+5,000/)).toHaveCount(0);
   });
 
   test("2. Pantalla Explorador de Becas: Filtros, búsqueda y modal de detalle", async ({
@@ -51,8 +51,12 @@ test.describe("LatinoMigra - End to End Suite", () => {
       .first()
       .click();
 
-    // Check modal detail is displayed
-    await expect(page.locator("text=Requisitos Principales").first()).toBeVisible();
+    // Check modal detail is displayed. Matched by role: the panel also has a
+    // disclosure control reading "Ver requisitos principales", which a text
+    // substring match picks up first and which is hidden on this viewport.
+    await expect(
+      page.getByRole("heading", { name: "Requisitos Principales", exact: true })
+    ).toBeVisible();
 
     // Close the modal
     const closeButton = page
@@ -95,20 +99,6 @@ test.describe("LatinoMigra - End to End Suite", () => {
     // Check prompt input is ready
     const messageInput = page.getByPlaceholder(/Pregunta sobre visas/i);
     await expect(messageInput).toBeVisible();
-  });
-
-  test("5. Pantalla Directorio Consular: Tarjetas de consulados y emergencias", async ({
-    page,
-  }) => {
-    // Click on "Mapa Consular" tab
-    await page.locator("#nav-item-mapa").click();
-
-    // Verify Consular directory title
-    await expect(page.locator("text=Consulados, Embajadas y Campus Destino")).toBeVisible();
-
-    // Verify country filters exist
-    await expect(page.locator("text=Tu País de Origen:")).toBeVisible();
-    await expect(page.locator("#select-user-country")).toBeVisible();
   });
 
   test("7. Cambio de Tema: alterna entre Modo Claro y Modo Oscuro", async ({ page }) => {

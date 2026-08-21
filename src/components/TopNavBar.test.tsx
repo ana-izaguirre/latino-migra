@@ -21,7 +21,6 @@ describe("TopNavBar Component", () => {
     expect(screen.getByText("LatinoMigra")).toBeInTheDocument();
     expect(screen.getByText(/Becas & Estudios/)).toBeInTheDocument();
     expect(screen.getByText("Guía de Migración")).toBeInTheDocument();
-    expect(screen.getByText("Mapa Consular")).toBeInTheDocument();
     expect(screen.getByText("Chat IA")).toBeInTheDocument();
   });
 
@@ -33,17 +32,24 @@ describe("TopNavBar Component", () => {
   it("offers no destination that the product has hidden", () => {
     render(<TopNavBar {...defaultProps} />);
 
-    for (const label of [/Comunidad/i, /Planificador/i, /Calculadora/i, /Voluntariados/i]) {
+    for (const label of [
+      /Comunidad/i,
+      /Planificador/i,
+      /Calculadora/i,
+      /Voluntariados/i,
+      /Mapa Consular/i,
+    ]) {
       expect(screen.queryByText(label), String(label)).not.toBeInTheDocument();
     }
     expect(screen.queryByRole("button", { name: /Herramientas/i })).not.toBeInTheDocument();
   });
 
-  it("still offers the two screens the product is built on", () => {
+  it("still offers the three screens the product is built on", () => {
     render(<TopNavBar {...defaultProps} />);
 
     expect(screen.getAllByText(/Becas/).length).toBeGreaterThan(0);
     expect(screen.getByText("Guía de Migración")).toBeInTheDocument();
+    expect(screen.getByText("Chat IA")).toBeInTheDocument();
   });
 
   /**

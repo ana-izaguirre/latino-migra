@@ -27,7 +27,13 @@ describe("Footer Component", () => {
 
       // Assert on controls, not on any text: the footer's prose mentions the
       // community without linking to it.
-      for (const label of [/Planificador/i, /Calculadora/i, /Voluntariados/i, /Comunidad/i]) {
+      for (const label of [
+        /Planificador/i,
+        /Calculadora/i,
+        /Voluntariados/i,
+        /Comunidad/i,
+        /Mapa Consular/i,
+      ]) {
         expect(screen.queryByRole("button", { name: label }), String(label)).toBeNull();
       }
     });
@@ -40,12 +46,16 @@ describe("Footer Component", () => {
       expect(setActiveTab).toHaveBeenCalledWith("guia");
     });
 
-    it("keeps the consular map and the assistant", () => {
+    it("keeps the assistant", () => {
       const setActiveTab = vi.fn();
       render(<Footer setActiveTab={setActiveTab} />);
 
-      fireEvent.click(screen.getByText(/Mapa Consular/i));
-      expect(setActiveTab).toHaveBeenCalledWith("mapa");
+      const chat = screen
+        .getAllByRole("button")
+        .find((b) => /IA|Consultor Migratorio/i.test(b.textContent ?? ""));
+      expect(chat, "the footer must still reach the assistant").toBeDefined();
+      fireEvent.click(chat as HTMLElement);
+      expect(setActiveTab).toHaveBeenCalledWith("chat");
     });
 
     it("leaves no empty section behind", () => {

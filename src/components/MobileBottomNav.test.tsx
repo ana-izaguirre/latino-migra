@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { screen, fireEvent } from "@testing-library/react";
+import { fireEvent } from "@testing-library/react";
 import { renderWithProviders as render } from "../test/renderWithProviders";
 import { MobileBottomNav } from "./MobileBottomNav";
 
