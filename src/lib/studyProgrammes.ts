@@ -1,4 +1,4 @@
-import { StudyProgramme, StudyProgrammeKind } from "../types";
+import { MigrationRoute, StudyProgramme, StudyProgrammeKind } from "../types";
 
 /**
  * Domains this catalogue may cite.
@@ -137,3 +137,78 @@ export const STUDY_KIND_BADGE_LABELS: Record<StudyProgrammeKind, string> = {
   certificado: "Certificado",
   fp: "FP",
 };
+
+/** Spanish labels for the migration routes, in the order the filter shows them. */
+export const MIGRATION_ROUTE_LABELS: Record<MigrationRoute, string> = {
+  directa: "Abre vía migratoria",
+  requisito: "Requisito de un visado",
+  ninguna: "No abre vía",
+};
+
+/** Shorter label for the badge on a card. */
+export const MIGRATION_ROUTE_BADGE_LABELS: Record<MigrationRoute, string> = {
+  directa: "Vía migratoria",
+  requisito: "Requisito de visado",
+  ninguna: "Sin vía migratoria",
+};
+
+/** Every axis the studies catalogue can be narrowed on. */
+export interface StudyFilters {
+  kind: StudyProgrammeKind | "todos";
+  country: string;
+  modality: string;
+  migrationRoute: MigrationRoute | "todas" | "sin-verificar";
+  /** Matched against the title and the institution. */
+  search: string;
+}
+
+export const EMPTY_STUDY_FILTERS: StudyFilters = {
+  kind: "todos",
+  country: "Todos",
+  modality: "Todas",
+  migrationRoute: "todas",
+  search: "",
+};
+
+/**
+ * One definition of the rule.
+ *
+ * The counts beside each chip come from this same predicate with a single axis
+ * relaxed, so the number on a chip is always what selecting it renders. Writing
+ * the predicate twice — once for the list, once for the counts — is how an
+ * interface starts lying about its own behaviour.
+ */
+export function matchesStudyFilters(programme: StudyProgramme, filters: StudyFilters): boolean {
+  if (filters.kind !== "todos" && programme.kind !== filters.kind) return false;
+  if (filters.country !== "Todos" && programme.country !== filters.country) return false;
+  if (filters.modality !== "Todas" && programme.modality !== filters.modality) return false;
+
+  if (filters.migrationRoute === "sin-verificar") {
+    if (programme.migrationRoute) return false;
+  } else if (filters.migrationRoute !== "todas") {
+    if (programme.migrationRoute !== filters.migrationRoute) return false;
+  }
+
+  const search = filters.search.trim().toLowerCase();
+  if (search) {
+    const haystack = `${programme.title} ${programme.institution}`.toLowerCase();
+    if (!haystack.includes(search)) return false;
+  }
+
+  return true;
+}
+
+/**
+ * How many results each option of one axis would give, with the other filters
+ * as they are — which is the number the chips promise.
+ */
+export function countByOption<T extends string>(
+  programmes: StudyProgramme[],
+  filters: StudyFilters,
+  axis: keyof StudyFilters,
+  option: T
+): number {
+  return programmes.filter((programme) =>
+    matchesStudyFilters(programme, { ...filters, [axis]: option })
+  ).length;
+}

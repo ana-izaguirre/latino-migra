@@ -63,6 +63,78 @@ describe("EstudiosSection", () => {
     expect(screen.getByText("Bachillerato homologado")).toBeVisible();
   });
 
+  it("filters by country, modality, migration route and name", () => {
+    render(
+      <EstudiosSection
+        scholarships={[]}
+        onOpenScholarship={vi.fn()}
+        programmes={[
+          programme({ migrationRoute: "directa", migrationRouteNote: "Da acceso al visado." }),
+          programme({
+            id: "programa-dos",
+            title: "Curso en línea",
+            institution: "UNED",
+            kind: "curso",
+            country: "Alemania",
+            modality: "En línea",
+            migrationRoute: "ninguna",
+            migrationRouteNote: "No genera estancia.",
+          }),
+        ]}
+      />
+    );
+
+    const list = () => document.getElementById("estudios-list");
+    expect(list()?.children).toHaveLength(2);
+
+    fireEvent.click(document.getElementById("estudios-country-chip-Alemania")!);
+    expect(list()?.children).toHaveLength(1);
+    expect(document.getElementById("estudio-card-programa-dos")).toBeInTheDocument();
+
+    fireEvent.click(document.getElementById("estudios-clear-filters")!);
+    expect(list()?.children).toHaveLength(2);
+
+    fireEvent.click(document.getElementById("estudios-route-chip-directa")!);
+    expect(list()?.children).toHaveLength(1);
+    expect(document.getElementById("estudio-card-programa-uno")).toBeInTheDocument();
+
+    fireEvent.click(document.getElementById("estudios-clear-filters")!);
+    fireEvent.change(document.getElementById("estudios-search-input")!, {
+      target: { value: "uned" },
+    });
+    expect(list()?.children).toHaveLength(1);
+    expect(document.getElementById("estudio-card-programa-dos")).toBeInTheDocument();
+  });
+
+  it("says which filters emptied the list", () => {
+    render(
+      <EstudiosSection
+        scholarships={[]}
+        onOpenScholarship={vi.fn()}
+        programmes={[programme({ country: "España", kind: "fp" })]}
+      />
+    );
+
+    fireEvent.change(document.getElementById("estudios-search-input")!, {
+      target: { value: "no existe" },
+    });
+
+    expect(screen.getByText(/Ningún programa con estos filtros/i)).toBeInTheDocument();
+    expect(screen.getByText(/"no existe"/)).toBeInTheDocument();
+  });
+
+  it("says an unchecked migration route is unchecked rather than guessing", () => {
+    render(
+      <EstudiosSection scholarships={[]} onOpenScholarship={vi.fn()} programmes={[programme()]} />
+    );
+
+    // The fixture records no route at all. The card says so; it does not
+    // borrow "no route" from an entry that was actually checked.
+    const card = document.getElementById("estudio-card-programa-uno")!;
+    expect(within(card).getByText("Sin verificar")).toBeInTheDocument();
+    expect(within(card).queryByText(/Sin vía migratoria/)).not.toBeInTheDocument();
+  });
+
   it("narrows the list by kind, with counts that match what renders", () => {
     render(
       <EstudiosSection
