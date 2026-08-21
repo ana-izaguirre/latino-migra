@@ -101,6 +101,26 @@ These are project-specific. A reasonable default would break them.
 
 ---
 
+## Commit identity
+
+Commits are authored by the repository owner, not by the agent. Set this
+before the first commit of a session — the container is recreated each time,
+so it does not persist:
+
+```bash
+git config user.name  "ana-izaguirre"
+git config user.email "gaortizb777@gmail.com"
+```
+
+This keeps a squash merge from adding a `Co-authored-by` trailer, and makes
+the branch history match the merge commit.
+
+Commits made inside the agent container are **not** signed: there is no
+signing key there, and there should not be one. Verification comes from
+GitHub instead — merging through the pull request button makes GitHub the
+committer and signs the result, so every commit that reaches `main` is
+Verified. Merge from the pull request; do not push to `main` directly.
+
 ## Workflow
 
 ### One change per pull request
