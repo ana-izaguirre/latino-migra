@@ -24,8 +24,16 @@ means database failures are invisible to the user.
 | `antiScamData.ts` | per-country guidance | 15 KB | Rarely |
 | `volunteeringData.ts` | 6 | 11 KB | Programme availability |
 | `countriesData.ts` | 29 | 7 KB | Effectively static (reference data) |
+| `studyProgrammes.ts` | 13 | 15 KB | Official programme portals |
 
-All six are eagerly imported and ship in the initial bundle.
+All seven are eagerly imported and ship in the initial bundle.
+
+`studyProgrammes.ts` is the only dataset with an enforced shape. Every entry
+must carry an `officialUrl` served over https from a domain on
+`OFFICIAL_STUDY_DOMAINS` in `src/lib/studyProgrammes.ts`; one that does not is
+reported on screen rather than rendered or dropped. It has no Firestore
+counterpart — adding one means a new rule, which `docs/security.md` puts behind
+human approval. Spec: `specs/estudios-catalogue.md`.
 
 ## Firestore collections
 
