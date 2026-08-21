@@ -131,6 +131,23 @@ Recently addressed and verified by tests:
 - Dismissing the drawer restores the reading position instead of jumping to the
   top.
 
+## Scholarship list
+
+- One way through the catalogue. The screen carried a numbered pager and a
+  "load more" button behind a mode switch, plus a page-size selector — three
+  controls doing one job, and on a phone the numbered pager was a row of tap
+  targets nobody asked for. Lazy loading is what remains: `LOAD_BATCH_SIZE`
+  convocatorias at a time, a progress bar that announces itself, and an
+  explicit end state.
+- Changing a filter resets to the first batch. What was loaded before the
+  change says nothing about what matches after it.
+- A cover image that fails to load renders a labelled placeholder rather than
+  the browser's broken-image glyph, which reads as the application being
+  broken instead of one picture being gone.
+  `src/components/ui/ImageWithFallback.tsx`. An empty `src` counts as a
+  failure: the browser would otherwise resolve it against the page URL and
+  fetch the document itself.
+
 ## Migration guides
 
 - The guide collapses its heavy blocks below `lg` and leaves them open above

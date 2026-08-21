@@ -36,11 +36,14 @@ export default defineConfig({
        * country mapping — where high coverage is both achievable and valuable,
        * so it carries its own stricter budget.
        */
+      // A ratchet, not a target: raised with each pull request that adds
+      // tests, so coverage can only go up. Never lower these to make a build
+      // pass — write the test instead.
       thresholds: {
-        statements: 43,
-        branches: 43,
-        functions: 36,
-        lines: 43,
+        statements: 52,
+        branches: 47,
+        functions: 46,
+        lines: 52,
         "src/lib/PreferencesContext.tsx": {
           statements: 95,
           branches: 85,

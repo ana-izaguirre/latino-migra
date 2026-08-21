@@ -19,12 +19,7 @@ import {
   Award,
   PlusCircle,
   Send,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
   ArrowDownCircle,
-  Layers,
   SlidersHorizontal,
   RefreshCw,
   BookOpen,
@@ -48,6 +43,7 @@ import {
 import { usePreferences } from "../lib/PreferencesContext";
 import { FilterChipGroup } from "./ui/FilterChipGroup";
 import { Modal } from "./ui/Modal";
+import { ImageWithFallback } from "./ui/ImageWithFallback";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card";
@@ -77,6 +73,9 @@ function daysUntil(deadline: string): number | null {
   today.setHours(0, 0, 0, 0);
   return Math.round((target.getTime() - today.getTime()) / 86_400_000);
 }
+
+/** How many convocatorias each "Cargar más" adds. */
+const LOAD_BATCH_SIZE = 6;
 
 /** Long enough for a slow connection, short enough to not look frozen. */
 const CATALOGUE_FETCH_TIMEOUT_MS = 8000;
@@ -270,11 +269,11 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
   });
   const [suggestSuccess, setSuggestSuccess] = useState<boolean>(false);
 
-  // Pagination & Lazy Loading State
-  const [itemsPerPage, setItemsPerPage] = useState<number>(6);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [visibleCount, setVisibleCount] = useState<number>(6);
-  const [displayMode, setDisplayMode] = useState<"paginated" | "continuous">("paginated");
+  /**
+   * How many convocatorias are on screen. The list loads more on request and
+   * never paginates: one way through the catalogue, not two behind a switch.
+   */
+  const [visibleCount, setVisibleCount] = useState<number>(LOAD_BATCH_SIZE);
   const mainListRef = useRef<HTMLDivElement>(null);
 
   const countries = [
@@ -375,8 +374,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
     setSelectedDateRange("Todas");
     setSortBy("deadline-asc");
     setSearchQuery("");
-    setCurrentPage(1);
-    setVisibleCount(itemsPerPage > 0 ? itemsPerPage : 6);
+    setVisibleCount(LOAD_BATCH_SIZE);
   };
 
   /**
@@ -644,10 +642,10 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
     // as well only risks the two lists drifting apart.
   }, [scholarshipsList, viewModeTab, favorites, matchesFilters, sortBy]);
 
-  // Reset pagination when viewModeTab, filters, sort or pageSize change
+  // Start from the top of the catalogue whenever the filters change: what was
+  // loaded before the change says nothing about what matches after it.
   useEffect(() => {
-    setCurrentPage(1);
-    setVisibleCount(itemsPerPage > 0 ? itemsPerPage : filteredScholarships.length);
+    setVisibleCount(LOAD_BATCH_SIZE);
   }, [
     viewModeTab,
     searchQuery,
@@ -658,35 +656,28 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
     selectedInstitutionType,
     selectedDateRange,
     sortBy,
-    itemsPerPage,
   ]);
 
-  const totalPages =
-    itemsPerPage > 0 ? Math.max(1, Math.ceil(filteredScholarships.length / itemsPerPage)) : 1;
-  const validCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const displayedScholarships = useMemo(
+    () => filteredScholarships.slice(0, visibleCount),
+    [filteredScholarships, visibleCount]
+  );
 
-  const displayedScholarships = useMemo(() => {
-    if (displayMode === "continuous") {
-      return filteredScholarships.slice(0, visibleCount);
-    }
-    if (itemsPerPage === 0) {
-      return filteredScholarships;
-    }
-    const startIdx = (validCurrentPage - 1) * itemsPerPage;
-    return filteredScholarships.slice(startIdx, startIdx + itemsPerPage);
-  }, [filteredScholarships, displayMode, visibleCount, itemsPerPage, validCurrentPage]);
+  /** How many the next tap would add — the button says so rather than guessing. */
+  const nextBatchSize = Math.min(
+    LOAD_BATCH_SIZE,
+    filteredScholarships.length - displayedScholarships.length
+  );
 
-  const handlePageChange = (page: number) => {
-    const targetPage = Math.min(Math.max(1, page), totalPages);
-    setCurrentPage(targetPage);
-    if (mainListRef.current) {
-      mainListRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
+  // An empty catalogue is fully loaded, not 0% loaded: dividing by zero here
+  // put NaN in the progress readout and in the bar's width.
+  const loadedPercentage =
+    filteredScholarships.length === 0
+      ? 100
+      : Math.round((displayedScholarships.length / filteredScholarships.length) * 100);
 
   const handleLoadMore = () => {
-    const step = itemsPerPage > 0 ? itemsPerPage : 6;
-    setVisibleCount((prev) => Math.min(prev + step, filteredScholarships.length));
+    setVisibleCount((prev) => Math.min(prev + LOAD_BATCH_SIZE, filteredScholarships.length));
   };
 
   const handleSuggestSubmit = (e: React.FormEvent) => {
@@ -1157,101 +1148,23 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                 )}
               </div>
 
-              {/* List Toolbar: Counters, Items Per Page & Display Mode */}
-              <div className="bg-surface-container-lowest dark:bg-slate-800 p-4 rounded-2xl border border-outline-variant/40 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3 text-xs md:text-sm text-on-surface-variant dark:text-slate-300">
-                  <span>
-                    {filteredScholarships.length === 0 ? (
-                      "0 convocatorias encontradas"
-                    ) : displayMode === "continuous" ? (
-                      <>
-                        Mostrando <strong>{displayedScholarships.length}</strong> de{" "}
-                        <strong>{filteredScholarships.length}</strong> convocatorias
-                      </>
-                    ) : itemsPerPage === 0 ? (
-                      <>
-                        Mostrando todas las <strong>{filteredScholarships.length}</strong>{" "}
-                        convocatorias
-                      </>
-                    ) : (
-                      <>
-                        Mostrando{" "}
-                        <strong>
-                          {Math.min(
-                            (validCurrentPage - 1) * itemsPerPage + 1,
-                            filteredScholarships.length
-                          )}
-                          –{Math.min(validCurrentPage * itemsPerPage, filteredScholarships.length)}
-                        </strong>{" "}
-                        de <strong>{filteredScholarships.length}</strong> convocatorias
-                      </>
-                    )}
+              {/* List Toolbar: how much of the catalogue is on screen. */}
+              <div className="bg-surface-container-lowest dark:bg-slate-800 p-4 rounded-2xl border border-outline-variant/40 dark:border-slate-700 flex flex-wrap items-center gap-3">
+                <span className="text-xs md:text-sm text-on-surface-variant dark:text-slate-300">
+                  {filteredScholarships.length === 0 ? (
+                    "0 convocatorias encontradas"
+                  ) : (
+                    <>
+                      Mostrando <strong>{displayedScholarships.length}</strong> de{" "}
+                      <strong>{filteredScholarships.length}</strong> convocatorias
+                    </>
+                  )}
+                </span>
+                {favorites.length > 0 && (
+                  <span className="text-secondary dark:text-teal-300 font-semibold bg-secondary/10 dark:bg-teal-900/30 px-2 py-0.5 rounded-full text-xs">
+                    ♥ {favorites.length} guardadas
                   </span>
-                  {favorites.length > 0 && (
-                    <span className="text-secondary dark:text-teal-300 font-semibold bg-secondary/10 dark:bg-teal-900/30 px-2 py-0.5 rounded-full text-xs">
-                      ♥ {favorites.length} guardadas
-                    </span>
-                  )}
-                </div>
-
-                {/* Layout Controls: Mode & Items per Page */}
-                <div className="flex flex-wrap items-center gap-2.5">
-                  {/* Display Mode Toggle */}
-                  <div className="flex items-center bg-surface dark:bg-slate-900 p-1 rounded-xl border border-outline-variant/40 dark:border-slate-700 text-xs">
-                    <button
-                      type="button"
-                      onClick={() => setDisplayMode("paginated")}
-                      id="mode-paginated-btn"
-                      className={`inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-1 rounded-lg font-semibold transition-all ${
-                        displayMode === "paginated"
-                          ? "bg-primary text-white dark:bg-sky-600 shadow-xs"
-                          : "text-on-surface-variant dark:text-slate-400 hover:text-primary dark:hover:text-sky-300"
-                      }`}
-                      title="Modo Paginación: navegar página por página"
-                    >
-                      <Layers className="w-3.5 h-3.5" />
-                      <span className="hidden xs:inline">Páginas</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDisplayMode("continuous")}
-                      id="mode-lazy-btn"
-                      className={`inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-1 rounded-lg font-semibold transition-all ${
-                        displayMode === "continuous"
-                          ? "bg-secondary text-white dark:bg-teal-600 shadow-xs"
-                          : "text-on-surface-variant dark:text-slate-400 hover:text-secondary dark:hover:text-teal-300"
-                      }`}
-                      title="Modo Carga Progresiva: botón Cargar Más para móviles"
-                    >
-                      <ArrowDownCircle className="w-3.5 h-3.5" />
-                      <span className="hidden xs:inline">Carga Diferida</span>
-                    </button>
-                  </div>
-
-                  {/* Items per Page Selector */}
-                  {displayMode === "paginated" && (
-                    <div className="flex items-center gap-1 bg-surface dark:bg-slate-900 p-1 rounded-xl border border-outline-variant/40 dark:border-slate-700 text-xs font-semibold">
-                      <span className="text-[11px] text-on-surface-variant dark:text-slate-400 px-1 hidden md:inline">
-                        Ver:
-                      </span>
-                      {[6, 12, 18, 0].map((size) => (
-                        <button
-                          key={size}
-                          type="button"
-                          onClick={() => setItemsPerPage(size)}
-                          id={`items-per-page-${size === 0 ? "all" : size}`}
-                          className={`min-w-[40px] min-h-[40px] sm:min-w-0 sm:min-h-0 px-2 py-1 inline-flex items-center justify-center rounded-lg transition-colors ${
-                            itemsPerPage === size
-                              ? "bg-primary/15 dark:bg-sky-900/60 text-primary dark:text-sky-300 font-bold"
-                              : "text-on-surface-variant dark:text-slate-400 hover:bg-surface-container dark:hover:bg-slate-800"
-                          }`}
-                        >
-                          {size === 0 ? "Todas" : size}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
 
               {filteredScholarships.length === 0 ? (
@@ -1306,7 +1219,8 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                         <Card key={beca.id} className="hover:shadow-xl transition-all group">
                           <div>
                             <CardHeader className="h-44 overflow-hidden">
-                              <img
+                              <ImageWithFallback
+                                id={`beca-image-${beca.id}`}
                                 src={beca.imageUrl}
                                 alt={beca.title}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -1416,186 +1330,84 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                     })}
                   </div>
 
-                  {/* Bottom Pagination & Lazy Loading Section */}
+                  {/*
+                    One way to page through the list, not two.
+
+                    The screen used to carry a numbered pager and a "load more"
+                    button behind a mode switch, plus a page-size selector — three
+                    controls doing one job, and on a phone the numbered pager was
+                    a row of tap targets nobody asked for. Lazy loading is what a
+                    catalogue on a phone wants: keep reading, or stop.
+                  */}
                   <div className="pt-2">
-                    {displayMode === "continuous" ? (
-                      /* Lazy Loading / Infinite Scroll Mode */
-                      <div className="bg-surface-container-lowest dark:bg-slate-800 p-6 rounded-2xl border border-outline-variant/40 dark:border-slate-700 text-center space-y-4">
-                        {/* Progress Bar */}
-                        <div className="max-w-md mx-auto space-y-1.5">
-                          <div className="flex items-center justify-between text-xs text-on-surface-variant dark:text-slate-400 font-medium">
-                            <span>Progreso de carga</span>
-                            <span>
-                              {displayedScholarships.length} de {filteredScholarships.length} (
-                              {Math.round(
-                                (displayedScholarships.length / filteredScholarships.length) * 100
-                              )}
-                              %)
-                            </span>
-                          </div>
-                          <div className="w-full bg-surface-container dark:bg-slate-700 h-2 rounded-full overflow-hidden">
-                            <div
-                              className="bg-secondary dark:bg-teal-400 h-full rounded-full transition-all duration-300"
-                              style={{
-                                width: `${(displayedScholarships.length / filteredScholarships.length) * 100}%`,
-                              }}
-                            />
-                          </div>
+                    <div className="bg-surface-container-lowest dark:bg-slate-800 p-6 rounded-2xl border border-outline-variant/40 dark:border-slate-700 text-center space-y-4">
+                      {/* Progress Bar */}
+                      <div className="max-w-md mx-auto space-y-1.5">
+                        <div className="flex items-center justify-between text-xs text-on-surface-variant dark:text-slate-400 font-medium">
+                          <span id="load-progress-label">Progreso de carga</span>
+                          <span>
+                            {displayedScholarships.length} de {filteredScholarships.length} (
+                            {loadedPercentage}%)
+                          </span>
                         </div>
-
-                        {displayedScholarships.length < filteredScholarships.length ? (
-                          <div className="space-y-2">
-                            <button
-                              type="button"
-                              onClick={handleLoadMore}
-                              id="btn-load-more-scholarships"
-                              className="btn-tactile inline-flex items-center gap-2 bg-secondary dark:bg-teal-600 hover:bg-secondary/90 text-white font-bold text-sm px-6 py-3 rounded-xl shadow-md hover:shadow-lg transition-all"
-                            >
-                              <ArrowDownCircle className="w-4 h-4 animate-bounce" />
-                              <span>
-                                Cargar Más Convocatorias (+
-                                {Math.min(
-                                  itemsPerPage > 0 ? itemsPerPage : 6,
-                                  filteredScholarships.length - displayedScholarships.length
-                                )}
-                                )
-                              </span>
-                            </button>
-                            <p className="text-xs text-on-surface-variant dark:text-slate-400">
-                              Quedan {filteredScholarships.length - displayedScholarships.length}{" "}
-                              becas por mostrar
-                            </p>
-                          </div>
-                        ) : (
-                          <div className="space-y-2 py-2">
-                            <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-1.5">
-                              <CheckCircle2 className="w-4 h-4" />
-                              <span>
-                                Has llegado al final de las {filteredScholarships.length}{" "}
-                                convocatorias
-                              </span>
-                            </p>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (mainListRef.current) {
-                                  mainListRef.current.scrollIntoView({
-                                    behavior: "smooth",
-                                    block: "start",
-                                  });
-                                }
-                              }}
-                              className="btn-tactile text-xs font-semibold text-secondary dark:text-teal-300 hover:underline inline-block py-1 px-2"
-                            >
-                              Volver arriba del listado ↑
-                            </button>
-                          </div>
-                        )}
+                        <div
+                          role="progressbar"
+                          aria-labelledby="load-progress-label"
+                          aria-valuemin={0}
+                          aria-valuemax={filteredScholarships.length}
+                          aria-valuenow={displayedScholarships.length}
+                          className="w-full bg-surface-container dark:bg-slate-700 h-2 rounded-full overflow-hidden"
+                        >
+                          <div
+                            className="bg-secondary dark:bg-teal-400 h-full rounded-full transition-all duration-300"
+                            style={{ width: `${loadedPercentage}%` }}
+                          />
+                        </div>
                       </div>
-                    ) : (
-                      /* Standard Numbered Pagination Mode */
-                      itemsPerPage > 0 &&
-                      totalPages > 1 && (
-                        <div className="bg-surface-container-lowest dark:bg-slate-800 p-4 md:p-6 rounded-2xl border border-outline-variant/40 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
-                          <div className="text-xs md:text-sm text-on-surface-variant dark:text-slate-400 font-medium">
-                            Página <strong>{validCurrentPage}</strong> de{" "}
-                            <strong>{totalPages}</strong> ({filteredScholarships.length}{" "}
-                            convocatorias)
-                          </div>
 
-                          {/* Navigation Controls */}
-                          <div className="flex items-center gap-1.5">
-                            {/* First Page */}
-                            <button
-                              type="button"
-                              onClick={() => handlePageChange(1)}
-                              disabled={validCurrentPage === 1}
-                              aria-label="Primera página"
-                              id="pagination-first-page"
-                              className="btn-tactile p-2 rounded-xl border border-outline-variant/40 dark:border-slate-700 text-on-surface dark:text-slate-200 hover:bg-surface-container dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                            >
-                              <ChevronsLeft className="w-4 h-4" />
-                            </button>
-
-                            {/* Previous Page */}
-                            <button
-                              type="button"
-                              onClick={() => handlePageChange(validCurrentPage - 1)}
-                              disabled={validCurrentPage === 1}
-                              aria-label="Página anterior"
-                              id="pagination-prev-page"
-                              className="btn-tactile px-3 py-2 rounded-xl border border-outline-variant/40 dark:border-slate-700 text-xs font-bold text-on-surface dark:text-slate-200 hover:bg-surface-container dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-1"
-                            >
-                              <ChevronLeft className="w-4 h-4" />
-                              <span className="hidden md:inline">Anterior</span>
-                            </button>
-
-                            {/* Numbered Page Buttons */}
-                            <div className="flex items-center gap-1">
-                              {Array.from({ length: totalPages }, (_, i) => i + 1)
-                                .filter((page) => {
-                                  if (page === 1 || page === totalPages) return true;
-                                  return Math.abs(page - validCurrentPage) <= 1;
-                                })
-                                .map((page, idx, arr) => {
-                                  const prevPage = arr[idx - 1];
-                                  const showEllipsisBefore = prevPage && page - prevPage > 1;
-
-                                  return (
-                                    <React.Fragment key={page}>
-                                      {showEllipsisBefore && (
-                                        <span className="px-1 text-xs text-on-surface-variant dark:text-slate-500 font-bold">
-                                          …
-                                        </span>
-                                      )}
-                                      <button
-                                        type="button"
-                                        onClick={() => handlePageChange(page)}
-                                        id={`pagination-page-${page}`}
-                                        aria-current={
-                                          page === validCurrentPage ? "page" : undefined
-                                        }
-                                        className={`btn-tactile w-9 h-9 rounded-xl text-xs font-bold transition-all flex items-center justify-center ${
-                                          page === validCurrentPage
-                                            ? "bg-primary text-white dark:bg-sky-600 shadow-sm ring-2 ring-primary/20"
-                                            : "border border-outline-variant/40 dark:border-slate-700 text-on-surface dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700"
-                                        }`}
-                                      >
-                                        {page}
-                                      </button>
-                                    </React.Fragment>
-                                  );
-                                })}
-                            </div>
-
-                            {/* Next Page */}
-                            <button
-                              type="button"
-                              onClick={() => handlePageChange(validCurrentPage + 1)}
-                              disabled={validCurrentPage === totalPages}
-                              aria-label="Página siguiente"
-                              id="pagination-next-page"
-                              className="btn-tactile px-3 py-2 rounded-xl border border-outline-variant/40 dark:border-slate-700 text-xs font-bold text-on-surface dark:text-slate-200 hover:bg-surface-container dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-1"
-                            >
-                              <span className="hidden md:inline">Siguiente</span>
-                              <ChevronRight className="w-4 h-4" />
-                            </button>
-
-                            {/* Last Page */}
-                            <button
-                              type="button"
-                              onClick={() => handlePageChange(totalPages)}
-                              disabled={validCurrentPage === totalPages}
-                              aria-label="Última página"
-                              id="pagination-last-page"
-                              className="btn-tactile p-2 rounded-xl border border-outline-variant/40 dark:border-slate-700 text-on-surface dark:text-slate-200 hover:bg-surface-container dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                            >
-                              <ChevronsRight className="w-4 h-4" />
-                            </button>
-                          </div>
+                      {displayedScholarships.length < filteredScholarships.length ? (
+                        <div className="space-y-2">
+                          <button
+                            type="button"
+                            onClick={handleLoadMore}
+                            id="btn-load-more-scholarships"
+                            className="btn-tactile inline-flex items-center gap-2 bg-secondary dark:bg-teal-600 hover:bg-secondary/90 text-white font-bold text-sm px-6 py-3 rounded-xl shadow-md hover:shadow-lg transition-all"
+                          >
+                            <ArrowDownCircle className="w-4 h-4" aria-hidden="true" />
+                            <span>Cargar Más Convocatorias (+{nextBatchSize})</span>
+                          </button>
+                          <p className="text-xs text-on-surface-variant dark:text-slate-400">
+                            Quedan {filteredScholarships.length - displayedScholarships.length}{" "}
+                            becas por mostrar
+                          </p>
                         </div>
-                      )
-                    )}
+                      ) : (
+                        <div className="space-y-2 py-2">
+                          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-1.5">
+                            <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
+                            <span>
+                              Has llegado al final de las {filteredScholarships.length}{" "}
+                              convocatorias
+                            </span>
+                          </p>
+                          <button
+                            type="button"
+                            id="btn-back-to-list-top"
+                            onClick={() => {
+                              if (mainListRef.current) {
+                                mainListRef.current.scrollIntoView({
+                                  behavior: "smooth",
+                                  block: "start",
+                                });
+                              }
+                            }}
+                            className="btn-tactile text-xs font-semibold text-secondary dark:text-teal-300 hover:underline inline-block py-1 px-2"
+                          >
+                            Volver arriba del listado ↑
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
