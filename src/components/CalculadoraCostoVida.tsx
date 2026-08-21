@@ -14,6 +14,13 @@ import {
   AlertTriangle,
   Download,
 } from "lucide-react";
+import { useCurrency } from "../lib/CurrencyContext";
+import {
+  SUPPORTED_CURRENCIES,
+  convertCurrency,
+  formatCurrencyAmount,
+  CurrencyInfo,
+} from "../lib/currency";
 import { NavigationTab, GoogleUser } from "../types";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { CalendarAgendaButton } from "./CalendarAgendaButton";
@@ -336,22 +343,23 @@ const CITIES_DATA: Record<string, CityData> = {
 };
 
 // Exchange rates relative to 1 USD
-const FX_RATES_FROM_USD: Record<string, { rate: number; name: string; symbol: string }> = {
-  COP: { rate: 4150, name: "Peso Colombiano (COP)", symbol: "COP $" },
-  MXN: { rate: 18.8, name: "Peso Mexicano (MXN)", symbol: "MXN $" },
-  PEN: { rate: 3.75, name: "Sol Peruano (PEN)", symbol: "S/" },
-  ARS: { rate: 1180, name: "Peso Argentino (ARS)", symbol: "ARS $" },
-  CLP: { rate: 940, name: "Peso Chileno (CLP)", symbol: "CLP $" },
-  BRL: { rate: 5.4, name: "Real Brasileño (BRL)", symbol: "R$" },
-  USD: { rate: 1.0, name: "Dólar Estadounidense (USD)", symbol: "$ USD" },
-  EUR: { rate: 0.92, name: "Euro (EUR)", symbol: "€" },
-  CAD: { rate: 1.36, name: "Dólar Canadiense (CAD)", symbol: "$ CAD" },
-  AUD: { rate: 1.52, name: "Dólar Australiano (AUD)", symbol: "$ AUD" },
-};
-
 export const CalculadoraCostoVida: React.FC<CalculadoraCostoVidaProps> = ({ setActiveTab }) => {
   const [selectedCityKey, setSelectedCityKey] = useState<string>("madrid-es");
-  const [targetCurrency, setTargetCurrency] = useState<string>("COP");
+  /**
+   * The currency comes from the shared preference — the one the menu writes,
+   * which lives in `userPreferences/{uid}` for signed-in users and the
+   * `lm_prefs` cookie for everyone else.
+   *
+   * This screen used to keep its own `useState("COP")` and never read that
+   * preference, so a visitor who chose Lempiras saw Colombian pesos: the one
+   * screen whose whole purpose is converting money was the one screen
+   * ignoring the money the visitor picked.
+   */
+  const {
+    currency: targetCurrency,
+    setCurrency: setTargetCurrency,
+    availableCurrencies,
+  } = useCurrency();
   const [lifestyle, setLifestyle] = useState<"estudiante" | "profesional" | "familia">(
     "estudiante"
   );
@@ -402,28 +410,20 @@ export const CalculadoraCostoVida: React.FC<CalculadoraCostoVidaProps> = ({ setA
     };
   }, [city, lifestyle, housingType, numberOfKids, includeEntertainment]);
 
-  // Convert to user's selected Latin American currency
-  const conversionMultiplier = useMemo(() => {
-    // 1 USD = fxRates[curr].rate
-    // City has currencyCode (EUR, CAD, USD)
-    let amountInUsd = 1;
-    if (city.currencyCode === "EUR") amountInUsd = 1 / 0.92;
-    else if (city.currencyCode === "CAD") amountInUsd = 1 / 1.36;
-    else amountInUsd = 1;
+  // The city's own prices, converted through the shared EUR-based table in
+  // `src/lib/currency.ts`. The screen used to carry a second, ten-currency
+  // table of its own, and anything missing from it fell through to Colombian
+  // pesos without saying so.
+  const targetInfo = SUPPORTED_CURRENCIES[targetCurrency];
 
-    const rateToTarget = FX_RATES_FROM_USD[targetCurrency]?.rate || 1;
-    return amountInUsd * rateToTarget;
-  }, [city.currencyCode, targetCurrency]);
-
-  const targetFx = FX_RATES_FROM_USD[targetCurrency] || FX_RATES_FROM_USD["COP"];
-
-  const formatLocal = (val: number) => {
-    return `${city.currencySymbol} ${val.toLocaleString()}`;
-  };
+  const formatLocal = (val: number) => `${city.currencySymbol} ${val.toLocaleString()}`;
 
   const formatConverted = (val: number) => {
-    const converted = Math.round(val * conversionMultiplier);
-    return `${targetFx.symbol} ${converted.toLocaleString()}`;
+    if (!targetInfo) return "—";
+    return formatCurrencyAmount(
+      convertCurrency(val, city.currencyCode, targetCurrency),
+      targetCurrency
+    );
   };
 
   const handleExportPlan = () => {
@@ -562,9 +562,9 @@ export const CalculadoraCostoVida: React.FC<CalculadoraCostoVidaProps> = ({ setA
                 onChange={(e) => setTargetCurrency(e.target.value)}
                 className="w-full bg-surface dark:bg-slate-900 border border-outline-variant/60 dark:border-slate-700 rounded-2xl px-3.5 py-2.5 text-xs font-semibold text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-primary focus:outline-none"
               >
-                {Object.entries(FX_RATES_FROM_USD).map(([code, info]) => (
-                  <option key={code} value={code}>
-                    {info.name}
+                {availableCurrencies.map((info: CurrencyInfo) => (
+                  <option key={info.code} value={info.code}>
+                    {info.flag} {info.name}
                   </option>
                 ))}
               </select>
@@ -737,7 +737,8 @@ export const CalculadoraCostoVida: React.FC<CalculadoraCostoVidaProps> = ({ setA
                   </h2>
                 </div>
                 <p className="text-base font-bold text-emerald-700 dark:text-emerald-300">
-                  ≈ {formatConverted(monthlyCostBreakdown.totalLocal)} /mes en {targetFx.name}
+                  ≈ {formatConverted(monthlyCostBreakdown.totalLocal)} /mes en{" "}
+                  {targetInfo?.name ?? targetCurrency}
                 </p>
               </div>
 

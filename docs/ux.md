@@ -131,6 +131,18 @@ Recently addressed and verified by tests:
 - Dismissing the drawer restores the reading position instead of jumping to the
   top.
 
+## Cost of living calculator
+
+- The target currency is the shared preference, read through `useCurrency()`,
+  and picking one inside the calculator writes it back — the same two-way
+  behaviour the country selector already had. The screen used to keep a
+  private `useState("COP")` and never read the preference at all, so a
+  visitor who chose Lempiras was answered in Colombian pesos.
+- Conversion goes through the shared EUR-based table in `src/lib/currency.ts`.
+  The calculator carried a second table of its own with ten currencies to the
+  application's sixteen, and the seven it lacked — HNL, GTQ, BOB, CRC, DOP,
+  UYU, GBP — fell through `|| FX_RATES_FROM_USD["COP"]` and were answered in
+  pesos without a word.
 ## What the navigation offers
 
 - The product is narrowed to Becas and Guías. The planner, the calculator,
