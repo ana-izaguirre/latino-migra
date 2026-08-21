@@ -11,6 +11,68 @@ interface TranslationDictionary {
 }
 
 export const TRANSLATIONS: TranslationDictionary = {
+  // Sign-in modal (#80)
+  "auth.titleSignIn": { es: "Inicia Sesión con Google", en: "Sign in with Google" },
+  "auth.titleAccount": { es: "Tu Cuenta LatinoMigra", en: "Your LatinoMigra Account" },
+  "auth.descSignIn": {
+    es: "Guarda tu progreso de postulación, recordatorios en Google Calendar e historial de IA.",
+    en: "Keep your application progress, Google Calendar reminders and assistant history.",
+  },
+  "auth.descAccount": {
+    es: "Tus becas guardadas, progreso de visas y recordatorios están sincronizados.",
+    en: "Your saved scholarships, visa progress and reminders are in sync.",
+  },
+  "auth.continueWithGoogle": { es: "Continuar con Google", en: "Continue with Google" },
+  "auth.signOut": { es: "Cerrar Sesión", en: "Sign out" },
+  "auth.verifiedAccount": { es: "Cuenta Google Verificada", en: "Verified Google account" },
+  "auth.roleLabel": { es: "Rol de Cuenta:", en: "Account role:" },
+  "auth.roleAdmin": { es: "🔑 Administrador", en: "🔑 Administrator" },
+  "auth.roleStandard": { es: "👤 Usuario Estándar", en: "👤 Standard user" },
+  "auth.roleAdminBody": {
+    es: "Como administrador puedes gestionar convocatorias, acceder al Panel Admin y sincronizar la base de datos.",
+    en: "As an administrator you can manage calls, reach the admin panel and sync the database.",
+  },
+  "auth.roleStandardBody": {
+    es: "Como usuario estándar ves la plataforma limpia sin herramientas técnicas ni botones de administración.",
+    en: "As a standard user you see the platform without the technical tools or admin controls.",
+  },
+  "auth.syncBookmarks": {
+    es: "Sincronización activa de Becas Guardadas",
+    en: "Saved scholarships kept in sync",
+  },
+  "auth.syncCalendar": {
+    es: "Conexión directa con Google Calendar",
+    en: "Direct connection to Google Calendar",
+  },
+  "auth.syncChat": {
+    es: "Historial del Asistente LatinoMigra IA",
+    en: "LatinoMigra assistant history",
+  },
+  "auth.originCountry": {
+    es: "País de origen (para personalización de visas):",
+    en: "Country of origin (to tailor visa guidance):",
+  },
+  "auth.privacyNotice": {
+    es: "Protegido por Google OAuth 2.0. No compartiremos tu información personal.",
+    en: "Secured by Google OAuth 2.0. We will not share your personal information.",
+  },
+  "auth.errorPopupBlocked": {
+    es: "Tu navegador bloqueó la ventana de Google. Permite las ventanas emergentes de este sitio e inténtalo de nuevo.",
+    en: "Your browser blocked the Google window. Allow pop-ups for this site and try again.",
+  },
+  "auth.errorPopupClosed": {
+    es: "Cerraste la ventana de Google antes de terminar. Inténtalo de nuevo cuando quieras.",
+    en: "You closed the Google window before it finished. Try again whenever you like.",
+  },
+  "auth.errorNetwork": {
+    es: "No pudimos conectar con Google. Revisa tu conexión e inténtalo de nuevo.",
+    en: "We could not reach Google. Check your connection and try again.",
+  },
+  "auth.errorGeneric": {
+    es: "No pudimos completar el inicio de sesión con Google. Inténtalo de nuevo.",
+    en: "We could not complete the Google sign-in. Please try again.",
+  },
+
   // Navigation
   "nav.planificador": { es: "Planificador 360°", en: "360° Planner" },
   "nav.calculadora": { es: "Calculadora Costo de Vida", en: "Cost of Living Calculator" },
