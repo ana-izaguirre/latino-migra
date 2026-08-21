@@ -20,11 +20,9 @@ test.describe("LatinoMigra - End to End Suite", () => {
     await expect(page.locator("#nav-item-guia")).toBeVisible();
     await expect(page.locator("#nav-item-chat")).toBeVisible();
     await expect(page.locator("#nav-item-mapa")).toBeVisible();
-    // Secondary destinations live behind the grouped tools menu.
-    await expect(page.locator("#nav-tools-menu-btn")).toBeVisible();
-    await page.locator("#nav-tools-menu-btn").click();
-    await expect(page.locator("#nav-item-comunidad")).toBeVisible();
-    await page.keyboard.press("Escape");
+    // The tools menu held only screens the product has hidden, so it no
+    // longer renders — see `src/lib/navigation.ts`.
+    await expect(page.locator("#nav-tools-menu-btn")).toHaveCount(0);
 
     // Check metrics / trust badges exist
     await expect(page.locator("text=+5,000 Becas Activas").first()).toBeVisible();
@@ -111,18 +109,6 @@ test.describe("LatinoMigra - End to End Suite", () => {
     // Verify country filters exist
     await expect(page.locator("text=Tu País de Origen:")).toBeVisible();
     await expect(page.locator("#select-user-country")).toBeVisible();
-  });
-
-  test("6. Pantalla Comunidad: Historias de éxito y red de apoyo", async ({ page }) => {
-    // Click on "Comunidad" tab
-    await page.locator("#nav-tools-menu-btn").click();
-    await page.locator("#nav-item-comunidad").click();
-
-    // Verify Comunidad heading
-    await expect(page.locator("h1").first()).toContainText("Foros y Experiencias");
-
-    // Verify forum search or button
-    await expect(page.locator("#new-post-forum-btn")).toBeVisible();
   });
 
   test("7. Cambio de Tema: alterna entre Modo Claro y Modo Oscuro", async ({ page }) => {

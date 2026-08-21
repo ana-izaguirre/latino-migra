@@ -18,6 +18,7 @@ import {
   HeartHandshake,
   Bot,
 } from "lucide-react";
+import { isTabVisible } from "../lib/navigation";
 import { NavigationTab } from "../types";
 import { useLanguage } from "../lib/i18n";
 import { Modal } from "./ui/Modal";
@@ -78,24 +79,28 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               <span>{t("footer.tools", "Herramientas")}</span>
             </h4>
             <ul className="space-y-2 text-xs text-on-surface-variant dark:text-slate-300">
-              <li>
-                <button
-                  onClick={() => handleNavigate("planificador")}
-                  className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
-                >
-                  <Compass className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                  <span>{t("nav.planificador", "Planificador 360° (Presupuesto & Clima)")}</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => handleNavigate("calculadora")}
-                  className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
-                >
-                  <Calculator className="w-3.5 h-3.5 text-teal-500 shrink-0" />
-                  <span>{t("nav.calculadora", "Calculadora de Costo de Vida y Divisas")}</span>
-                </button>
-              </li>
+              {isTabVisible("planificador") && (
+                <li>
+                  <button
+                    onClick={() => handleNavigate("planificador")}
+                    className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
+                  >
+                    <Compass className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>{t("nav.planificador", "Planificador 360° (Presupuesto & Clima)")}</span>
+                  </button>
+                </li>
+              )}
+              {isTabVisible("calculadora") && (
+                <li>
+                  <button
+                    onClick={() => handleNavigate("calculadora")}
+                    className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
+                  >
+                    <Calculator className="w-3.5 h-3.5 text-teal-500 shrink-0" />
+                    <span>{t("nav.calculadora", "Calculadora de Costo de Vida y Divisas")}</span>
+                  </button>
+                </li>
+              )}
               <li>
                 <button
                   onClick={() => handleNavigate("becas")}
@@ -105,19 +110,21 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                   <span>{t("nav.becas", "Catálogo de Becas 2026-2027")}</span>
                 </button>
               </li>
-              <li>
-                <button
-                  onClick={() => handleNavigate("voluntariados")}
-                  className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
-                >
-                  <HeartHandshake className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                  <span>
-                    {language === "en"
-                      ? "Volunteering & Exchanges"
-                      : "Voluntariados e Intercambios"}
-                  </span>
-                </button>
-              </li>
+              {isTabVisible("voluntariados") && (
+                <li>
+                  <button
+                    onClick={() => handleNavigate("voluntariados")}
+                    className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
+                  >
+                    <HeartHandshake className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                    <span>
+                      {language === "en"
+                        ? "Volunteering & Exchanges"
+                        : "Voluntariados e Intercambios"}
+                    </span>
+                  </button>
+                </li>
+              )}
               <li>
                 <button
                   onClick={() => handleNavigate("mapa")}
@@ -145,32 +152,36 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               {t("footer.community", "Comunidad & Asistencia")}
             </h4>
             <ul className="space-y-2 text-xs text-on-surface-variant dark:text-slate-300">
-              <li>
-                <button
-                  onClick={() => handleNavigate("comunidad")}
-                  className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
-                >
-                  <MessageSquare className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                  <span>
-                    {language === "en"
-                      ? "Community Forum & Experiences"
-                      : "Foro de Migrantes & Consejos"}
-                  </span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => handleNavigate("feedback")}
-                  className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
-                >
-                  <MessageSquarePlus className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                  <span>
-                    {language === "en"
-                      ? "Suggest New Feature or Scholarship"
-                      : "Sugerir Nueva Beca o Función"}
-                  </span>
-                </button>
-              </li>
+              {isTabVisible("comunidad") && (
+                <li>
+                  <button
+                    onClick={() => handleNavigate("comunidad")}
+                    className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                    <span>
+                      {language === "en"
+                        ? "Community Forum & Experiences"
+                        : "Foro de Migrantes & Consejos"}
+                    </span>
+                  </button>
+                </li>
+              )}
+              {isTabVisible("feedback") && (
+                <li>
+                  <button
+                    onClick={() => handleNavigate("feedback")}
+                    className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
+                  >
+                    <MessageSquarePlus className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                    <span>
+                      {language === "en"
+                        ? "Suggest New Feature or Scholarship"
+                        : "Sugerir Nueva Beca o Función"}
+                    </span>
+                  </button>
+                </li>
+              )}
               <li>
                 <button
                   onClick={() => handleNavigate("chat")}

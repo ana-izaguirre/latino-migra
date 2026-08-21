@@ -6,23 +6,6 @@ import { test, expect } from "@playwright/test";
  */
 
 test.describe("Country selection consistency", () => {
-  test("a destination picked in the guides carries over to the planner", async ({ page }) => {
-    await page.goto("/");
-
-    await page.locator("#nav-item-guia").click();
-    await page
-      .getByRole("button", { name: /Alemania/i })
-      .first()
-      .click();
-    await expect(page.locator("text=Tipos de Visado en Alemania").first()).toBeVisible();
-
-    // Open the planner from the grouped tools menu.
-    await page.locator("#nav-tools-menu-btn").click();
-    await page.locator("#nav-item-planificador").click();
-
-    await expect(page.locator("#planner-destination-country")).toHaveValue("Alemania");
-  });
-
   // Uses Alemania rather than Portugal on purpose: LOCATIONS_DATA only covers
   // Alemania, Canadá, EE.UU., España, Reino Unido and Suiza, so a destination
   // outside that set has no consular entries for the map to select.
@@ -79,7 +62,8 @@ test.describe("Desktop navigation", () => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto("/");
 
-    const lastNavItem = await page.locator("#nav-tools-menu-btn").boundingBox();
+    // The tools menu is gone, so the last inline destination is the bar's end.
+    const lastNavItem = await page.locator("#nav-item-chat").boundingBox();
     const firstAction = await page.locator("#alerts-center-btn").boundingBox();
 
     expect(lastNavItem).not.toBeNull();
@@ -90,26 +74,15 @@ test.describe("Desktop navigation", () => {
     ).toBeLessThanOrEqual(firstAction!.x + 1);
   });
 
-  test("reaches secondary screens through the tools menu", async ({ page }) => {
-    await page.goto("/");
-
-    await expect(page.locator("#nav-item-calculadora")).toBeHidden();
-    await page.locator("#nav-tools-menu-btn").click();
-    await expect(page.locator("#nav-tools-menu")).toBeVisible();
-
-    await page.locator("#nav-item-calculadora").click();
-    await expect(page.locator("#nav-tools-menu")).toBeHidden();
-    await expect(page.locator("text=Calculadora").first()).toBeVisible();
-  });
-
-  test("closes the tools menu when clicking outside", async ({ page }) => {
-    await page.goto("/");
-
-    await page.locator("#nav-tools-menu-btn").click();
-    await expect(page.locator("#nav-tools-menu")).toBeVisible();
-
-    await page.locator("h1").first().click();
-    await expect(page.locator("#nav-tools-menu")).toBeHidden();
+  test("does not offer the screens the product has hidden", async ({ page }) => {
+    // Narrowed to Becas and Guías — see `src/lib/navigation.ts`. The tools
+    // menu held only hidden screens, so it is gone rather than opening onto
+    // nothing.
+    await expect(page.locator("#nav-item-planificador")).toHaveCount(0);
+    await expect(page.locator("#nav-item-calculadora")).toHaveCount(0);
+    await expect(page.locator("#nav-item-comunidad")).toHaveCount(0);
+    await expect(page.locator("#nav-item-voluntariados")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Herramientas/i })).toHaveCount(0);
   });
 
   test("groups currency, language and theme under one preferences menu", async ({ page }) => {
@@ -146,23 +119,6 @@ test.describe("Preference persistence", () => {
     await page.waitForTimeout(600);
     await page.reload();
     await expect.poll(isDark).toBe(!before);
-  });
-
-  test("keeps the destination country across a reload", async ({ page }) => {
-    await page.goto("/");
-    await page.locator("#nav-item-guia").click();
-    await page
-      .getByRole("button", { name: /Alemania/i })
-      .first()
-      .click();
-
-    await page.waitForTimeout(600); // past the write debounce
-    await page.reload();
-
-    // The planner reads the same context, so the choice must survive there too.
-    await page.locator("#nav-tools-menu-btn").click();
-    await page.locator("#nav-item-planificador").click();
-    await expect(page.locator("#planner-destination-country")).toHaveValue("Alemania");
   });
 
   test("stores preferences in a cookie and never in browser storage", async ({ page }) => {

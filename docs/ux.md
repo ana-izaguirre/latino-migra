@@ -131,6 +131,22 @@ Recently addressed and verified by tests:
 - Dismissing the drawer restores the reading position instead of jumping to the
   top.
 
+## What the navigation offers
+
+- The product is narrowed to Becas and Guías. The planner, the calculator,
+  volunteering, the community and the feedback hub are no longer linked from
+  the top bar, the drawer, the bottom bar or the footer.
+- They are **hidden, not deleted**: the components, their data and their tests
+  are untouched and still compile. `src/lib/navigation.ts` holds the single
+  list, so restoring a screen is deleting one line rather than editing four
+  components.
+- The desktop "Herramientas" menu held only hidden screens for a
+  non-administrator, so it no longer renders at all rather than opening onto
+  an empty panel.
+- Navigation is `useState` in `App.tsx` with no router, so a hidden screen has
+  no URL to arrive by and is genuinely unreachable — which is also why the
+  end-to-end tests that drove those screens were removed rather than adapted.
+
 ## Scholarship list
 
 - One way through the catalogue. The screen carried a numbered pager and a

@@ -78,9 +78,10 @@ test.describe("Mobile navigation", () => {
     await page.locator("#bottom-nav-menu").click();
     await expect(page.locator("#mobile-nav-drawer")).toBeVisible();
 
-    await page.locator("#drawer-nav-item-calculadora").click();
+    // The calculator is no longer offered — see `src/lib/navigation.ts`.
+    await page.locator("#drawer-nav-item-mapa").click();
     await expect(page.locator("#mobile-nav-drawer")).toBeHidden();
-    await expect(page.locator("h1").first()).toContainText("Calculadora de Costo de Vida");
+    await expect(page.locator("h1").first()).toContainText(/Consular|Consulados/i);
   });
 
   test("closes the drawer with Escape", async ({ page }) => {
