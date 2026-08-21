@@ -204,6 +204,28 @@ Recently addressed and verified by tests:
   answer usefully about one specific call, and the handler, the prop and the
   path through `App` stay wired so restoring it is one word.
 
+## Home
+
+- The first screen shows what the product holds rather than describing it: the
+  three convocatorias closing soonest, every guide country with its number of
+  visa routes, and the studies catalogue's size with three of its programmes
+  named. It was three cards of prose, so a visitor could not see that the
+  catalogue existed without navigating into it (#86).
+- **No total is claimed for the scholarships.** The catalogue screen loads from
+  Firestore and the first screen does not, so a figure stated here could
+  contradict the figure stated there. #46 removed an invented "+5,000 Becas
+  Activas"; a number that is merely often wrong is the same defect, smaller.
+  The guides and the studies ship bundled, so their counts cannot drift and are
+  given exactly.
+- A call whose deadline has passed is never previewed. The comparison is against
+  today rather than a stored flag — `isUrgent` was written once at creation and
+  still called closed calls urgent.
+- The assistant is described rather than previewed: it answers per question, so
+  there is nothing real to show, and a sample exchange is what the chat screen
+  itself used to fabricate (#4).
+- Measured at 375px: 7350px before, 8078px after. The screen is long, and the
+  hero is most of it — worth its own look.
+
 ## Estudios (cursos, certificados y FP)
 
 - The Becas & Estudios screen carries a fourth tab, **Cursos, Certificados y
