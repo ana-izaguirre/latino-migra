@@ -86,15 +86,20 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ setActiveTab, currentU
               prevención de estafas y soporte consular.
             </p>
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-3.5 pt-2">
+            {/*
+              Two destinations, side by side even on a phone. Three wide
+              buttons wrapped onto three full-width lines at 375px and read as
+              stacked blocks rather than a choice — and the third led to the
+              planner, which the navigation no longer offers.
+            */}
+            <div className="grid grid-cols-2 gap-3 pt-2 sm:flex sm:flex-wrap sm:items-center">
               <button
                 onClick={() => setActiveTab("becas")}
                 id="hero-btn-becas"
                 aria-label="Buscar Becas"
-                className="inline-flex items-center gap-2 bg-primary dark:bg-sky-600 hover:bg-primary-container text-on-primary dark:text-white px-5 py-3 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer"
+                className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-primary dark:bg-sky-600 px-4 text-sm font-bold text-on-primary dark:text-white shadow-md transition-all hover:bg-primary-container hover:shadow-lg active:scale-95 cursor-pointer"
               >
-                <Search className="w-4 h-4" />
+                <Search className="w-4 h-4 shrink-0" aria-hidden="true" />
                 <span>Buscar Becas</span>
               </button>
 
@@ -102,20 +107,10 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ setActiveTab, currentU
                 onClick={() => setActiveTab("guia")}
                 id="hero-btn-guias"
                 aria-label="Ver Guías Migratorias"
-                className="inline-flex items-center gap-2 bg-secondary dark:bg-teal-600 hover:bg-secondary/90 text-white px-5 py-3 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer"
+                className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-secondary dark:bg-teal-600 px-4 text-sm font-bold text-white shadow-md transition-all hover:bg-secondary/90 hover:shadow-lg active:scale-95 cursor-pointer"
               >
-                <Compass className="w-4 h-4" />
-                <span>Ver Guías Migratorias</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab("planificador")}
-                id="hero-btn-planificador"
-                aria-label="Armar Mi Plan de Migración"
-                className="inline-flex items-center gap-2 bg-surface-container dark:bg-slate-800 hover:bg-surface-container-high text-primary dark:text-sky-300 px-4 py-3 rounded-xl font-semibold text-sm border border-outline-variant/60 dark:border-slate-700 transition-all active:scale-95 cursor-pointer"
-              >
-                <Calculator className="w-4 h-4 text-emerald-500" />
-                <span>Planificador 360°</span>
+                <Compass className="w-4 h-4 shrink-0" aria-hidden="true" />
+                <span>Ver Guías</span>
               </button>
             </div>
 
@@ -143,20 +138,12 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ setActiveTab, currentU
               <div className="absolute inset-0 bg-gradient-to-t from-primary/40 via-transparent to-transparent" />
             </div>
 
-            {/* Floating Stats Badge */}
-            <div className="absolute -bottom-6 -left-4 sm:left-4 bg-surface-container-lowest dark:bg-slate-800/95 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-outline-variant/50 dark:border-slate-700 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-secondary-container/40 dark:bg-teal-500/20 text-secondary dark:text-teal-300 flex items-center justify-center font-bold">
-                <Award className="w-6 h-6" />
-              </div>
-              <div>
-                <span className="block text-xs font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider">
-                  Oportunidades
-                </span>
-                <span className="text-xl font-extrabold text-primary dark:text-sky-300">
-                  +5,000 Becas Activas
-                </span>
-              </div>
-            </div>
+            {/*
+              No catalogue figures here. This badge claimed "+5,000 Becas
+              Activas" against a catalogue of 22, on the screen whose job is
+              to say what the product is. Numbers about the catalogue belong
+              on the catalogue, where they are counted rather than asserted.
+            */}
           </div>
         </div>
       </section>
@@ -172,31 +159,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ setActiveTab, currentU
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Card 1: Planificador */}
-          <div className="bg-surface-container-lowest dark:bg-slate-800 p-6 rounded-2xl border border-secondary/30 dark:border-teal-500/30 hover:shadow-lg transition-all space-y-4 flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="w-12 h-12 rounded-xl bg-teal-100 dark:bg-teal-900/50 text-teal-600 dark:text-teal-300 flex items-center justify-center">
-                <Calculator className="w-6 h-6" />
-              </div>
-              <h3 className="font-headline-sm text-lg font-bold text-primary dark:text-sky-300">
-                Planificador de Migración
-              </h3>
-              <p className="text-xs text-on-surface-variant dark:text-slate-300 leading-relaxed">
-                Calcula presupuesto real, recomendaciones de ciudad por clima/coste, guía
-                antiestafas y checklist con o sin hijos.
-              </p>
-            </div>
-            <button
-              onClick={() => setActiveTab("planificador")}
-              id="feature-btn-plan"
-              className="inline-flex items-center gap-2 min-h-[44px] text-secondary dark:text-teal-300 font-semibold text-xs hover:underline pt-2"
-            >
-              <span>Configurar Plan</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Card 2: AI Assistant */}
           <div className="bg-surface-container-lowest dark:bg-slate-800 p-6 rounded-2xl border border-outline-variant/40 dark:border-slate-700 hover:shadow-lg transition-all space-y-4 flex flex-col justify-between">
             <div className="space-y-3">

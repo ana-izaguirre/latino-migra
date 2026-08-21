@@ -131,6 +131,19 @@ Recently addressed and verified by tests:
 - Dismissing the drawer restores the reading position instead of jumping to the
   top.
 
+## The first screen
+
+- Two destinations, side by side at every width. Three wide buttons wrapped
+  onto three full-width lines at 375px and read as stacked blocks rather than
+  a choice — and the third led to the planner, which the navigation no longer
+  offers.
+- No catalogue figures. The badge claimed "+5,000 Becas Activas" against a
+  catalogue of 22, on the one screen whose job is to say what the product is.
+  Numbers about the catalogue belong on the catalogue, where they are counted
+  rather than asserted.
+- Nothing here links to a hidden screen. The planner card is gone with the
+  planner.
+
 ## Scholarship list
 
 - One way through the catalogue. The screen carried a numbered pager and a
