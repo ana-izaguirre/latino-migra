@@ -1,6 +1,6 @@
 # LatinoMigra 🌍🎓
 
-[![Status](https://img.shields.io/badge/estado-en%20desarrollo%20activo-yellow)](https://github.com/ana-izaguirre/latino-migra/projects)
+[![Status](https://img.shields.io/badge/estado-en%20desarrollo%20activo-yellow)](https://github.com/users/ana-izaguirre/projects/4)
 [![License](https://img.shields.io/badge/licencia-MIT-blue)](./LICENSE)
 [![CI](https://github.com/ana-izaguirre/latino-migra/actions/workflows/ci.yml/badge.svg)](https://github.com/ana-izaguirre/latino-migra/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/badge/coverage-43%25-orange)](https://github.com/ana-izaguirre/latino-migra/actions/workflows/ci.yml)
@@ -16,7 +16,7 @@
 > ⚠️ **Estado: en desarrollo activo.** El producto ya es usable, pero sigue
 > cambiando: las pantallas, la forma de los datos y las reglas de Firestore
 > todavía no son estables. El trabajo se sigue issue por issue en el
-> [tablero del proyecto **Product Engineering**](https://github.com/ana-izaguirre/latino-migra/projects),
+> [tablero del proyecto **Product Engineering**](https://github.com/users/ana-izaguirre/projects/4),
 > que es la hoja de ruta: qué está en cola, en curso y terminado. Las issues
 > abiertas están en [Issues](https://github.com/ana-izaguirre/latino-migra/issues).
 
