@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { renderWithProviders as render } from "../test/renderWithProviders";
 import { AuthModal, describeSignInError } from "./AuthModal";
@@ -19,6 +19,16 @@ const LanguageSwitch: React.FC = () => {
 };
 
 describe("AuthModal Component", () => {
+  /*
+    Tests run without a Firebase environment, so the real
+    `isFirebaseConfigured` is false and the sign-in button is disabled — which
+    is the point of #78. Every test that exercises signing in states that the
+    build is configured.
+  */
+  beforeEach(() => {
+    vi.spyOn(firebase, "isFirebaseConfigured").mockReturnValue(true);
+  });
+
   const defaultProps = {
     isOpen: true,
     onClose: vi.fn(),
@@ -259,6 +269,96 @@ describe("AuthModal Component", () => {
    * Regression for #80. The modal rendered entirely in Spanish whatever the
    * chosen language — including the strings it asks for personal data with.
    */
+  /**
+   * Regression for #88. The list was nine countries written into the markup, so
+   * someone from Panamá, Paraguay or Uruguay could not say where they were
+   * from — on a platform whose audience is Latin America.
+   */
+  /**
+   * Regression for #78. `.env` ships every `VITE_FIREBASE_*` value as an empty
+   * string, and `"" || fallback` is the fallback — so a build with no
+   * environment silently used placeholder credentials and every sign-in failed
+   * with a message blaming the visitor's connection.
+   */
+  describe("when the build has no Firebase configuration", () => {
+    beforeEach(() => {
+      vi.spyOn(firebase, "isFirebaseConfigured").mockReturnValue(false);
+    });
+
+    it("says so, instead of offering a retry that cannot work", () => {
+      render(<AuthModal {...defaultProps} />);
+
+      const notice = document.getElementById("auth-unconfigured");
+      expect(notice).toBeInTheDocument();
+      expect(notice).toHaveAttribute("role", "alert");
+      expect(notice).toHaveTextContent(/no está disponible en esta versión/i);
+      // And says what still works without an account.
+      expect(notice).toHaveTextContent(/becas/i);
+    });
+
+    it("disables the Google button rather than letting it fail", () => {
+      render(<AuthModal {...defaultProps} />);
+
+      const button = document.getElementById("google-signin-btn") as HTMLButtonElement;
+      expect(button).toBeDisabled();
+    });
+
+    it("never calls Firebase", () => {
+      const signIn = vi.spyOn(firebase, "signInWithGoogle");
+      render(<AuthModal {...defaultProps} />);
+
+      fireEvent.click(document.getElementById("google-signin-btn")!);
+
+      expect(signIn).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("when the build is configured", () => {
+    it("offers sign-in with no warning", () => {
+      render(<AuthModal {...defaultProps} />);
+
+      expect(document.getElementById("auth-unconfigured")).not.toBeInTheDocument();
+      expect(document.getElementById("google-signin-btn")).not.toBeDisabled();
+    });
+  });
+
+  describe("country of origin", () => {
+    it("offers every Latin American country the platform knows about", () => {
+      render(<AuthModal {...defaultProps} />);
+
+      const select = document.getElementById("auth-origin-country") as HTMLSelectElement;
+      const offered = Array.from(select.options).map((option) => option.value);
+
+      expect(offered).toHaveLength(LATIN_AMERICAN_COUNTRIES.length);
+      for (const country of LATIN_AMERICAN_COUNTRIES) {
+        expect(offered, country.name).toContain(country.name);
+      }
+      // The ones the hardcoded list left out.
+      for (const missing of ["Panamá", "Paraguay", "Uruguay", "Bolivia", "Brasil"]) {
+        expect(offered, missing).toContain(missing);
+      }
+    });
+
+    it("is sorted, so the reader can find their country", () => {
+      render(<AuthModal {...defaultProps} />);
+
+      const select = document.getElementById("auth-origin-country") as HTMLSelectElement;
+      const offered = Array.from(select.options).map((option) => option.value);
+
+      expect(offered).toEqual([...offered].sort((a, b) => a.localeCompare(b, "es")));
+      expect(new Set(offered).size).toBe(offered.length);
+    });
+
+    it("labels the control, so it is announced", () => {
+      render(<AuthModal {...defaultProps} />);
+
+      const select = document.getElementById("auth-origin-country")!;
+      const label = document.querySelector('label[for="auth-origin-country"]');
+      expect(label).toBeInTheDocument();
+      expect(select.tagName).toBe("SELECT");
+    });
+  });
+
   describe("in English", () => {
     const en = (key: string) => TRANSLATIONS[key]?.en ?? key;
 

@@ -11,6 +11,35 @@ interface TranslationDictionary {
 }
 
 export const TRANSLATIONS: TranslationDictionary = {
+  // Home (#86)
+  "home.becasHeading": {
+    es: "Convocatorias abiertas ahora mismo",
+    en: "Calls open right now",
+  },
+  "home.becasIntro": {
+    es: "Las de cierre más próximo, con su fuente oficial.",
+    en: "The soonest to close, each with its official source.",
+  },
+  "home.seeAllBecas": { es: "Ver todas las convocatorias", en: "See every call" },
+  "home.guiasHeading": { es: "Guías por país", en: "Guides by country" },
+  "home.guiasIntro": { es: "países, con", en: "countries, with" },
+  "home.guiasRoutes": {
+    es: "vías migratorias y sus fuentes oficiales.",
+    en: "migration routes and their official sources.",
+  },
+  "home.seeAllGuias": { es: "Explorar las guías", en: "Explore the guides" },
+  "home.estudiosHeading": { es: "Estudiar sin beca", en: "Studying without a scholarship" },
+  "home.estudiosIntro": {
+    es: "programas oficiales de formación profesional, certificaciones de idioma y cursos, cada uno con la fuente que lo publica.",
+    en: "official vocational, language-certification and course programmes, each with the source that publishes it.",
+  },
+  "home.seeAllEstudios": { es: "Ver los programas", en: "See the programmes" },
+  "home.chatHeading": { es: "Asistente Migratorio IA", en: "AI migration assistant" },
+  "home.chatIntro": {
+    es: "Resuelve dudas sobre visados, apostillas, cartas de motivación y requisitos financieros. Responde a tu pregunta concreta; no sustituye a la fuente oficial.",
+    en: "Answers questions about visas, apostilles, motivation letters and financial requirements. It answers your specific question; it does not replace the official source.",
+  },
+  "home.tryChat": { es: "Probar el asistente", en: "Try the assistant" },
   // Sign-in modal (#80)
   "auth.titleSignIn": { es: "Inicia Sesión con Google", en: "Sign in with Google" },
   "auth.titleAccount": { es: "Tu Cuenta LatinoMigra", en: "Your LatinoMigra Account" },
@@ -24,6 +53,7 @@ export const TRANSLATIONS: TranslationDictionary = {
   },
   "auth.continueWithGoogle": { es: "Continuar con Google", en: "Continue with Google" },
   "auth.signOut": { es: "Cerrar Sesión", en: "Sign out" },
+  "auth.unnamedAccount": { es: "Cuenta sin nombre", en: "Unnamed account" },
   "auth.verifiedAccount": { es: "Cuenta Google Verificada", en: "Verified Google account" },
   "auth.roleLabel": { es: "Rol de Cuenta:", en: "Account role:" },
   "auth.roleAdmin": { es: "🔑 Administrador", en: "🔑 Administrator" },
@@ -76,6 +106,10 @@ export const TRANSLATIONS: TranslationDictionary = {
   // Navigation
   "nav.planificador": { es: "Planificador 360°", en: "360° Planner" },
   "nav.calculadora": { es: "Calculadora Costo de Vida", en: "Cost of Living Calculator" },
+  "auth.notConfigured": {
+    es: "El inicio de sesión no está disponible en esta versión de la aplicación. Puedes seguir usando las becas, las guías y el asistente sin cuenta.",
+    en: "Sign-in is not available in this build. You can still use the scholarships, the guides and the assistant without an account.",
+  },
   "nav.becas": { es: "Becas & Estudios", en: "Scholarships & Studies" },
   "nav.voluntariados": { es: "Voluntariados & Intercambios", en: "Volunteering & Exchanges" },
   "nav.guia": { es: "Guía de Migración", en: "Migration Guide" },
@@ -401,6 +435,9 @@ export const TRANSLATIONS: TranslationDictionary = {
   "estudios.rejectedNotice": { es: "No mostramos", en: "We are not showing" },
   "estudios.rejectedOne": { es: "programa porque", en: "programme because" },
   "estudios.rejectedMany": { es: "programas porque", en: "programmes because" },
+  "guia.categoryLabel": { es: "Tipo de vía", en: "Route type" },
+  "guia.categoryAll": { es: "Todas", en: "All" },
+  "guia.countryLabel": { es: "País de destino", en: "Destination country" },
   "guia.voteUseful": { es: "Marcar como útil", en: "Mark as useful" },
   "guia.voteCount": { es: "útiles", en: "found it useful" },
   "guia.voteFirst": { es: "Sé el primero en marcarla útil", en: "Be the first to mark it useful" },

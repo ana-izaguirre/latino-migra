@@ -158,6 +158,18 @@ in three places that render remote URLs:
 Its allowlist includes `data:`, which contradicts the function's own comment.
 `data:` URIs do not execute in `<img src>`, so impact is low.
 
+`getSafeImageUrl` returns an empty string for an unusable URL and lets the
+caller decide (#99). Its default used to be one stock photograph, so every
+avatar in the product rendered a stranger's face as the visitor's own, and a
+`javascript:` URL was answered with a picture rather than with nothing. Avatars
+go through `src/components/ui/Avatar.tsx`, which shows the person's initial when
+there is no safe picture.
+
+Nothing in the sign-in path fills a missing field any more. `displayName`,
+`email` and `photoURL` are stored and rendered as the provider gave them, or
+not at all — `usuario@latinomigra.com` was an address at the project's own
+domain attributed to a real person and written to `users/{uid}`.
+
 ## CSRF
 
 Not applicable. The API accepts no cookie-based credentials, so there is no

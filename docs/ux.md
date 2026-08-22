@@ -204,6 +204,28 @@ Recently addressed and verified by tests:
   answer usefully about one specific call, and the handler, the prop and the
   path through `App` stay wired so restoring it is one word.
 
+## Home
+
+- The first screen shows what the product holds rather than describing it: the
+  three convocatorias closing soonest, every guide country with its number of
+  visa routes, and the studies catalogue's size with three of its programmes
+  named. It was three cards of prose, so a visitor could not see that the
+  catalogue existed without navigating into it (#86).
+- **No total is claimed for the scholarships.** The catalogue screen loads from
+  Firestore and the first screen does not, so a figure stated here could
+  contradict the figure stated there. #46 removed an invented "+5,000 Becas
+  Activas"; a number that is merely often wrong is the same defect, smaller.
+  The guides and the studies ship bundled, so their counts cannot drift and are
+  given exactly.
+- A call whose deadline has passed is never previewed. The comparison is against
+  today rather than a stored flag — `isUrgent` was written once at creation and
+  still called closed calls urgent.
+- The assistant is described rather than previewed: it answers per question, so
+  there is nothing real to show, and a sample exchange is what the chat screen
+  itself used to fabricate (#4).
+- Measured at 375px: 7350px before, 8078px after. The screen is long, and the
+  hero is most of it — worth its own look.
+
 ## Favourites
 
 - The tab is "Mis Guardados" and holds both catalogues: a language
@@ -213,6 +235,7 @@ Recently addressed and verified by tests:
   heading with its own count.
 - A favourite is stored as `"{kind}:{id}"`. A bare id stopped identifying
   anything once two catalogues shared a screen.
+
 ## Scholarship filters in the mobile sheet
 
 - Each of the six groups is one swipeable row of chips, the same as the quick
@@ -265,6 +288,16 @@ Recently addressed and verified by tests:
   The breakpoint sits on a wrapper rather than on the control itself:
   `lg:hidden` and a display utility on one element let the emitted order pick
   the winner, and it picked `inline-flex`.
+- The visa category filter is chips with a live count, through the same
+  `FilterChipGroup`. The counts come from the predicate the list itself uses, so
+  a chip cannot promise routes the list will not show — the "Todas (4)" label
+  was the only count before, and the per-category chips had none.
+- The country picker is one swipeable row of chips with a count of visa routes
+  per country, through the same `FilterChipGroup` the scholarship filters use.
+  It was seven full-size buttons in a `flex-wrap` row: three lines of blocks at
+  375px between the title and the content, with the selected one carrying
+  `scale-105` so it overlapped its neighbours. Measured after: one row, 44px
+  targets, no sideways scroll.
 - The usefulness counter shows a number only when one was read. It printed
   `helpfulVotes || 18` for every visa, so a country with no votes claimed
   eighteen people had found each visa useful; a failed read now says so and a

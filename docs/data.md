@@ -18,7 +18,7 @@ means database failures are invisible to the user.
 
 | File | Records | Size | Changes with |
 |---|---|---|---|
-| `migrationGuides.ts` | 7 countries / 57 visas | 48 KB | Immigration law |
+| `migrationGuides.ts` | 7 countries / 24 visas | 48 KB | Immigration law |
 | `scholarships.ts` | 22 | 35 KB | Annual calls and deadlines |
 | `locations.ts` | 32 | 20 KB | Consular addresses, phones, hours |
 | `antiScamData.ts` | per-country guidance | 15 KB | Rarely |

@@ -1,7 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
 import { screen, fireEvent } from "@testing-library/react";
 import { renderWithProviders as render } from "../test/renderWithProviders";
-import { HeroLanding } from "./HeroLanding";
+import { HeroLanding, upcomingCalls } from "./HeroLanding";
+import { SCHOLARSHIPS_DATA } from "../data/scholarships";
+import { MIGRATION_GUIDES_DATA } from "../data/migrationGuides";
+import { Scholarship } from "../types";
 
 describe("HeroLanding Component", () => {
   it("renders hero title, metrics and quick action buttons", () => {
@@ -100,9 +103,15 @@ describe("HeroLanding Component", () => {
       expect(setActiveTab).toHaveBeenCalledWith("becas");
     });
 
-    it("passes the avatar through the URL sanitiser", () => {
+    it("renders no image at all for an unsafe avatar URL", () => {
       // A profile photo is a remote URL from a third party. Rendering one
       // unchecked is how a `javascript:` src reaches the page.
+      //
+      // The sanitiser used to answer an unusable URL with a stock photograph,
+      // so this asserted the `src` was merely not `javascript:`. It answers
+      // with nothing now, and `Avatar` shows the person's initial instead of a
+      // stranger's face (#99) — a stronger property, so the assertion moves
+      // with it rather than the test being weakened.
       render(
         <HeroLanding
           setActiveTab={vi.fn()}
@@ -110,8 +119,22 @@ describe("HeroLanding Component", () => {
         />
       );
 
+      expect(document.querySelector("img[alt='Ana Izaguirre']")).toBeNull();
+      expect(screen.getByLabelText("Ana Izaguirre")).toHaveTextContent("A");
+      expect(document.body.innerHTML).not.toMatch(/javascript:/i);
+    });
+
+    it("shows the picture when there is a safe one", () => {
+      render(
+        <HeroLanding
+          setActiveTab={vi.fn()}
+          currentUser={{ ...user, avatar: "https://example.com/ana.jpg" }}
+        />
+      );
+
       const avatar = screen.getByAltText("Ana Izaguirre") as HTMLImageElement;
-      expect(avatar.getAttribute("src")).not.toMatch(/^javascript:/i);
+      expect(avatar.tagName).toBe("IMG");
+      expect(avatar.getAttribute("src")).toBe("https://example.com/ana.jpg");
     });
   });
 
@@ -130,6 +153,122 @@ describe("HeroLanding Component", () => {
 
       for (const id of ["hero-btn-becas", "hero-btn-guias"]) {
         expect(container.querySelector(`#${id}`), id).toBeInTheDocument();
+      }
+    });
+  });
+
+  /**
+   * Regression for #86. The first screen described the product in prose: a
+   * visitor could not see that the catalogue existed without navigating into
+   * it. Every record it shows now is real.
+   */
+  describe("what the first screen shows", () => {
+    it("previews real calls from the catalogue, not descriptions of them", () => {
+      render(<HeroLanding setActiveTab={vi.fn()} />);
+
+      const preview = document.getElementById("home-becas-preview");
+      expect(preview).toBeInTheDocument();
+      expect(preview!.children.length).toBeGreaterThan(0);
+
+      // Each card is a record that exists in the catalogue.
+      for (const card of Array.from(preview!.children)) {
+        const id = card.id.replace("home-beca-", "");
+        const beca = SCHOLARSHIPS_DATA.find((s) => s.id === id);
+        expect(beca, id).toBeDefined();
+        expect(card).toHaveTextContent(beca!.title);
+        expect(card).toHaveTextContent(beca!.institution);
+      }
+    });
+
+    /**
+     * Tested against a fixture, not against the shipped catalogue.
+     *
+     * Every deadline in `scholarships.ts` is currently in the future, so
+     * asserting this through a render would pass whether the filter existed or
+     * not — a test that never triggers the thing it asserts. The filter is
+     * exercised directly, with a call that has closed.
+     */
+    it("never offers a call whose deadline has passed", () => {
+      const today = new Date("2026-08-21T00:00:00Z");
+      const call = (id: string, deadlineDate: string) =>
+        ({ ...SCHOLARSHIPS_DATA[0], id, deadlineDate }) as Scholarship;
+
+      const result = upcomingCalls(
+        [
+          call("closed", "2026-01-01"),
+          call("open-later", "2027-01-01"),
+          call("open-soon", "2026-09-01"),
+          call("today", "2026-08-21"),
+        ],
+        today
+      );
+
+      expect(result.map((beca) => beca.id)).toEqual(["today", "open-soon", "open-later"]);
+      expect(result.map((beca) => beca.id)).not.toContain("closed");
+    });
+
+    it("ignores a call whose deadline cannot be read, rather than ranking it first", () => {
+      const today = new Date("2026-08-21T00:00:00Z");
+      const call = (id: string, deadlineDate: string) =>
+        ({ ...SCHOLARSHIPS_DATA[0], id, deadlineDate }) as Scholarship;
+
+      const result = upcomingCalls(
+        [call("broken", "próximamente"), call("real", "2026-09-01")],
+        today
+      );
+
+      expect(result.map((beca) => beca.id)).toEqual(["real"]);
+    });
+
+    it("shows at most three, so the first screen stays a preview", () => {
+      const today = new Date("2026-08-21T00:00:00Z");
+      const many = Array.from({ length: 10 }, (_, i) => ({
+        ...SCHOLARSHIPS_DATA[0],
+        id: `beca-${i}`,
+        deadlineDate: `2026-09-0${(i % 9) + 1}`,
+      })) as Scholarship[];
+
+      expect(upcomingCalls(many, today)).toHaveLength(3);
+    });
+
+    it("shows the soonest deadlines first", () => {
+      render(<HeroLanding setActiveTab={vi.fn()} />);
+
+      const dates = Array.from(document.getElementById("home-becas-preview")!.children).map(
+        (card) =>
+          SCHOLARSHIPS_DATA.find((s) => s.id === card.id.replace("home-beca-", ""))!.deadlineDate
+      );
+      expect(dates).toEqual([...dates].sort());
+    });
+
+    it("states a count only where it cannot drift", () => {
+      render(<HeroLanding setActiveTab={vi.fn()} />);
+
+      // The guides and the studies ship bundled, so their totals are certain.
+      const routes = Object.values(MIGRATION_GUIDES_DATA).reduce(
+        (total, guide) => total + guide.visas.length,
+        0
+      );
+      expect(screen.getByText(new RegExp(`${routes}`))).toBeInTheDocument();
+
+      // The scholarship catalogue loads from Firestore on its own screen, so
+      // no total is claimed for it here — a figure that is merely often wrong
+      // is the same defect as one that was invented (#46).
+      const becas = document.getElementById("home-becas-preview")!;
+      expect(becas.parentElement).not.toHaveTextContent(
+        new RegExp(`${SCHOLARSHIPS_DATA.length}\\s*(convocatorias|becas)`)
+      );
+    });
+
+    it("lists every guide country with its number of routes", () => {
+      render(<HeroLanding setActiveTab={vi.fn()} />);
+
+      const guides = document.getElementById("home-guias-preview")!;
+      const countries = Object.values(MIGRATION_GUIDES_DATA);
+      expect(guides.children).toHaveLength(countries.length);
+
+      for (const guide of countries) {
+        expect(guides, guide.country).toHaveTextContent(guide.country);
       }
     });
   });

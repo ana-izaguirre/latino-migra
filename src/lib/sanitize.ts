@@ -8,11 +8,13 @@ const SAFE_IMAGE_PROTOCOLS = ["http:", "https:", "data:"];
 /**
  * Validates and sanitizes image URLs to prevent javascript: pseudo-protocols
  * or arbitrary HTML injection via DOM image attributes.
+ *
+ * Returns an empty string when there is nothing safe to show, so the caller
+ * decides what to render instead. The default used to be a stock photograph of
+ * a stranger, which every avatar in the product then presented as the
+ * visitor's own face (#99).
  */
-export function getSafeImageUrl(
-  url?: string | null,
-  fallback = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80"
-): string {
+export function getSafeImageUrl(url?: string | null, fallback = ""): string {
   if (!url || typeof url !== "string") {
     return fallback;
   }

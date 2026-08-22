@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { ShieldCheck, Bookmark, Calendar, Sparkles, LogOut, AlertTriangle } from "lucide-react";
 import { GoogleUser } from "../types";
-import { signInWithGoogle, isUserAdmin } from "../lib/firebase";
-import { getSafeImageUrl } from "../lib/sanitize";
+import { signInWithGoogle, isUserAdmin, isFirebaseConfigured } from "../lib/firebase";
+import { Avatar } from "./ui/Avatar";
 import { Modal } from "./ui/Modal";
 import { useLanguage } from "../lib/i18n";
 import { LATIN_AMERICAN_COUNTRIES } from "../data/countriesData";
@@ -76,6 +76,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onSignOut,
 }) => {
   const { t } = useLanguage();
+  /*
+    Read once per render rather than at module load, so a build that is
+    configured and one that is not both render honestly and the state is
+    reachable from a test.
+  */
+  const canSignIn = isFirebaseConfigured();
   const [selectedCountry, setSelectedCountry] = useState<string>("Colombia");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   /** Message shown, in the visitor's language, when sign-in did not complete. */
@@ -92,11 +98,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const admin = await isUserAdmin(fbUser.uid);
       const userToSignIn: GoogleUser = {
         id: fbUser.uid,
-        name: fbUser.displayName || "Usuario LatinoMigra",
-        email: fbUser.email || "usuario@latinomigra.com",
-        avatar:
-          fbUser.photoURL ||
-          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+        // Absent, not invented. `usuario@latinomigra.com` was an address at
+        // the project's own domain attributed to a real person, and the avatar
+        // was a stock photograph of a stranger shown as their face (#99).
+        name: fbUser.displayName || t("auth.unnamedAccount", "Cuenta sin nombre"),
+        email: fbUser.email || "",
+        avatar: fbUser.photoURL || "",
         countryOfOrigin: countryOfOrigin || selectedCountry,
         isAdmin: admin,
         signedInAt: new Date().toLocaleDateString("es-ES", {
@@ -150,11 +157,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       {currentUser ? (
         <div className="space-y-6">
           <div className="bg-surface-container/60 dark:bg-slate-800/80 p-4 rounded-2xl border border-outline-variant/40 dark:border-slate-700 flex items-center gap-4">
-            <img
-              src={getSafeImageUrl(currentUser.avatar)}
-              alt={currentUser.name}
-              referrerPolicy="no-referrer"
-              className="w-14 h-14 rounded-full object-cover border-2 border-primary/30"
+            <Avatar
+              id="auth-avatar"
+              src={currentUser.avatar}
+              name={currentUser.name}
+              className="w-14 h-14 rounded-full border-2 border-primary/30 text-xl"
             />
             <div className="flex-1 min-w-0">
               <h4 className="font-bold text-sm text-primary dark:text-sky-300 truncate">
@@ -238,9 +245,32 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         /* Sign In View */
         <div className="space-y-4">
           {/* Direct Official Google Button */}
+          {/*
+            The application cannot sign anyone in without its Firebase
+            configuration, and every value in `.env` ships empty, so a build
+            that missed its environment reported "inténtalo de nuevo" forever
+            while retrying could never work (#78). Say what is actually wrong
+            and stop offering a control that cannot succeed.
+          */}
+          {!canSignIn && (
+            <p
+              id="auth-unconfigured"
+              role="alert"
+              className="flex items-start gap-2 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs font-semibold text-amber-800 dark:text-amber-300"
+            >
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
+              <span>
+                {t(
+                  "auth.notConfigured",
+                  "El inicio de sesión no está disponible en esta versión de la aplicación. Puedes seguir usando las becas, las guías y el asistente sin cuenta."
+                )}
+              </span>
+            </p>
+          )}
+
           <button
             onClick={handleFirebaseGoogleSignIn}
-            disabled={isLoading}
+            disabled={isLoading || !canSignIn}
             id="google-signin-btn"
             aria-label={t("auth.continueWithGoogle", "Continuar con Google")}
             className="btn-tactile w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-800 font-bold text-sm py-3 px-4 rounded-xl border border-slate-300 shadow-sm transition-all hover:shadow-md disabled:opacity-50"
