@@ -11,6 +11,68 @@ interface TranslationDictionary {
 }
 
 export const TRANSLATIONS: TranslationDictionary = {
+  // Sign-in modal (#80)
+  "auth.titleSignIn": { es: "Inicia Sesión con Google", en: "Sign in with Google" },
+  "auth.titleAccount": { es: "Tu Cuenta LatinoMigra", en: "Your LatinoMigra Account" },
+  "auth.descSignIn": {
+    es: "Guarda tu progreso de postulación, recordatorios en Google Calendar e historial de IA.",
+    en: "Keep your application progress, Google Calendar reminders and assistant history.",
+  },
+  "auth.descAccount": {
+    es: "Tus becas guardadas, progreso de visas y recordatorios están sincronizados.",
+    en: "Your saved scholarships, visa progress and reminders are in sync.",
+  },
+  "auth.continueWithGoogle": { es: "Continuar con Google", en: "Continue with Google" },
+  "auth.signOut": { es: "Cerrar Sesión", en: "Sign out" },
+  "auth.verifiedAccount": { es: "Cuenta Google Verificada", en: "Verified Google account" },
+  "auth.roleLabel": { es: "Rol de Cuenta:", en: "Account role:" },
+  "auth.roleAdmin": { es: "🔑 Administrador", en: "🔑 Administrator" },
+  "auth.roleStandard": { es: "👤 Usuario Estándar", en: "👤 Standard user" },
+  "auth.roleAdminBody": {
+    es: "Como administrador puedes gestionar convocatorias, acceder al Panel Admin y sincronizar la base de datos.",
+    en: "As an administrator you can manage calls, reach the admin panel and sync the database.",
+  },
+  "auth.roleStandardBody": {
+    es: "Como usuario estándar ves la plataforma limpia sin herramientas técnicas ni botones de administración.",
+    en: "As a standard user you see the platform without the technical tools or admin controls.",
+  },
+  "auth.syncBookmarks": {
+    es: "Sincronización activa de Becas Guardadas",
+    en: "Saved scholarships kept in sync",
+  },
+  "auth.syncCalendar": {
+    es: "Conexión directa con Google Calendar",
+    en: "Direct connection to Google Calendar",
+  },
+  "auth.syncChat": {
+    es: "Historial del Asistente LatinoMigra IA",
+    en: "LatinoMigra assistant history",
+  },
+  "auth.originCountry": {
+    es: "País de origen (para personalización de visas):",
+    en: "Country of origin (to tailor visa guidance):",
+  },
+  "auth.privacyNotice": {
+    es: "Protegido por Google OAuth 2.0. No compartiremos tu información personal.",
+    en: "Secured by Google OAuth 2.0. We will not share your personal information.",
+  },
+  "auth.errorPopupBlocked": {
+    es: "Tu navegador bloqueó la ventana de Google. Permite las ventanas emergentes de este sitio e inténtalo de nuevo.",
+    en: "Your browser blocked the Google window. Allow pop-ups for this site and try again.",
+  },
+  "auth.errorPopupClosed": {
+    es: "Cerraste la ventana de Google antes de terminar. Inténtalo de nuevo cuando quieras.",
+    en: "You closed the Google window before it finished. Try again whenever you like.",
+  },
+  "auth.errorNetwork": {
+    es: "No pudimos conectar con Google. Revisa tu conexión e inténtalo de nuevo.",
+    en: "We could not reach Google. Check your connection and try again.",
+  },
+  "auth.errorGeneric": {
+    es: "No pudimos completar el inicio de sesión con Google. Inténtalo de nuevo.",
+    en: "We could not complete the Google sign-in. Please try again.",
+  },
+
   // Navigation
   "nav.planificador": { es: "Planificador 360°", en: "360° Planner" },
   "nav.calculadora": { es: "Calculadora Costo de Vida", en: "Cost of Living Calculator" },
@@ -136,6 +198,11 @@ export const TRANSLATIONS: TranslationDictionary = {
   },
 
   // Chat
+  "chat.newConversation": { es: "Nueva Consulta", en: "New Consultation" },
+  "chat.requestFailed": {
+    es: "No pudimos conectar con el asistente. Revisa tu conexión e inténtalo de nuevo.",
+    en: "We could not reach the assistant. Check your connection and try again.",
+  },
   "chat.evalProfile": { es: "🎯 Diagnosticar Mi Perfil", en: "🎯 Diagnose My Profile" },
   "chat.welcomeTitle": {
     es: "¡Hola! ¿Cómo puedo orientar tu plan migratorio?",
@@ -272,6 +339,22 @@ export const TRANSLATIONS: TranslationDictionary = {
     en: "Study routes that do not depend on funding: vocational training, language certifications and official courses. Each one links to the official source that publishes it.",
   },
   "estudios.kindLabel": { es: "Tipo de programa", en: "Programme type" },
+  "estudios.countryLabel": { es: "País", en: "Country" },
+  "estudios.modalityLabel": { es: "Modalidad", en: "Format" },
+  "estudios.routeLabel": { es: "¿Abre vía migratoria?", en: "Opens a migration route?" },
+  "estudios.routeHeading": { es: "Vía migratoria", en: "Migration route" },
+  "estudios.routeUnverified": { es: "Sin verificar", en: "Not checked" },
+  "estudios.filterAll": { es: "Todos", en: "All" },
+  "estudios.filterAllF": { es: "Todas", en: "All" },
+  "estudios.clearFilters": { es: "Limpiar", en: "Clear" },
+  "estudios.searchLabel": {
+    es: "Buscar programa o institución",
+    en: "Search programme or institution",
+  },
+  "estudios.searchPlaceholder": {
+    es: "Buscar por nombre o institución…",
+    en: "Search by name or institution…",
+  },
   "estudios.kindAll": { es: "Todos", en: "All" },
   "estudios.showing": { es: "Mostrando", en: "Showing" },
   "estudios.programmes": { es: "programas oficiales", en: "official programmes" },
@@ -290,12 +373,12 @@ export const TRANSLATIONS: TranslationDictionary = {
   "estudios.relatedScholarships": { es: "Becas para esta ruta", en: "Scholarships for this route" },
   "estudios.seeAll": { es: "Ver todos los programas", en: "See every programme" },
   "estudios.emptyFilterTitle": {
-    es: "Ningún programa de este tipo",
-    en: "No programme of this type",
+    es: "Ningún programa con estos filtros",
+    en: "No programme matches these filters",
   },
   "estudios.emptyFilterBody": {
-    es: "Cambia el tipo de programa para ver el resto del catálogo.",
-    en: "Change the programme type to see the rest of the catalogue.",
+    es: "Ningún programa cumple a la vez",
+    en: "No programme matches all of",
   },
   "estudios.emptyCatalogueTitle": {
     es: "No pudimos mostrar el catálogo de estudios",

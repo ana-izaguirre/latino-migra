@@ -119,6 +119,25 @@ export interface Scholarship {
 export type StudyProgrammeKind = "curso" | "certificado" | "fp";
 
 /**
+ * Whether the programme opens a way to migrate.
+ *
+ * The reason someone is on this platform rather than on a course aggregator,
+ * so it is recorded per entry rather than inferred from the kind — a course is
+ * not automatically useless for migrating and a vocational title is not
+ * automatically enough.
+ *
+ * - `directa`   — the programme itself is a basis for a study or residence permit
+ * - `requisito` — it grants no status, but a visa route requires it
+ * - `ninguna`   — it changes nothing about your status
+ *
+ * There is deliberately no fourth value for "we did not check": an entry whose
+ * route is unknown carries no value at all, so the filter can say "sin
+ * verificar" instead of guessing. A filter that guesses is how `daysLeft` and
+ * `isUrgent` came to match everything.
+ */
+export type MigrationRoute = "directa" | "requisito" | "ninguna";
+
+/**
  * A study route that is not a scholarship: a course, a certificate or a
  * vocational qualification.
  *
@@ -150,6 +169,10 @@ export interface StudyProgramme {
   requirements: string[];
   /** Ids in the scholarship catalogue that fund this route. */
   relatedScholarshipIds?: string[];
+  /** Omitted when nobody has checked. Never guessed. */
+  migrationRoute?: MigrationRoute;
+  /** Why, in one sentence. Required whenever `migrationRoute` is set. */
+  migrationRouteNote?: string;
 }
 
 export interface VisaType {

@@ -21,68 +21,41 @@ import { ChatMessage, ChatConversation, Scholarship } from "../types";
 import { useLanguage } from "../lib/i18n";
 import { useCurrency } from "../lib/CurrencyContext";
 import { formatCurrency } from "../lib/currency";
+import { chatErrorMessage, useMigrationChat } from "../lib/useMigrationChat";
 import { Modal } from "./ui/Modal";
 
 interface ChatIAProps {
   initialPrompt?: string;
+  /**
+   * The exchange carried over from the floating bubble.
+   *
+   * Maximising used to start a fresh conversation, so the reader lost what
+   * they had asked in order to see it in a bigger window (#4).
+   */
+  initialHistory?: ChatMessage[];
   scholarshipContext?: Scholarship | null;
 }
 
-export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt }) => {
+export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt, initialHistory }) => {
   const { language, t } = useLanguage();
+  const { ask } = useMigrationChat();
   const { currency } = useCurrency();
-  const [conversations, setConversations] = useState<ChatConversation[]>([
+  /**
+   * One empty conversation, seeded with whatever the floating bubble was
+   * carrying.
+   *
+   * The screen used to open on a fabricated exchange — a question the reader
+   * had never asked and a long assistant reply hardcoded in the client,
+   * addressed to "Ana" by name. It read as history and was not, which is the
+   * same defect as the invented vote counts and the invented sources: a value
+   * presented with confidence from no source at all.
+   */
+  const [conversations, setConversations] = useState<ChatConversation[]>(() => [
     {
       id: "conv-1",
-      title: "Requisitos visa estudiante España",
-      updatedAt: "Hoy, 10:15 AM",
-      messages: [
-        {
-          id: "m-1",
-          role: "user",
-          content:
-            "¿Cuáles son los requisitos clave para la visa de estudiante de España desde Colombia?",
-          timestamp: "10:15 AM",
-        },
-        {
-          id: "m-2",
-          role: "assistant",
-          content: `¡Hola, Ana! Para solicitar el **Visado de Estudiante para España** (estancias superiores a 90 días) desde Colombia o cualquier país latinoamericano, los requisitos consulares principales son:
-
-### 1. Documentación Personal y Académica
-* **Pasaporte Vigente**: Mínimo 1 año de validez restante.
-* **Carta de Aceptación Oficial**: Emitida por una universidad o centro registrado en España (RUCT).
-* **Certificado de Antecedentes Penales**: Apostillado por el Ministerio de Relaciones Exteriores en tu país de origen (emitido dentro de los últimos 3 meses).
-
-### 2. Acreditación Económica y Sanitaria
-* **Medios Económicos Demostrables**: Debes acreditar al menos el 100% del IPREM mensual (aprox. **600 €/mes** de estancia). Puedes certificarlo con extractos bancarios propios, carta de patrocinio familiar o concesión de Beca.
-* **Seguro Médico Privado**: Debe ser de una compañía autorizada en España (Adeslas, Sanitas, DKV), **sin copagos** y con cobertura completa de repatriación.
-
-### 3. Siguientes Pasos al Llegar a España
-1. **Empadronamiento**: En el Ayuntamiento de tu ciudad.
-2. **Solicitud de la TIE (Tarjeta de Identidad de Extranjero)**: Solicitar cita previa de extranjería dentro de los primeros 30 días.`,
-          timestamp: "10:16 AM",
-          sources: [
-            { title: "Consulado General de España", url: "https://www.exteriores.gob.es" },
-            {
-              title: "Ministerio de Inclusión, Seguridad Social y Migraciones",
-              url: "https://www.inclusion.gob.es",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: "conv-2",
-      title: "Becas CONACYT para maestría",
-      updatedAt: "Ayer",
-      messages: [],
-    },
-    {
-      id: "conv-3",
-      title: "Costo de vida en Buenos Aires vs Madrid",
-      updatedAt: "Hace 3 días",
-      messages: [],
+      title: t("chat.newConversation", "Nueva Consulta"),
+      updatedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      messages: initialHistory ?? [],
     },
   ]);
 
@@ -155,65 +128,27 @@ export const ChatIA: React.FC<ChatIAProps> = ({ initialPrompt }) => {
     setInputText("");
     setIsLoading(true);
 
-    try {
-      // Call server API route /api/chat
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: prompt,
-          language: language,
-          history: activeConv.messages.map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
-        }),
-      });
-
-      const data = await response.json();
-
-      const assistantMessage: ChatMessage = {
-        id: `msg-ai-${Date.now()}`,
-        role: "assistant",
-        content: data.reply || data.text || "No se pudo obtener la respuesta.",
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        sources: data.sources || [
-          { title: "Ministerio de Asuntos Exteriores", url: "https://www.exteriores.gob.es" },
-          { title: "Portal de Inmigración Oficial", url: "https://extranjeros.inclusion.gob.es" },
-        ],
-      };
-
+    const appendToActive = (message: ChatMessage) =>
       setConversations((prev) =>
-        prev.map((conv) => {
-          if (conv.id === activeConvId) {
-            return {
-              ...conv,
-              messages: [...conv.messages, assistantMessage],
-            };
-          }
-          return conv;
-        })
+        prev.map((conv) =>
+          conv.id === activeConvId ? { ...conv, messages: [...conv.messages, message] } : conv
+        )
       );
-    } catch (err) {
-      console.error("Error al enviar mensaje:", err);
-      const errorMessage: ChatMessage = {
-        id: `msg-err-${Date.now()}`,
-        role: "assistant",
-        content:
-          "Ocurrió un error al conectar con LatinoMigra IA. Por favor, verifica tu conexión o intenta nuevamente.",
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      };
 
-      setConversations((prev) =>
-        prev.map((conv) => {
-          if (conv.id === activeConvId) {
-            return {
-              ...conv,
-              messages: [...conv.messages, errorMessage],
-            };
-          }
-          return conv;
-        })
+    try {
+      appendToActive(await ask(prompt, { history: activeConv.messages, language }));
+    } catch (err) {
+      // The bubble and this screen fail the same way now: the conversation
+      // says the assistant did not answer, rather than showing a reply it
+      // never gave.
+      console.error("Error al enviar mensaje:", err);
+      appendToActive(
+        chatErrorMessage(
+          t(
+            "chat.requestFailed",
+            "No pudimos conectar con el asistente. Revisa tu conexión e inténtalo de nuevo."
+          )
+        )
       );
     } finally {
       setIsLoading(false);

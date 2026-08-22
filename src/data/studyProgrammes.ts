@@ -35,6 +35,9 @@ export const STUDY_PROGRAMMES_DATA: StudyProgramme[] = [
       "Homologación previa de los estudios cursados en el país de origen ante el Ministerio.",
       "Visado de estancia por estudios para estancias superiores a 90 días.",
     ],
+    migrationRoute: "directa",
+    migrationRouteNote:
+      "Cursar un ciclo formativo de más de 90 días requiere y da acceso al visado de estancia por estudios; el portal del Ministerio detalla el trámite.",
   },
   {
     id: "dele-instituto-cervantes",
@@ -55,6 +58,9 @@ export const STUDY_PROGRAMMES_DATA: StudyProgramme[] = [
       "Inscripción en un centro examinador dentro del plazo de la convocatoria.",
       "Documento de identidad o pasaporte en vigor el día del examen.",
     ],
+    migrationRoute: "requisito",
+    migrationRouteNote:
+      "El diploma no da estancia por sí mismo, pero acredita el nivel de español que piden universidades y el expediente de nacionalidad.",
   },
   {
     id: "santander-open-academy-cursos",
@@ -76,6 +82,9 @@ export const STUDY_PROGRAMMES_DATA: StudyProgramme[] = [
       "Cumplir los requisitos concretos de cada convocatoria, que varían por programa.",
     ],
     relatedScholarshipIds: ["santander-open-academy"],
+    migrationRoute: "ninguna",
+    migrationRouteNote:
+      "Se cursa en línea desde el país de origen: no genera estancia ni permiso de ningún tipo.",
   },
   {
     id: "uned-abierta-cursos",
@@ -93,6 +102,9 @@ export const STUDY_PROGRAMMES_DATA: StudyProgramme[] = [
       "Cursos abiertos de la mayor universidad pública a distancia de España, en español y sin requisito de admisión previa. Sirven para preparar una candidatura de máster o para acreditar formación específica.",
     outcome: "Certificado de superación expedido por la UNED cuando se abona la tasa",
     requirements: ["Registro gratuito en la plataforma.", "Conexión estable y dedicación semanal."],
+    migrationRoute: "ninguna",
+    migrationRouteNote:
+      "Formación a distancia sin matrícula presencial: no habilita ninguna estancia.",
   },
   {
     id: "ausbildung-alemania",
@@ -116,6 +128,9 @@ export const STUDY_PROGRAMMES_DATA: StudyProgramme[] = [
       "Reconocimiento del título de secundaria del país de origen.",
     ],
     relatedScholarshipIds: ["daad-masters-germany"],
+    migrationRoute: "directa",
+    migrationRouteNote:
+      "El contrato de formación con una empresa alemana es la base del visado de formación profesional que describe el portal del Gobierno Federal.",
   },
   {
     id: "goethe-zertifikat",
@@ -136,6 +151,9 @@ export const STUDY_PROGRAMMES_DATA: StudyProgramme[] = [
       "Inscripción en una sede del Goethe-Institut o centro examinador autorizado.",
       "Edad mínima según el examen.",
     ],
+    migrationRoute: "requisito",
+    migrationRouteNote:
+      "No da estancia, pero el nivel de alemán acreditado es requisito de varias vías de visado y de la Ausbildung.",
   },
   {
     id: "camoes-portugues-caple",
@@ -157,6 +175,9 @@ export const STUDY_PROGRAMMES_DATA: StudyProgramme[] = [
       "Documento de identidad en vigor.",
     ],
     relatedScholarshipIds: ["instituto-camoes-portugal"],
+    migrationRoute: "requisito",
+    migrationRouteNote:
+      "El diploma acredita el nivel de portugués que exigen universidades y trámites de nacionalidad; no otorga estancia.",
   },
   {
     id: "iefp-portugal-formacao",
@@ -178,6 +199,9 @@ export const STUDY_PROGRAMMES_DATA: StudyProgramme[] = [
       "Escolaridad mínima según el nivel del curso.",
       "Registro previo en el centro de empleo correspondiente.",
     ],
+    migrationRoute: "ninguna",
+    migrationRouteNote:
+      "La oferta pública exige residencia legal previa en Portugal, así que es formación para quien ya está, no una vía de entrada.",
   },
   {
     id: "solas-fet-irlanda",
@@ -199,6 +223,9 @@ export const STUDY_PROGRAMMES_DATA: StudyProgramme[] = [
       "Permiso de residencia o estudio válido para cursos de más de 90 días.",
       "Nivel de inglés acreditado en la mayoría de los programas.",
     ],
+    migrationRoute: "directa",
+    migrationRouteNote:
+      "Los cursos de más de 90 días se cursan con permiso de estudio; el portal indica cuáles están en la lista elegible.",
   },
   {
     id: "educationusa-cursos",
@@ -221,6 +248,9 @@ export const STUDY_PROGRAMMES_DATA: StudyProgramme[] = [
       "Acreditación de inglés y de fondos suficientes.",
     ],
     relatedScholarshipIds: ["fulbright-usa-2026"],
+    migrationRoute: "directa",
+    migrationRouteNote:
+      "La admisión en una institución acreditada emite el formulario I-20, que es la base de la visa F-1 o M-1.",
   },
   {
     id: "vet-australia",
@@ -243,6 +273,9 @@ export const STUDY_PROGRAMMES_DATA: StudyProgramme[] = [
       "Seguro médico OSHC durante toda la estancia.",
     ],
     relatedScholarshipIds: ["australia-rtp-scholarship", "destination-australia-regional"],
+    migrationRoute: "directa",
+    migrationRouteNote:
+      "Un curso con proveedor registrado (RTO) es la base del visado de estudiante subclase 500.",
   },
   {
     id: "canada-college-dli",
@@ -265,6 +298,9 @@ export const STUDY_PROGRAMMES_DATA: StudyProgramme[] = [
       "Inglés o francés acreditado según la institución.",
     ],
     relatedScholarshipIds: ["uoft-pearson-scholarship"],
+    migrationRoute: "directa",
+    migrationRouteNote:
+      "Solo una institución designada (DLI) permite obtener el permiso de estudios, y algunos programas dan acceso al permiso de trabajo posgraduación.",
   },
   {
     id: "erasmus-plus-movilidad",
@@ -286,5 +322,8 @@ export const STUDY_PROGRAMMES_DATA: StudyProgramme[] = [
       "Requisitos de idioma y académicos definidos por la institución de acogida.",
     ],
     relatedScholarshipIds: ["erasmus-mundus-emjmd"],
+    migrationRoute: "directa",
+    migrationRouteNote:
+      "La movilidad se cursa en una institución de acogida, y es esa institución la que da acceso al permiso de estudios de su país.",
   },
 ];
