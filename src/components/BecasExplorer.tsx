@@ -323,6 +323,17 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
       };
 
   /**
+   * Which half of the favourites tab is open (#106).
+   *
+   * A saved scholarship and a saved programme describe themselves in different
+   * words — one has an education level and a closing date, the other a format
+   * and a migration route — so one filter panel above both lists could only
+   * ever narrow one of them while appearing to narrow both. It did: the panel
+   * filtered the scholarships and the programmes ignored it.
+   */
+  const [savedKind, setSavedKind] = useState<"scholarships" | "programmes">("scholarships");
+
+  /**
    * What the Estudios tab will actually show — not `STUDY_PROGRAMMES_DATA.length`.
    * An entry without an official source does not render, and a badge counting
    * the entries rather than the results is the "counted the whole catalogue
@@ -444,6 +455,19 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
     () => favouritesOfKind(favorites, "scholarship"),
     [favorites]
   );
+
+  /**
+   * The saved programmes get their own filter state rather than sharing the
+   * Estudios tab's. The counts on a chip have to be measured against the list
+   * the chip sits beside — counting the whole catalogue while the list beside
+   * it is filtered is the defect this screen already shipped once.
+   */
+  const savedProgrammeFilters = useStudyFilters(savedProgrammes);
+
+  /** Whether the list and the filter panel on screen are study programmes. */
+  const showingProgrammes =
+    showingStudies || (viewModeTab === "favorites" && savedKind === "programmes");
+  const programmeFilters = showingStudies ? studyFilters : savedProgrammeFilters;
 
   const clearFilters = () => {
     setSelectedCountry("Todos");
@@ -652,9 +676,13 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
     while the studies list is showing is exactly the "value from the wrong
     source" the option counts already got wrong once.
   */
-  const clearActiveFilters = showingStudies ? studyFilters.clearFilters : clearFilters;
-  const activeFilterTotal = showingStudies ? studyFilters.activeFilterCount : activeFilterCount;
-  const sheetFilterCount = showingStudies ? studyFilters.activeFilterCount : advancedFilterCount;
+  const clearActiveFilters = showingProgrammes ? programmeFilters.clearFilters : clearFilters;
+  const activeFilterTotal = showingProgrammes
+    ? programmeFilters.activeFilterCount
+    : activeFilterCount;
+  const sheetFilterCount = showingProgrammes
+    ? programmeFilters.activeFilterCount
+    : advancedFilterCount;
 
   /**
    * The whole filter set, rendered identically in the desktop sidebar and the
@@ -870,20 +898,20 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
           <div className="relative flex-1 min-w-[200px] md:w-64">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400" />
             <Input
-              value={showingStudies ? studyFilters.filters.search : searchQuery}
+              value={showingProgrammes ? programmeFilters.filters.search : searchQuery}
               onChange={(e) =>
-                showingStudies
-                  ? studyFilters.setFilter("search", e.target.value)
+                showingProgrammes
+                  ? programmeFilters.setFilter("search", e.target.value)
                   : setSearchQuery(e.target.value)
               }
               placeholder={
-                showingStudies
+                showingProgrammes
                   ? t("estudios.searchPlaceholder", "Buscar por nombre o institución…")
                   : t("becas.searchPlaceholder", "Buscar por nombre, país, área o universidad...")
               }
               id="becas-search-input"
               aria-label={
-                showingStudies
+                showingProgrammes
                   ? t("estudios.searchLabel", "Buscar programa o institución")
                   : t("becas.searchLabel", "Buscar convocatorias")
               }
@@ -896,14 +924,14 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
             do — a programme has no closing date, so offering "cierre más
             próximo" here would sort by a field it does not carry.
           */}
-          {showingStudies ? (
+          {showingProgrammes ? (
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-on-surface-variant dark:text-slate-400 whitespace-nowrap">
                 {t("estudios.sortLabel", "Ordenar por:")}
               </span>
               <Select
-                value={studyFilters.sortBy}
-                onValueChange={(value) => studyFilters.setSortBy(value as StudySortOption)}
+                value={programmeFilters.sortBy}
+                onValueChange={(value) => programmeFilters.setSortBy(value as StudySortOption)}
               >
                 <SelectTrigger
                   id="estudios-sort-select"
@@ -1151,7 +1179,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
             </div>
           </div>
 
-          {!showingStudies && (
+          {!showingProgrammes && (
             <>
               <FilterChipGroup
                 label={t("becas.countryLabel", "País Destino")}
@@ -1233,7 +1261,9 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                 </button>
               </div>
 
-              {showingStudies ? studyFilters.renderGroups("sheet") : renderFilterGroups("sheet")}
+              {showingProgrammes
+                ? programmeFilters.renderGroups("sheet")
+                : renderFilterGroups("sheet")}
             </div>
 
             {/* Bottom Apply Action */}
@@ -1251,8 +1281,10 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                 <CheckCircle2 className="w-4 h-4" />
                 <span>
                   {t("becas.applyFilters", "Ver")}{" "}
-                  {showingStudies ? studyFilters.matching.length : filteredScholarships.length}{" "}
-                  {showingStudies
+                  {showingProgrammes
+                    ? programmeFilters.matching.length
+                    : filteredScholarships.length}{" "}
+                  {showingProgrammes
                     ? t("becas.programmesNoun", "programas")
                     : t("becas.scholarshipsNoun", "convocatorias")}
                 </span>
@@ -1307,8 +1339,8 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                 </button>
               </div>
 
-              {showingStudies
-                ? studyFilters.renderGroups("sidebar")
+              {showingProgrammes
+                ? programmeFilters.renderGroups("sidebar")
                 : renderFilterGroups("sidebar")}
             </aside>
           }
@@ -1321,42 +1353,89 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
             ref={mainListRef}
             id="scholarships-main-section"
             className="lg:col-span-9"
-            aria-busy={!showingStudies && catalogueStatus === "loading"}
+            aria-busy={!showingProgrammes && catalogueStatus === "loading"}
           >
             <TabsContent value={viewModeTab} className="space-y-6">
               {/*
-                Saved study programmes, above the saved scholarships. The tab
-                holds both catalogues since #82, so a reader who saved a
-                language certification finds it where they saved it.
+                Two sub-tabs rather than two stacked lists under one filter
+                panel (#106). The panel above narrows whichever is open, and
+                its counts are measured against that list.
               */}
-              {viewModeTab === "favorites" && savedProgrammes.length > 0 && (
-                <div className="space-y-3" id="saved-programmes">
-                  <h3 className="font-headline-sm text-lg font-bold text-primary dark:text-sky-300">
-                    {t("becas.savedProgrammes", "Programas de estudio guardados")} (
-                    {savedProgrammes.length})
-                  </h3>
-                  <EstudiosSection
-                    scholarships={scholarshipsList}
-                    onOpenScholarship={(scholarship) => setSelectedScholarship(scholarship)}
-                    programmes={savedProgrammes}
-                    favourites={favorites}
-                    onToggleFavourite={(id) => toggleFavorite("programme", id)}
-                    hideHeading
-                  />
-                  <h3 className="font-headline-sm text-lg font-bold text-primary dark:text-sky-300 pt-2">
-                    {t("becas.savedScholarships", "Becas guardadas")} (
-                    {favoriteScholarshipIds.length})
-                  </h3>
+              {viewModeTab === "favorites" && (
+                <div
+                  className="flex items-center gap-2 p-1 bg-surface-container dark:bg-slate-800 rounded-xl"
+                  role="tablist"
+                  aria-label={t("becas.savedKindLabel", "Tipo de guardado")}
+                  id="saved-kind-tabs"
+                >
+                  {(
+                    [
+                      [
+                        "scholarships",
+                        t("becas.savedScholarships", "Becas guardadas"),
+                        favoriteScholarshipIds.length,
+                      ],
+                      [
+                        "programmes",
+                        t("becas.savedProgrammes", "Programas guardados"),
+                        savedProgrammes.length,
+                      ],
+                    ] as const
+                  ).map(([kind, copy, count]) => (
+                    <button
+                      key={kind}
+                      type="button"
+                      role="tab"
+                      aria-selected={savedKind === kind}
+                      id={`saved-kind-${kind}`}
+                      onClick={() => setSavedKind(kind)}
+                      className={`flex-1 min-h-[44px] px-3 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer active:scale-95 ${
+                        savedKind === kind
+                          ? "bg-surface-container-lowest dark:bg-slate-900 text-primary dark:text-sky-300 shadow-xs"
+                          : "text-on-surface-variant dark:text-slate-400"
+                      }`}
+                    >
+                      {copy} ({count})
+                    </button>
+                  ))}
                 </div>
               )}
 
-              {showingStudies ? (
+              {showingProgrammes && savedProgrammes.length === 0 && !showingStudies ? (
+                /* Saved-but-empty is not the same as "the catalogue failed". */
+                <div
+                  id="empty-saved-programmes"
+                  className="bg-surface-container-lowest dark:bg-slate-800 rounded-2xl p-12 text-center space-y-4 border border-outline-variant/40 dark:border-slate-700"
+                >
+                  <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-950/60 flex items-center justify-center mx-auto text-red-500">
+                    <Heart className="w-8 h-8" aria-hidden="true" />
+                  </div>
+                  <h3 className="font-headline-sm text-lg font-bold text-primary dark:text-sky-300">
+                    {t("becas.emptySavedProgrammesTitle", "Aún no tienes programas guardados")}
+                  </h3>
+                  <p className="text-sm text-on-surface-variant dark:text-slate-400 max-w-md mx-auto">
+                    {t(
+                      "becas.emptySavedProgrammesBody",
+                      "Pulsa el corazón (♥) en cualquier curso, certificado o FP para guardarlo y encontrarlo aquí."
+                    )}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setViewModeTab("estudios")}
+                    id="empty-saved-programmes-explore-btn"
+                    className="bg-primary dark:bg-sky-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-container"
+                  >
+                    {t("becas.seeAllProgrammes", "Ver Todos los Programas")}
+                  </button>
+                </div>
+              ) : showingProgrammes ? (
                 <EstudiosSection
                   scholarships={scholarshipsList}
                   onOpenScholarship={(scholarship) => setSelectedScholarship(scholarship)}
+                  programmes={showingStudies ? STUDY_PROGRAMMES_DATA : savedProgrammes}
                   favourites={favorites}
                   onToggleFavourite={(id) => toggleFavorite("programme", id)}
-                  filterState={studyFilters}
+                  filterState={programmeFilters}
                   hideHeading
                 />
               ) : (

@@ -231,8 +231,18 @@ Recently addressed and verified by tests:
 - The tab is "Mis Guardados" and holds both catalogues: a language
   certification or a vocational programme can be saved beside a scholarship
   (#82). The badge counts both.
-- Saved programmes render above the saved scholarships, each under its own
-  heading with its own count.
+- Two sub-tabs inside it — "Becas guardadas (N)" and "Programas guardados (N)"
+  — and the filter panel narrows whichever is open (#106). They rendered as two
+  stacked lists under a single panel, which narrowed the scholarships while the
+  programmes ignored it, and counted its chips against the whole catalogue
+  rather than against what was saved. A scholarship has an education level and
+  a closing date; a programme has a format and a migration route, so one panel
+  above both could only ever narrow one of them.
+- The saved programmes carry their own `useStudyFilters` instance, separate
+  from the Estudios tab's, so each chip's count is measured against the list it
+  sits beside.
+- An empty saved list says nothing was saved. It previously fell through to the
+  catalogue's own empty state, which blames the official-source check instead.
 - A favourite is stored as `"{kind}:{id}"`. A bare id stopped identifying
   anything once two catalogues shared a screen.
 

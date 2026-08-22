@@ -159,8 +159,87 @@ describe("BecasExplorer Component", () => {
 
       await user.click(screen.getByRole("tab", { name: /Mis Guardados/i }));
 
-      expect(document.getElementById("saved-programmes")).toBeInTheDocument();
+      // Saved programmes live behind their own sub-tab since #106: one filter
+      // panel above two kinds of item could only ever narrow one of them.
+      const programmesTab = document.getElementById("saved-kind-programmes")!;
+      expect(programmesTab).toHaveTextContent("(1)");
+      expect(document.getElementById(`estudio-card-${programmeId}`)).not.toBeInTheDocument();
+
+      fireEvent.click(programmesTab);
       expect(document.getElementById(`estudio-card-${programmeId}`)).toBeInTheDocument();
+    });
+
+    /*
+      One filter panel above two kinds of item narrowed the scholarships while
+      the programmes ignored it, and counted its chips against the whole
+      catalogue rather than against what was saved (#106).
+    */
+    describe("filters per kind", () => {
+      /** Saves one programme and one scholarship, then opens favourites. */
+      const saveOneOfEach = async () => {
+        const result = await openStudies();
+        fireEvent.click(document.querySelector('[id^="estudio-fav-"]') as HTMLElement);
+        await result.user.click(screen.getByRole("tab", { name: /Todas las Convocatorias/i }));
+        fireEvent.click(
+          document.querySelector('button[title*="favoritos"], button[title*="beca"]') as HTMLElement
+        );
+        await result.user.click(screen.getByRole("tab", { name: /Mis Guardados/i }));
+        return result;
+      };
+
+      it("shows one kind at a time, each with its own count", async () => {
+        await saveOneOfEach();
+
+        expect(document.getElementById("saved-kind-scholarships")).toHaveTextContent("(1)");
+        expect(document.getElementById("saved-kind-programmes")).toHaveTextContent("(1)");
+
+        // The scholarship half is open first, so no programme card is rendered
+        // beneath the scholarship filters.
+        expect(document.querySelector('[id^="estudio-card-"]')).toBeNull();
+      });
+
+      it("gives each kind the filters that describe it", async () => {
+        const { container } = await saveOneOfEach();
+
+        const sidebar = container.querySelector("aside")!;
+        expect(sidebar.querySelector("#sidebar-country-Todos")).toBeInTheDocument();
+        expect(sidebar.querySelector("#sidebar-estudios-route-chip-directa")).toBeNull();
+
+        fireEvent.click(document.getElementById("saved-kind-programmes")!);
+
+        // A saved scholarship has no migration route and a saved programme has
+        // no education level, so the panel swaps rather than spanning both.
+        expect(sidebar.querySelector("#sidebar-estudios-route-chip-directa")).toBeInTheDocument();
+        expect(sidebar.querySelector("#sidebar-country-Todos")).toBeNull();
+      });
+
+      it("counts the chips against what is saved, not the whole catalogue", async () => {
+        const { container } = await saveOneOfEach();
+        fireEvent.click(document.getElementById("saved-kind-programmes")!);
+
+        const sidebar = container.querySelector("aside")!;
+        const total = Number(
+          sidebar
+            .querySelector("#sidebar-estudios-country-chip-Todos")!
+            .textContent?.match(/(\d+)\s*$/)?.[1]
+        );
+
+        // One programme is saved. Counting the catalogue would give thirteen.
+        expect(total).toBe(1);
+      });
+
+      it("says nothing is saved rather than blaming the catalogue", async () => {
+        const result = await openStudies();
+        await result.user.click(screen.getByRole("tab", { name: /Mis Guardados/i }));
+        fireEvent.click(document.getElementById("saved-kind-programmes")!);
+
+        // With no saved programmes the list is empty because nothing was saved,
+        // not because every entry failed its official-source check.
+        expect(document.getElementById("empty-saved-programmes")).toBeInTheDocument();
+        expect(
+          screen.queryByText(/No pudimos mostrar el catálogo de estudios/i)
+        ).not.toBeInTheDocument();
+      });
     });
 
     it("counts saved scholarships and programmes together", async () => {
