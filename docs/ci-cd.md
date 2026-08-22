@@ -88,6 +88,21 @@ enabled under **Settings → Branches → Add branch ruleset** on `main`:
 enabling it would lock the maintainer out of their own repository. The
 protection that matters here is that the checks pass, not that someone approves.
 
+### Code owners
+
+`.github/CODEOWNERS` lists the paths where a passing build proves nothing —
+Firestore rules and write paths, the shared types, the deployment files, the
+workflows, and the dependency manifest. GitHub **requests** a review from the
+owner on any pull request touching them, and that request is the gate:
+everything not listed merges on green CI alone. The reasoning per path is in
+[CONTRIBUTING.md](../CONTRIBUTING.md), "Which pull requests need a review".
+
+Requesting is not blocking. To make it block, enable *Require review from Code
+Owners* in the ruleset — but only together with a bypass entry for the
+maintainer, for the same reason "Require approvals" is off: nobody can approve
+their own pull request, and every pull request here currently has the same
+author. Enabling it without the bypass stops all merges.
+
 ## Deployment
 
 Not in the repository. Vercel deploys from its git integration:

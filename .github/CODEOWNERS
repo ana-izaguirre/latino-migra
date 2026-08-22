@@ -1,0 +1,37 @@
+# Paths whose review is never automatic.
+#
+# GitHub requests a review from the owner on any pull request that touches
+# these files. That request is the gate: everything NOT listed here can merge
+# on green CI alone.
+#
+# The list is deliberately short. It is not "important files" — it is the set
+# where CI cannot tell right from wrong, because the failure lands somewhere
+# the test suite does not reach: real data, a real session, a real deployment.
+#
+# Rationale per entry is in CONTRIBUTING.md, "Which pull requests need a
+# review".
+
+# Data. `firestore.rules` is the only enforced access control in the product —
+# the browser talks to Firestore directly, so a wrong rule is a live data leak
+# that no unit test observes. There is also no backup or restore capability
+# (#18), which makes every write-path change irreversible.
+/firestore.rules            @ana-izaguirre
+/src/lib/firebase.ts        @ana-izaguirre
+
+# Shared contract. A change here reshapes records other screens already store.
+/src/types.ts               @ana-izaguirre
+
+# Deployment and the API key holder.
+/server.ts                  @ana-izaguirre
+/vercel.json                @ana-izaguirre
+
+# Environment and CI. A workflow edit can disable the checks that guard
+# everything else, so it cannot be guarded by those same checks.
+/.github/                   @ana-izaguirre
+/.env                       @ana-izaguirre
+/.env.example               @ana-izaguirre
+
+# Dependencies. A new package is new code from someone else, shipped to the
+# browser, and no test in this repository reviews it.
+/package.json               @ana-izaguirre
+/package-lock.json          @ana-izaguirre
