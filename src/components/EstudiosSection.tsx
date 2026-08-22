@@ -4,23 +4,35 @@ import {
   ArrowDownCircle,
   CheckCircle2,
   ExternalLink,
+  Globe2,
   GraduationCap,
   Landmark,
   Link2,
+  Plane,
+  RotateCcw,
+  Search,
+  Wifi,
 } from "lucide-react";
 
 import { STUDY_PROGRAMMES_DATA } from "../data/studyProgrammes";
 import { useLanguage } from "../lib/i18n";
 import {
+  EMPTY_STUDY_FILTERS,
+  MIGRATION_ROUTE_BADGE_LABELS,
+  MIGRATION_ROUTE_LABELS,
   REJECTION_REASONS,
   STUDY_KIND_BADGE_LABELS,
   STUDY_KIND_LABELS,
+  StudyFilters,
+  countByOption,
+  matchesStudyFilters,
   validateStudyProgrammes,
 } from "../lib/studyProgrammes";
-import { Scholarship, StudyProgramme, StudyProgrammeKind } from "../types";
+import { MigrationRoute, Scholarship, StudyProgramme, StudyProgrammeKind } from "../types";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardFooter } from "./ui/card";
+import { Input } from "./ui/input";
 import { Disclosure } from "./ui/Disclosure";
 import { FilterChipGroup } from "./ui/FilterChipGroup";
 
@@ -38,9 +50,9 @@ interface EstudiosSectionProps {
   programmes?: StudyProgramme[];
 }
 
-type KindFilter = "todos" | StudyProgrammeKind;
-
 const KIND_ORDER: StudyProgrammeKind[] = ["curso", "certificado", "fp"];
+
+const ROUTE_ORDER: MigrationRoute[] = ["directa", "requisito", "ninguna"];
 
 /**
  * How many programmes each "Ver más" adds.
@@ -51,6 +63,24 @@ const KIND_ORDER: StudyProgrammeKind[] = ["curso", "certificado", "fp"];
  * than either behaviour.
  */
 const STUDY_BATCH_SIZE = 6;
+
+/**
+ * Filter options with the count each one would give.
+ *
+ * Hoisted out of the component so the count and the list are one call to one
+ * predicate, and so the memos that build the options declare a complete
+ * dependency list rather than closing over a helper redefined on every render.
+ */
+const optionsFor = <T extends string>(
+  programmes: StudyProgramme[],
+  filters: StudyFilters,
+  axis: keyof StudyFilters,
+  entries: { id: T; label: string }[]
+) =>
+  entries.map((entry) => ({
+    ...entry,
+    count: countByOption(programmes, filters, axis, entry.id),
+  }));
 
 /**
  * Courses, certificates and vocational training — the half of "Becas &
@@ -66,39 +96,99 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
   programmes = STUDY_PROGRAMMES_DATA,
 }) => {
   const { t } = useLanguage();
-  const [kindFilter, setKindFilter] = useState<KindFilter>("todos");
+  const [filters, setFilters] = useState<StudyFilters>(EMPTY_STUDY_FILTERS);
   const [visibleCount, setVisibleCount] = useState(STUDY_BATCH_SIZE);
 
   /** Narrowing the list starts it again from the top of the new list. */
-  const changeKind = (kind: KindFilter) => {
-    setKindFilter(kind);
+  const setFilter = <K extends keyof StudyFilters>(axis: K, value: StudyFilters[K]) => {
+    setFilters((prev) => ({ ...prev, [axis]: value }));
     setVisibleCount(STUDY_BATCH_SIZE);
   };
+
+  const clearFilters = () => {
+    setFilters(EMPTY_STUDY_FILTERS);
+    setVisibleCount(STUDY_BATCH_SIZE);
+  };
+
+  const activeFilterCount = (Object.keys(EMPTY_STUDY_FILTERS) as (keyof StudyFilters)[]).filter(
+    (axis) => filters[axis] !== EMPTY_STUDY_FILTERS[axis]
+  ).length;
 
   const { valid, rejected } = useMemo(() => validateStudyProgrammes(programmes), [programmes]);
 
   const matching = useMemo(
-    () => (kindFilter === "todos" ? valid : valid.filter((p) => p.kind === kindFilter)),
-    [valid, kindFilter]
+    () => valid.filter((programme) => matchesStudyFilters(programme, filters)),
+    [valid, filters]
   );
 
   const visible = matching.slice(0, visibleCount);
 
   /**
-   * The counts come from the same list the chips filter, so a chip cannot
-   * promise results the list does not have.
+   * Every count is this same predicate with one axis relaxed, so the number on
+   * a chip is exactly what selecting it renders. Two definitions of one rule
+   * drift, and the interface starts lying about its own behaviour.
    */
   const kindOptions = useMemo(
-    () => [
-      { id: "todos", label: t("estudios.kindAll", "Todos"), count: valid.length },
-      ...KIND_ORDER.map((kind) => ({
-        id: kind,
-        label: STUDY_KIND_LABELS[kind],
-        count: valid.filter((p) => p.kind === kind).length,
-      })),
-    ],
-    [valid, t]
+    () =>
+      optionsFor(valid, filters, "kind", [
+        { id: "todos", label: t("estudios.filterAll", "Todos") },
+        ...KIND_ORDER.map((kind) => ({ id: kind, label: STUDY_KIND_LABELS[kind] })),
+      ]),
+    [valid, filters, t]
   );
+
+  const countryOptions = useMemo(
+    () =>
+      optionsFor(valid, filters, "country", [
+        { id: "Todos", label: t("estudios.filterAll", "Todos") },
+        ...Array.from(new Set(valid.map((p) => p.country)))
+          .sort((a, b) => a.localeCompare(b, "es"))
+          .map((country) => ({ id: country, label: country })),
+      ]),
+    [valid, filters, t]
+  );
+
+  const modalityOptions = useMemo(
+    () =>
+      optionsFor(valid, filters, "modality", [
+        { id: "Todas", label: t("estudios.filterAllF", "Todas") },
+        ...Array.from(new Set(valid.map((p) => p.modality)))
+          .sort((a, b) => a.localeCompare(b, "es"))
+          .map((modality) => ({ id: modality, label: modality })),
+      ]),
+    [valid, filters, t]
+  );
+
+  /**
+   * "Sin verificar" is an option rather than a silent omission: an entry whose
+   * route nobody checked carries no value, and hiding those would let the
+   * filter imply the catalogue knows more than it does.
+   */
+  const routeOptions = useMemo(
+    () =>
+      optionsFor(valid, filters, "migrationRoute", [
+        { id: "todas", label: t("estudios.filterAllF", "Todas") },
+        ...ROUTE_ORDER.map((route) => ({ id: route, label: MIGRATION_ROUTE_LABELS[route] })),
+        { id: "sin-verificar", label: t("estudios.routeUnverified", "Sin verificar") },
+      ]),
+    [valid, filters, t]
+  );
+
+  /**
+   * Which filters are narrowing the list, in words.
+   *
+   * An empty state that says "no results" without saying which of four filters
+   * caused it leaves the reader guessing at the one to relax.
+   */
+  const activeFilterSummary = [
+    filters.search.trim() && `"${filters.search.trim()}"`,
+    filters.country !== "Todos" && filters.country,
+    filters.kind !== "todos" && STUDY_KIND_LABELS[filters.kind],
+    filters.modality !== "Todas" && filters.modality,
+    filters.migrationRoute === "sin-verificar"
+      ? t("estudios.routeUnverified", "Sin verificar")
+      : filters.migrationRoute !== "todas" && MIGRATION_ROUTE_LABELS[filters.migrationRoute],
+  ].filter((entry): entry is string => Boolean(entry));
 
   /** Scholarships an entry names, keeping only the ones actually loaded. */
   const relatedScholarships = (programme: StudyProgramme): Scholarship[] =>
@@ -145,22 +235,91 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
         </div>
       )}
 
-      <FilterChipGroup
-        label={t("estudios.kindLabel", "Tipo de programa")}
-        icon={<GraduationCap className="w-4 h-4 text-secondary dark:text-teal-400" />}
-        options={kindOptions}
-        value={kindFilter}
-        onChange={(id) => changeKind(id as KindFilter)}
-        idPrefix="estudios-kind-chip"
-        onClear={kindFilter !== "todos" ? () => setKindFilter("todos") : undefined}
-      />
+      <div className="space-y-3.5 bg-surface-container-lowest dark:bg-slate-800 p-3.5 rounded-2xl border border-outline-variant/40 dark:border-slate-700">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search
+              className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400"
+              aria-hidden="true"
+            />
+            <Input
+              value={filters.search}
+              onChange={(e) => setFilter("search", e.target.value)}
+              id="estudios-search-input"
+              aria-label={t("estudios.searchLabel", "Buscar programa o institución")}
+              placeholder={t("estudios.searchPlaceholder", "Buscar por nombre o institución…")}
+              className="pl-9"
+            />
+          </div>
+          {activeFilterCount > 0 && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              id="estudios-clear-filters"
+              className="inline-flex items-center gap-1.5 min-h-[44px] px-3 text-xs font-semibold text-secondary dark:text-teal-400 hover:underline cursor-pointer active:scale-95"
+            >
+              <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>{t("estudios.clearFilters", "Limpiar")}</span>
+            </button>
+          )}
+        </div>
+
+        {/*
+          Migration first. It is the reason somebody is here rather than on a
+          course aggregator, and putting it under three other filters would bury
+          the one question this platform exists to answer.
+        */}
+        <FilterChipGroup
+          label={t("estudios.routeLabel", "¿Abre vía migratoria?")}
+          icon={<Plane className="w-4 h-4 text-secondary dark:text-teal-400" />}
+          options={routeOptions}
+          value={filters.migrationRoute}
+          onChange={(id) => setFilter("migrationRoute", id as StudyFilters["migrationRoute"])}
+          idPrefix="estudios-route-chip"
+          onClear={
+            filters.migrationRoute !== "todas"
+              ? () => setFilter("migrationRoute", "todas")
+              : undefined
+          }
+        />
+
+        <FilterChipGroup
+          label={t("estudios.countryLabel", "País")}
+          icon={<Globe2 className="w-4 h-4 text-secondary dark:text-teal-400" />}
+          options={countryOptions}
+          value={filters.country}
+          onChange={(id) => setFilter("country", id)}
+          idPrefix="estudios-country-chip"
+          onClear={filters.country !== "Todos" ? () => setFilter("country", "Todos") : undefined}
+        />
+
+        <FilterChipGroup
+          label={t("estudios.kindLabel", "Tipo de programa")}
+          icon={<GraduationCap className="w-4 h-4 text-secondary dark:text-teal-400" />}
+          options={kindOptions}
+          value={filters.kind}
+          onChange={(id) => setFilter("kind", id as StudyFilters["kind"])}
+          idPrefix="estudios-kind-chip"
+          onClear={filters.kind !== "todos" ? () => setFilter("kind", "todos") : undefined}
+        />
+
+        <FilterChipGroup
+          label={t("estudios.modalityLabel", "Modalidad")}
+          icon={<Wifi className="w-4 h-4 text-secondary dark:text-teal-400" />}
+          options={modalityOptions}
+          value={filters.modality}
+          onChange={(id) => setFilter("modality", id)}
+          idPrefix="estudios-modality-chip"
+          onClear={filters.modality !== "Todas" ? () => setFilter("modality", "Todas") : undefined}
+        />
+      </div>
 
       {visible.length === 0 ? (
         <div className="bg-surface-container-lowest dark:bg-slate-800 rounded-2xl p-10 text-center space-y-4 border border-outline-variant/40 dark:border-slate-700">
           <h3 className="font-headline-sm text-lg font-bold text-primary dark:text-sky-300">
             {valid.length === 0
               ? t("estudios.emptyCatalogueTitle", "No pudimos mostrar el catálogo de estudios")
-              : t("estudios.emptyFilterTitle", "Ningún programa de este tipo")}
+              : t("estudios.emptyFilterTitle", "Ningún programa con estos filtros")}
           </h3>
           <p className="text-sm text-on-surface-variant dark:text-slate-400 max-w-md mx-auto">
             {valid.length === 0
@@ -168,13 +327,10 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
                   "estudios.emptyCatalogueBody",
                   "Ninguna de las entradas cumple la regla de fuente oficial, así que no hay nada verificado que enseñarte."
                 )
-              : t(
-                  "estudios.emptyFilterBody",
-                  "Cambia el tipo de programa para ver el resto del catálogo."
-                )}
+              : `${t("estudios.emptyFilterBody", "Ningún programa cumple a la vez")}: ${activeFilterSummary.join(", ")}.`}
           </p>
           {valid.length > 0 && (
-            <Button variant="soft" size="sm" onClick={() => changeKind("todos")}>
+            <Button variant="soft" size="sm" onClick={clearFilters}>
               {t("estudios.seeAll", "Ver todos los programas")}
             </Button>
           )}
@@ -198,6 +354,17 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
                       <Badge variant="level">{STUDY_KIND_BADGE_LABELS[programme.kind]}</Badge>
                       <Badge variant="institution">{programme.country}</Badge>
                       <Badge variant="support">{programme.modality}</Badge>
+                      {/*
+                        Absent, not guessed. An entry nobody has checked says so
+                        rather than borrowing the answer from a similar one.
+                      */}
+                      <Badge
+                        variant={programme.migrationRoute === "directa" ? "official" : "neutral"}
+                      >
+                        {programme.migrationRoute
+                          ? MIGRATION_ROUTE_BADGE_LABELS[programme.migrationRoute]
+                          : t("estudios.routeUnverified", "Sin verificar")}
+                      </Badge>
                     </div>
 
                     <h3 className="text-lg font-bold text-primary dark:text-sky-300 text-pretty">
@@ -243,6 +410,18 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
                       label={t("estudios.showDetails", "Ver requisitos y titulación")}
                       labelWhenOpen={t("estudios.hideDetails", "Ocultar requisitos")}
                     >
+                      {programme.migrationRouteNote && (
+                        <div className="space-y-1">
+                          <p className="flex items-center gap-1.5 text-xs font-bold text-on-surface dark:text-slate-200">
+                            <Plane className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                            {t("estudios.routeHeading", "Vía migratoria")}
+                          </p>
+                          <p className="text-xs text-on-surface-variant dark:text-slate-400">
+                            {programme.migrationRouteNote}
+                          </p>
+                        </div>
+                      )}
+
                       <div className="space-y-1">
                         <p className="text-xs font-bold text-on-surface dark:text-slate-200">
                           {t("estudios.outcome", "Qué obtienes")}

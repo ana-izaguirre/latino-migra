@@ -1,14 +1,24 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Bot, X, Send, Maximize2 } from "lucide-react";
 import { ChatMessage, GoogleUser } from "../types";
+import { useLanguage } from "../lib/i18n";
+import { chatErrorMessage, useMigrationChat } from "../lib/useMigrationChat";
 
 interface FloatingChatWidgetProps {
   currentUser?: GoogleUser | null;
-  /** Hands the current draft over to the full-screen Chat IA tab. */
-  onNavigateToFullChat: (prompt?: string) => void;
+  /**
+   * Hands the conversation over to the full-screen Chat IA tab.
+   *
+   * The whole exchange, not just the draft: maximising used to start over,
+   * which on the surface most people use meant losing the conversation to see
+   * it in a bigger window.
+   */
+  onNavigateToFullChat: (prompt: string, history: ChatMessage[]) => void;
 }
 
 export const FloatingChatWidget: React.FC<FloatingChatWidgetProps> = ({ onNavigateToFullChat }) => {
+  const { language, t } = useLanguage();
+  const { ask } = useMigrationChat();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [inputMessage, setInputMessage] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(false);
@@ -37,9 +47,17 @@ export const FloatingChatWidget: React.FC<FloatingChatWidgetProps> = ({ onNaviga
     "¿Puedo trabajar con visa de estudiante en España?",
   ];
 
-  const handleSendMessage = (textToSend?: string) => {
-    const text = textToSend || inputMessage;
-    if (!text.trim()) return;
+  /**
+   * One implementation, two presentations.
+   *
+   * This used to be an `if/else` over five keywords with fixed replies, and
+   * anything outside them got a paragraph that answered nothing — while the
+   * Chat IA tab asked Gemini. Same question, different answers, and the bubble
+   * is the surface people actually reach for (#4).
+   */
+  const handleSendMessage = async (textToSend?: string) => {
+    const text = (textToSend || inputMessage).trim();
+    if (!text || isTyping) return;
 
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -48,50 +66,30 @@ export const FloatingChatWidget: React.FC<FloatingChatWidgetProps> = ({ onNaviga
       timestamp: "Ahora",
     };
 
+    const history = messages;
     setMessages((prev) => [...prev, userMsg]);
     setInputMessage("");
     setIsTyping(true);
 
-    // Simulate smart AI assistance
-    setTimeout(() => {
-      let botReply = "";
-      const lower = text.toLowerCase();
-
-      if (lower.includes("estafa") || lower.includes("alquiler") || lower.includes("hotel")) {
-        botReply =
-          "🛡️ **Reglas de Oro Anti-Estafas en Alquiler:**\n1. **NUNCA transfieras dinero previo por Bizum/Western Union** sin haber visto la vivienda o sin una plataforma con retención legal (como Spotahome o Uniplaces).\n2. Si el anunciante dice estar fuera del país y promete enviar llaves por mensajero, es 100% una estafa.\n3. Reserva tus primeros 10-15 días en un hostal/Airbnb para visitar habitaciones en persona antes de firmar contrato.";
-      } else if (
-        lower.includes("empadronamiento") ||
-        lower.includes("padron") ||
-        lower.includes("españa")
-      ) {
-        botReply =
-          "📍 **El Empadronamiento en España:**\nEs el registro administrativo donde resides. Es imprescindible para sacar tu TIE (tarjeta física), tarjeta sanitaria y escolarizar a tus hijos.\n**Requisitos:** Contrato de alquiler de al menos 6 meses a tu nombre o autorización firmada del dueño de la casa con copia de su DNI. Se solicita con cita previa en el Ayuntamiento de tu ciudad.";
-      } else if (
-        lower.includes("presupuesto") ||
-        lower.includes("dinero") ||
-        lower.includes("cuanto")
-      ) {
-        botReply =
-          "💰 **Presupuesto Realista Inicial Sugerido:**\n- **Alojamiento (habitación):** 350€ - 650€/mes.\n- **Fianza/Depósito:** 1 a 2 meses de alquiler.\n- **Supermercado y comida:** 200€ - 250€/mes.\n- **Transporte y telefonía:** 40€ - 60€/mes.\n- **Colchón recomendado de llegada:** Entre 2.500€ y 4.000€ para cubrir imprevistos del primer mes.";
-      } else if (lower.includes("trabajar") || lower.includes("estudiante")) {
-        botReply =
-          "🎓 **Trabajo con Visa de Estudiante:**\nEn España, la reforma del reglamento de extranjería permite a los estudiantes de educación superior trabajar hasta **30 horas semanales**, siempre que no interfiera con sus horarios de clase. El empleador solo debe tramitar una comunicación a Extranjería.";
-      } else {
-        botReply =
-          "He recibido tu consulta sobre tu plan migratorio. Recuerda que para trámites oficiales como visados, es clave reunir tu pasaporte vigente, título apostillado, antecedentes penales y certificado médico legalizado. ¿Te gustaría ver las guías paso a paso o el directorio de becas abiertas?";
-      }
-
-      const assistantMsg: ChatMessage = {
-        id: `ai-${Date.now()}`,
-        role: "assistant",
-        content: botReply,
-        timestamp: "Ahora",
-      };
-
-      setMessages((prev) => [...prev, assistantMsg]);
+    try {
+      const reply = await ask(text, { history, language });
+      setMessages((prev) => [...prev, reply]);
+    } catch (e) {
+      // A failure is visible in the conversation rather than swallowed: the
+      // reader has to know the assistant did not answer.
+      console.warn("Chat request failed:", e);
+      setMessages((prev) => [
+        ...prev,
+        chatErrorMessage(
+          t(
+            "chat.requestFailed",
+            "No pudimos conectar con el asistente. Revisa tu conexión e inténtalo de nuevo."
+          )
+        ),
+      ]);
+    } finally {
       setIsTyping(false);
-    }, 900);
+    }
   };
 
   return (
@@ -152,8 +150,9 @@ export const FloatingChatWidget: React.FC<FloatingChatWidgetProps> = ({ onNaviga
               <button
                 onClick={() => {
                   setIsOpen(false);
-                  onNavigateToFullChat(inputMessage.trim() || undefined);
+                  onNavigateToFullChat(inputMessage.trim(), messages);
                 }}
+                id="chat-widget-maximise"
                 title="Abrir en pantalla completa"
                 aria-label="Abrir el chat en pantalla completa"
                 className="tap-target p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
