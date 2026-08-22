@@ -103,9 +103,15 @@ describe("HeroLanding Component", () => {
       expect(setActiveTab).toHaveBeenCalledWith("becas");
     });
 
-    it("passes the avatar through the URL sanitiser", () => {
+    it("renders no image at all for an unsafe avatar URL", () => {
       // A profile photo is a remote URL from a third party. Rendering one
       // unchecked is how a `javascript:` src reaches the page.
+      //
+      // The sanitiser used to answer an unusable URL with a stock photograph,
+      // so this asserted the `src` was merely not `javascript:`. It answers
+      // with nothing now, and `Avatar` shows the person's initial instead of a
+      // stranger's face (#99) — a stronger property, so the assertion moves
+      // with it rather than the test being weakened.
       render(
         <HeroLanding
           setActiveTab={vi.fn()}
@@ -113,8 +119,22 @@ describe("HeroLanding Component", () => {
         />
       );
 
+      expect(document.querySelector("img[alt='Ana Izaguirre']")).toBeNull();
+      expect(screen.getByLabelText("Ana Izaguirre")).toHaveTextContent("A");
+      expect(document.body.innerHTML).not.toMatch(/javascript:/i);
+    });
+
+    it("shows the picture when there is a safe one", () => {
+      render(
+        <HeroLanding
+          setActiveTab={vi.fn()}
+          currentUser={{ ...user, avatar: "https://example.com/ana.jpg" }}
+        />
+      );
+
       const avatar = screen.getByAltText("Ana Izaguirre") as HTMLImageElement;
-      expect(avatar.getAttribute("src")).not.toMatch(/^javascript:/i);
+      expect(avatar.tagName).toBe("IMG");
+      expect(avatar.getAttribute("src")).toBe("https://example.com/ana.jpg");
     });
   });
 

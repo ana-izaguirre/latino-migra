@@ -43,18 +43,29 @@ for (const path in configModules) {
 
 const env: Record<string, any> = (import.meta as any).env || {};
 
+/**
+ * Stand-ins that let the bundle build without credentials.
+ *
+ * They are not a working configuration: Firebase initialises against them and
+ * every call then fails, so sign-in reports "no pudimos completar el inicio de
+ * sesión" while the real cause is that the application was built without its
+ * environment (#78). Naming them here is what makes that detectable — see
+ * `isFirebaseConfigured`.
+ */
+const PLACEHOLDER_API_KEY = "AIzaSyDummyKeyForSafeInitialization0000";
+const PLACEHOLDER_PROJECT_ID = "refined-coral-0zp2g";
+
 const firebaseConfig = {
-  apiKey:
-    env.VITE_FIREBASE_API_KEY || localConfig.apiKey || "AIzaSyDummyKeyForSafeInitialization0000",
+  apiKey: env.VITE_FIREBASE_API_KEY || localConfig.apiKey || PLACEHOLDER_API_KEY,
   authDomain:
     env.VITE_FIREBASE_AUTH_DOMAIN ||
     localConfig.authDomain ||
-    "refined-coral-0zp2g.firebaseapp.com",
-  projectId: env.VITE_FIREBASE_PROJECT_ID || localConfig.projectId || "refined-coral-0zp2g",
+    `${PLACEHOLDER_PROJECT_ID}.firebaseapp.com`,
+  projectId: env.VITE_FIREBASE_PROJECT_ID || localConfig.projectId || PLACEHOLDER_PROJECT_ID,
   storageBucket:
     env.VITE_FIREBASE_STORAGE_BUCKET ||
     localConfig.storageBucket ||
-    "refined-coral-0zp2g.appspot.com",
+    `${PLACEHOLDER_PROJECT_ID}.appspot.com`,
   messagingSenderId:
     env.VITE_FIREBASE_MESSAGING_SENDER_ID || localConfig.messagingSenderId || "123456789",
   appId: env.VITE_FIREBASE_APP_ID || localConfig.appId || "1:123456789:web:abcdef",
@@ -75,6 +86,35 @@ try {
       : getFirestore(appInstance);
 } catch (error) {
   console.warn("Firebase initialization warning (running in safe fallback mode):", error);
+}
+
+/**
+ * Whether this build carries a real Firebase configuration.
+ *
+ * `.env` ships every `VITE_FIREBASE_*` value as an empty string, and `"" ||
+ * fallback` is the fallback — so a build with no environment silently uses the
+ * placeholders above and every authenticated feature fails with a message that
+ * blames the visitor's connection. A failure has to be visible somewhere
+ * (CLAUDE.md constraint 5), and "the app was built without its keys" is not
+ * something a visitor can be expected to infer from "inténtalo de nuevo".
+ *
+ * This reads the configuration, never a secret: it compares against the two
+ * placeholder constants and answers a boolean.
+ */
+export function isFirebaseConfigured(): boolean {
+  return (
+    firebaseConfig.apiKey !== PLACEHOLDER_API_KEY &&
+    firebaseConfig.projectId !== PLACEHOLDER_PROJECT_ID &&
+    Boolean(firebaseConfig.apiKey) &&
+    Boolean(firebaseConfig.projectId)
+  );
+}
+
+if (!isFirebaseConfigured()) {
+  console.warn(
+    "Firebase is running on placeholder configuration: sign-in and every " +
+      "Firestore read or write will fail. Set the VITE_FIREBASE_* variables."
+  );
 }
 
 // Initialize Firebase App & Exports safely
@@ -149,11 +189,11 @@ export async function signInWithGoogle(countryOfOrigin?: string) {
       userRef,
       {
         uid: user.uid,
-        displayName: user.displayName || "Usuario LatinoMigra",
+        // Stored as the provider gave it. A placeholder written here comes
+        // back on every later read as though it were the person's own (#99).
+        displayName: user.displayName || "",
         email: user.email || "",
-        photoURL:
-          user.photoURL ||
-          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+        photoURL: user.photoURL || "",
         countryOfOrigin: finalCountry,
         updatedAt: new Date().toISOString(),
       },

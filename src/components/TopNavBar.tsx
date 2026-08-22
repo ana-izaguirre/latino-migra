@@ -27,7 +27,7 @@ import { isTabVisible } from "../lib/navigation";
 import { NavigationTab, ThemeMode, GoogleUser } from "../types";
 import { useLanguage } from "../lib/i18n";
 import { useCurrency } from "../lib/CurrencyContext";
-import { getSafeImageUrl } from "../lib/sanitize";
+import { Avatar } from "./ui/Avatar";
 import { isAdmin } from "../lib/authUtils";
 import { useBodyScrollLock } from "../lib/useBodyScrollLock";
 import { clearPreferences } from "../lib/preferencesStore";
@@ -532,11 +532,10 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
           >
             {currentUser ? (
               <>
-                <img
-                  src={getSafeImageUrl(currentUser.avatar)}
-                  alt={currentUser.name}
-                  referrerPolicy="no-referrer"
-                  className="w-6 h-6 md:w-5 md:h-5 rounded-full object-cover border border-white"
+                <Avatar
+                  src={currentUser.avatar}
+                  name={currentUser.name}
+                  className="w-6 h-6 md:w-5 md:h-5 rounded-full border border-white text-[10px]"
                 />
                 <span className="hidden md:inline max-w-[100px] truncate">{currentUser.name}</span>
               </>
@@ -614,11 +613,10 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
               {currentUser ? (
                 <div className="p-3 bg-secondary/10 dark:bg-teal-950/40 rounded-2xl border border-secondary/20 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <img
-                      src={getSafeImageUrl(currentUser.avatar)}
-                      alt={currentUser.name}
-                      referrerPolicy="no-referrer"
-                      className="w-9 h-9 rounded-full object-cover border border-white dark:border-slate-700"
+                    <Avatar
+                      src={currentUser.avatar}
+                      name={currentUser.name}
+                      className="w-9 h-9 rounded-full border border-white dark:border-slate-700 text-sm"
                     />
                     <div>
                       <div className="font-bold text-xs text-primary dark:text-teal-300 leading-tight">

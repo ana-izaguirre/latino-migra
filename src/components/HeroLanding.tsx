@@ -15,7 +15,7 @@ import { STUDY_PROGRAMMES_DATA } from "../data/studyProgrammes";
 import { MIGRATION_GUIDES_DATA } from "../data/migrationGuides";
 import { validateStudyProgrammes } from "../lib/studyProgrammes";
 import { useLanguage } from "../lib/i18n";
-import { getSafeImageUrl } from "../lib/sanitize";
+import { Avatar } from "./ui/Avatar";
 
 interface HeroLandingProps {
   setActiveTab: (tab: NavigationTab) => void;
@@ -66,11 +66,10 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ setActiveTab, currentU
         <section className="px-4 md:px-8 max-w-7xl mx-auto pt-6">
           <div className="bg-gradient-to-r from-primary/10 via-secondary/10 to-transparent dark:from-sky-950/60 dark:via-teal-950/40 dark:to-slate-900/40 p-6 rounded-3xl border border-secondary/30 dark:border-teal-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
             <div className="flex items-center gap-4">
-              <img
-                src={getSafeImageUrl(currentUser.avatar)}
-                alt={currentUser.name}
-                referrerPolicy="no-referrer"
-                className="w-14 h-14 rounded-2xl object-cover border-2 border-secondary dark:border-teal-400 shadow-md"
+              <Avatar
+                src={currentUser.avatar}
+                name={currentUser.name}
+                className="w-14 h-14 rounded-2xl border-2 border-secondary dark:border-teal-400 shadow-md text-xl"
               />
               <div>
                 <h2 className="text-xl md:text-2xl font-bold text-primary dark:text-sky-300">
