@@ -268,7 +268,12 @@ export default function App() {
 
         {activeTab === "guia" && (
           <main className="animate-fade-in">
-            <GuiaMigracion setActiveTab={setActiveTab} onAskAIAboutGuide={handleAskAIAboutGuide} />
+            <GuiaMigracion
+              setActiveTab={setActiveTab}
+              onAskAIAboutGuide={handleAskAIAboutGuide}
+              currentUser={currentUser}
+              onOpenAuthModal={() => setAuthModalOpen(true)}
+            />
           </main>
         )}
 

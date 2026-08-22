@@ -163,3 +163,38 @@ export function formatCurrency(amountInEur: number, targetCurrencyCode: string):
   const converted = convertCurrency(amountInEur, "EUR", targetCurrencyCode);
   return formatCurrencyAmount(converted, targetCurrencyCode);
 }
+
+/**
+ * A cost range, in whole units of `currencyCode`.
+ *
+ * The guides quote estimates — "€400 - €750" — so the two decimals
+ * `formatCurrencyAmount` adds claim a precision the source never had, and on a
+ * currency like HNL they double the width of a number that has to fit beside
+ * its label on a 375px screen.
+ */
+export function formatCostRange(min: number, max: number, currencyCode: string): string {
+  const curr = SUPPORTED_CURRENCIES[currencyCode] || { symbol: currencyCode };
+  const format = (value: number) =>
+    new Intl.NumberFormat("es-ES", { maximumFractionDigits: 0 }).format(Math.round(value));
+  return `${curr.symbol} ${format(min)} - ${curr.symbol} ${format(max)}`;
+}
+
+/**
+ * The same range converted into the currency the visitor chose.
+ *
+ * Returns `null` when the destination already charges in that currency, so the
+ * caller renders one line rather than the same number twice.
+ */
+export function convertCostRange(
+  min: number,
+  max: number,
+  fromCode: string,
+  toCode: string
+): string | null {
+  if (fromCode === toCode) return null;
+  return formatCostRange(
+    convertCurrency(min, fromCode, toCode),
+    convertCurrency(max, fromCode, toCode),
+    toCode
+  );
+}
