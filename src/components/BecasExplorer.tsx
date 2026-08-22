@@ -45,6 +45,7 @@ import {
 } from "../lib/firebase";
 import { usePreferences } from "../lib/PreferencesContext";
 import { useLanguage } from "../lib/i18n";
+import { useLabels } from "../lib/labels";
 import { FilterChipGroup } from "./ui/FilterChipGroup";
 import { Modal } from "./ui/Modal";
 import { ImageWithFallback } from "./ui/ImageWithFallback";
@@ -98,24 +99,12 @@ type SortOption = "deadline-asc" | "deadline-desc" | "title-asc" | "support-firs
 type ViewModeTab = "all" | "favorites" | "profile" | "estudios";
 
 /** Display names for the stored `educationLevel` values. */
-const EDUCATION_LEVEL_LABELS: Record<string, string> = {
-  pregrado: "Pregrado",
-  postgrado: "Postgrado / Máster",
-  doctorado: "Doctorado / PhD",
-  postdoctorado: "Post Doctorado",
-};
-
 /**
  * Hoisted out of the markup so the trigger and the list cannot drift apart:
  * `SelectValue` renders the label of whichever item matches `sortBy`, so a
  * label that exists in only one of the two would render blank.
  */
-const SORT_OPTIONS: { id: SortOption; label: string }[] = [
-  { id: "deadline-asc", label: "⏱️ Cierre más próximo (Inminente)" },
-  { id: "deadline-desc", label: "⏳ Más tiempo para postular" },
-  { id: "support-first", label: "💰 Beca Completa primero" },
-  { id: "title-asc", label: "🔤 Nombre (A-Z)" },
-];
+const SORT_OPTIONS: SortOption[] = ["deadline-asc", "deadline-desc", "support-first", "title-asc"];
 
 export const BecasExplorer: React.FC<BecasExplorerProps> = ({
   searchQuery,
@@ -135,6 +124,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
   // deliberately leaves the app-wide destination alone.
   const { destinationCountry, setDestinationCountry } = usePreferences();
   const { t } = useLanguage();
+  const label = useLabels();
   const [selectedCountry, setSelectedCountryState] = useState<string>(
     () => destinationCountry || "Todos"
   );
@@ -323,22 +313,10 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
     "Australia",
   ];
 
-  // Labels are short because they are read on a phone, inside a chip.
-  const educationLevels = [
-    { id: "todos", label: "🎓 Todos" },
-    { id: "pregrado", label: "📚 Pregrado" },
-    { id: "postgrado", label: "🎯 Postgrado / Máster" },
-    { id: "doctorado", label: "🔬 Doctorado" },
-    { id: "postdoctorado", label: "🏛️ Postdoctorado" },
-  ];
+  // Values, not labels. What the reader sees comes from `labels.ts`; these
+  // are what the catalogue stores and what the filters compare against.
+  const educationLevels = ["todos", "pregrado", "postgrado", "doctorado", "postdoctorado"];
   const areas = ["Todas", "STEM", "Artes y Humanidades", "Salud", "Negocios", "Todas las áreas"];
-  // "Todas" clears the area filter; "Todas las áreas" is a value scholarships
-  // actually carry, meaning the call is open to any field. Two options reading
-  // "Todas las áreas" were indistinguishable, so the labels say which is which.
-  const areaLabels: Record<string, string> = {
-    Todas: "✨ Todas",
-    "Todas las áreas": "Abierta a cualquier área",
-  };
   const supportTypes = ["Todos", "Beca Completa", "Beca Parcial", "Manutención"];
   const institutionTypes = [
     "Todas",
@@ -347,12 +325,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
     "Organismo Internacional",
     "Fundación",
   ];
-  const dateRanges = [
-    { id: "Todas", label: "📆 Todas" },
-    { id: "urgent", label: "⚡ Cierra en 30 días" },
-    { id: "semester", label: "📅 Cierra en 90 días" },
-    { id: "later", label: "⏳ Más de 90 días" },
-  ];
+  const dateRanges = ["Todas", "urgent", "semester", "later"];
 
   const handleSyncScholarships = async () => {
     setIsSyncingAI(true);
@@ -541,56 +514,68 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
    * cascade: narrowing the country immediately re-counts the levels, the
    * areas and the rest.
    */
+  // Every option's label goes through `label()`, so the chip, the card badge
+  // and the detail panel cannot disagree about what a stored value is called.
   const countryOptions = useMemo(
     () =>
       countries.map((c) => ({
         id: c,
-        label: c === "Todos" ? "🌍 Todos" : c,
+        label: label("country", c),
         count: countWith({ country: c }),
       })),
     // `countries` is a constant list defined in this component.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [countWith]
+    [countWith, label]
   );
 
   const educationOptions = useMemo(
-    () => educationLevels.map((l) => ({ ...l, count: countWith({ educationLevel: l.id }) })),
+    () =>
+      educationLevels.map((id) => ({
+        id,
+        label: label("educationLevel", id),
+        count: countWith({ educationLevel: id }),
+      })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [countWith]
+    [countWith, label]
   );
 
   const areaOptions = useMemo(
-    () => areas.map((a) => ({ id: a, label: areaLabels[a] ?? a, count: countWith({ area: a }) })),
+    () => areas.map((a) => ({ id: a, label: label("area", a), count: countWith({ area: a }) })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [countWith]
+    [countWith, label]
   );
 
   const supportOptions = useMemo(
     () =>
-      supportTypes.map((t) => ({
-        id: t,
-        label: t === "Todos" ? "🏆 Todos" : t,
-        count: countWith({ supportType: t }),
+      supportTypes.map((v) => ({
+        id: v,
+        label: label("supportType", v),
+        count: countWith({ supportType: v }),
       })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [countWith]
+    [countWith, label]
   );
 
   const institutionOptions = useMemo(
     () =>
-      institutionTypes.map((t) => ({
-        id: t,
-        label: t === "Todas" ? "🏛️ Todas" : t,
-        count: countWith({ institutionType: t }),
+      institutionTypes.map((v) => ({
+        id: v,
+        label: label("institutionType", v),
+        count: countWith({ institutionType: v }),
       })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [countWith]
+    [countWith, label]
   );
 
   const dateOptions = useMemo(
-    () => dateRanges.map((r) => ({ ...r, count: countWith({ dateRange: r.id }) })),
+    () =>
+      dateRanges.map((id) => ({
+        id,
+        label: label("dateRange", id),
+        count: countWith({ dateRange: id }),
+      })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [countWith]
+    [countWith, label]
   );
 
   /** Filters that are not on their default, for the "Limpiar" affordances. */
@@ -819,7 +804,10 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar por nombre, país, área o universidad..."
+                placeholder={t(
+                  "becas.searchPlaceholder",
+                  "Buscar por nombre, país, área o universidad..."
+                )}
                 id="becas-search-input"
                 aria-label="Buscar convocatorias"
                 className="pl-9"
@@ -842,8 +830,8 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   {SORT_OPTIONS.map((option) => (
-                    <SelectItem key={option.id} value={option.id}>
-                      {option.label}
+                    <SelectItem key={option} value={option}>
+                      {label("sort", option)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1371,7 +1359,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                                   <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
                                     <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-semibold">
                                       <MapPin className="w-3.5 h-3.5 text-sky-400" />
-                                      <span>{beca.country}</span>
+                                      <span>{label("country", beca.country)}</span>
                                     </div>
 
                                     <button
@@ -1410,16 +1398,19 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                                   <div className="flex flex-wrap items-center gap-1.5">
                                     {beca.educationLevel && (
                                       <Badge variant="level" className="capitalize">
-                                        {EDUCATION_LEVEL_LABELS[beca.educationLevel] ??
-                                          beca.educationLevel}
+                                        {label("educationLevel", beca.educationLevel)}
                                       </Badge>
                                     )}
-                                    <Badge variant="support">{beca.supportType}</Badge>
+                                    <Badge variant="support">
+                                      {label("supportType", beca.supportType)}
+                                    </Badge>
                                     {beca.institutionType && (
-                                      <Badge variant="institution">{beca.institutionType}</Badge>
+                                      <Badge variant="institution">
+                                        {label("institutionType", beca.institutionType)}
+                                      </Badge>
                                     )}
                                     <span className="text-xs text-on-surface-variant dark:text-slate-400 font-medium">
-                                      • {beca.area}
+                                      • {label("area", beca.area)}
                                     </span>
                                   </div>
 
