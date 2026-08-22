@@ -11,6 +11,35 @@ interface TranslationDictionary {
 }
 
 export const TRANSLATIONS: TranslationDictionary = {
+  // Home (#86)
+  "home.becasHeading": {
+    es: "Convocatorias abiertas ahora mismo",
+    en: "Calls open right now",
+  },
+  "home.becasIntro": {
+    es: "Las de cierre más próximo, con su fuente oficial.",
+    en: "The soonest to close, each with its official source.",
+  },
+  "home.seeAllBecas": { es: "Ver todas las convocatorias", en: "See every call" },
+  "home.guiasHeading": { es: "Guías por país", en: "Guides by country" },
+  "home.guiasIntro": { es: "países, con", en: "countries, with" },
+  "home.guiasRoutes": {
+    es: "vías migratorias y sus fuentes oficiales.",
+    en: "migration routes and their official sources.",
+  },
+  "home.seeAllGuias": { es: "Explorar las guías", en: "Explore the guides" },
+  "home.estudiosHeading": { es: "Estudiar sin beca", en: "Studying without a scholarship" },
+  "home.estudiosIntro": {
+    es: "programas oficiales de formación profesional, certificaciones de idioma y cursos, cada uno con la fuente que lo publica.",
+    en: "official vocational, language-certification and course programmes, each with the source that publishes it.",
+  },
+  "home.seeAllEstudios": { es: "Ver los programas", en: "See the programmes" },
+  "home.chatHeading": { es: "Asistente Migratorio IA", en: "AI migration assistant" },
+  "home.chatIntro": {
+    es: "Resuelve dudas sobre visados, apostillas, cartas de motivación y requisitos financieros. Responde a tu pregunta concreta; no sustituye a la fuente oficial.",
+    en: "Answers questions about visas, apostilles, motivation letters and financial requirements. It answers your specific question; it does not replace the official source.",
+  },
+  "home.tryChat": { es: "Probar el asistente", en: "Try the assistant" },
   // Sign-in modal (#80)
   "auth.titleSignIn": { es: "Inicia Sesión con Google", en: "Sign in with Google" },
   "auth.titleAccount": { es: "Tu Cuenta LatinoMigra", en: "Your LatinoMigra Account" },
