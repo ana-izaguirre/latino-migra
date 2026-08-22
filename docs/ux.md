@@ -256,6 +256,10 @@ Recently addressed and verified by tests:
   The breakpoint sits on a wrapper rather than on the control itself:
   `lg:hidden` and a display utility on one element let the emitted order pick
   the winner, and it picked `inline-flex`.
+- The visa category filter is chips with a live count, through the same
+  `FilterChipGroup`. The counts come from the predicate the list itself uses, so
+  a chip cannot promise routes the list will not show — the "Todas (4)" label
+  was the only count before, and the per-category chips had none.
 - The country picker is one swipeable row of chips with a count of visa routes
   per country, through the same `FilterChipGroup` the scholarship filters use.
   It was seven full-size buttons in a `flex-wrap` row: three lines of blocks at

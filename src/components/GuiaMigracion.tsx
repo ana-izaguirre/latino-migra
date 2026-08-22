@@ -17,7 +17,7 @@ import {
   Check,
   ThumbsUp,
 } from "lucide-react";
-import { NavigationTab } from "../types";
+import { NavigationTab, VisaType } from "../types";
 import { useLanguage } from "../lib/i18n";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { MIGRATION_GUIDES_DATA } from "../data/migrationGuides";
@@ -53,6 +53,7 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
   const selectedCountryCode = destinationCountryCode || "ES";
   const setSelectedCountryCode = setDestinationCountryByCode;
   const [selectedCategory, setSelectedCategory] = useState<string>("todos");
+
   const [visaVotes, setVisaVotes] = useState<Record<string, VisaVotesData>>({});
   const [userVotedVisas, setUserVotedVisas] = useState<Record<string, boolean>>({});
 
@@ -122,6 +123,8 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
    * checklist: the document ids differ per country, so keeping the old state
    * would tick boxes for documents the new country does not ask for.
    */
+  const selectCategory = (category: string) => setSelectedCategory(category);
+
   const selectCountry = (code: string) => {
     const next = MIGRATION_GUIDES_DATA[code];
     if (!next) return;
@@ -183,14 +186,33 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
     URL.revokeObjectURL(url);
   };
 
-  const filteredVisas = guide.visas.filter((v) => {
-    if (selectedCategory === "todos") return true;
-    return v.category === selectedCategory;
-  });
+  /**
+   * One definition of the rule, used by the list and by the counts beside it.
+   *
+   * Written twice they drift, and the chips start promising a number the list
+   * does not have — the defect the scholarship filters were opened about.
+   */
+  const matchesCategory = (visa: VisaType, category: string) =>
+    category === "todos" || visa.category === category;
 
-  const availableCategories = Array.from(
-    new Set(guide.visas.map((v) => v.category).filter(Boolean))
-  ) as string[];
+  const filteredVisas = useMemo(
+    () => guide.visas.filter((visa) => matchesCategory(visa, selectedCategory)),
+    [guide.visas, selectedCategory]
+  );
+
+  const categoryOptions = useMemo(
+    () => [
+      { id: "todos", label: t("guia.categoryAll", "Todas"), count: guide.visas.length },
+      ...(Array.from(new Set(guide.visas.map((v) => v.category).filter(Boolean))) as string[]).map(
+        (category) => ({
+          id: category,
+          label: category,
+          count: guide.visas.filter((visa) => matchesCategory(visa, category)).length,
+        })
+      ),
+    ],
+    [guide.visas, t]
+  );
 
   const roadmapSteps = [
     { num: 1, title: "Decisión y Búsqueda", desc: "Programa académico, idiomas o contrato" },
@@ -367,33 +389,22 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
             )}
           </div>
 
-          {/* Visa Category Filter Chips */}
-          {availableCategories.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              <button
-                onClick={() => setSelectedCategory("todos")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-                  selectedCategory === "todos"
-                    ? "bg-primary dark:bg-sky-600 text-white shadow-sm"
-                    : "bg-surface dark:bg-slate-800 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container"
-                }`}
-              >
-                Todas ({guide.visas.length})
-              </button>
-              {availableCategories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-                    selectedCategory === cat
-                      ? "bg-primary dark:bg-sky-600 text-white shadow-sm"
-                      : "bg-surface dark:bg-slate-800 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+          {/*
+            Chips with a live count, the same component the country picker and
+            the scholarship filters use. The counts come from the predicate the
+            list itself uses, so a chip cannot promise routes the list will not
+            show.
+          */}
+          {categoryOptions.length > 1 && (
+            <FilterChipGroup
+              label={t("guia.categoryLabel", "Tipo de vía")}
+              icon={<Briefcase className="w-4 h-4 text-secondary dark:text-teal-400" />}
+              options={categoryOptions}
+              value={selectedCategory}
+              onChange={selectCategory}
+              idPrefix="visa-category"
+              onClear={selectedCategory !== "todos" ? () => selectCategory("todos") : undefined}
+            />
           )}
 
           <div className="space-y-5">
