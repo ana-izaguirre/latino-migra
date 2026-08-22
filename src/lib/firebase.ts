@@ -1,4 +1,5 @@
 import { initializeApp } from "firebase/app";
+import { FavouriteKey, FavouriteKind, bookmarkToKey, favouriteKey } from "./favourites";
 import {
   getAuth,
   GoogleAuthProvider,
@@ -23,6 +24,7 @@ import {
   updateDoc,
   deleteDoc,
   increment,
+  getCountFromServer,
   QueryDocumentSnapshot,
   DocumentData,
 } from "firebase/firestore";
@@ -231,45 +233,56 @@ export async function fetchUserBookmarks(userId: string): Promise<string[]> {
   try {
     const q = query(collection(db, path), where("userId", "==", userId));
     const snap = await getDocs(q);
-    return snap.docs.map((d) => d.data().scholarshipId as string);
+    return snap.docs
+      .map((d) => bookmarkToKey(d.data()))
+      .filter((key): key is FavouriteKey => key !== null);
   } catch (err) {
     handleFirestoreError(err, OperationType.LIST, path);
     return [];
   }
 }
 
-// Firestore Helper: Save Scholarship Bookmark
-export async function toggleBookmarkScholarship(
+/**
+ * Saves or removes one favourite, of either catalogue.
+ *
+ * The collection is still called `savedScholarships`. Renaming it means copying
+ * every document and deleting the originals, and there is no backup or restore
+ * capability yet (#18), so the name stays wrong and this comment carries the
+ * reason. New documents carry `itemType` and `itemId`; the ones written before
+ * #82 carry `scholarshipId` and are read as scholarships, which is what all of
+ * them are.
+ */
+export async function toggleBookmark(
   userId: string,
-  scholarshipId: string,
+  kind: FavouriteKind,
+  itemId: string,
   title: string,
   country: string
-) {
+): Promise<boolean> {
   const path = "savedScholarships";
   try {
-    const q = query(
-      collection(db, path),
-      where("userId", "==", userId),
-      where("scholarshipId", "==", scholarshipId)
-    );
-    const snapshot = await getDocs(q);
+    const existing = await getDocs(query(collection(db, path), where("userId", "==", userId)));
+    const wanted = favouriteKey(kind, itemId);
+    const match = existing.docs.find((d) => bookmarkToKey(d.data()) === wanted);
 
-    if (!snapshot.empty) {
-      // Remove bookmark
-      const docId = snapshot.docs[0].id;
-      await deleteDoc(doc(db, path, docId));
-      return false; // Now unbookmarked
-    } else {
-      // Add bookmark
-      await addDoc(collection(db, path), {
-        userId,
-        scholarshipId,
-        scholarshipTitle: title,
-        country,
-        savedAt: new Date().toISOString(),
-      });
-      return true; // Now bookmarked
+    if (match) {
+      await deleteDoc(doc(db, path, match.id));
+      return false;
     }
+
+    await addDoc(collection(db, path), {
+      userId,
+      itemType: kind,
+      itemId,
+      // Kept for anything still reading the old field, and only for the kind it
+      // can describe: writing a programme id into `scholarshipId` would make a
+      // course look like a scholarship to every existing query.
+      ...(kind === "scholarship" ? { scholarshipId: itemId } : {}),
+      title,
+      country,
+      savedAt: new Date().toISOString(),
+    });
+    return true;
   } catch (err) {
     handleFirestoreError(err, OperationType.WRITE, path);
     throw err;
@@ -812,75 +825,71 @@ export async function triggerScholarshipSync(
 
 export interface VisaVotesData {
   helpfulVotes: number;
-  difficultyRating: number; // 1-5
-  totalReviews: number;
 }
 
 /**
- * Fetch persistent community votes and rating stats for visas of a country from Firestore
+ * How many people marked each visa of a country as useful.
+ *
+ * One document per (user, country, visa), with the document id built from all
+ * three — so the id itself enforces one vote per person and no rule has to
+ * check for a second one. The count is an aggregation over those documents
+ * rather than a stored counter: a counter any signed-in client may increment
+ * is a counter anyone can inflate, and there is no server here to hold it.
+ *
+ * Returns votes only for the visas that have any. A visa missing from the
+ * result has an unknown count, which the interface renders as unknown — it
+ * used to render as 18, a number nobody voted for.
  */
-/**
- * In-memory fallback used when Firestore is unavailable. Nothing is written to
- * localStorage, so the cache lives only for the current page session.
- */
-const visaVotesMemoryCache = new Map<string, Record<string, VisaVotesData>>();
-
 export async function fetchVisaGuideVotes(
   countryCode: string
 ): Promise<Record<string, VisaVotesData>> {
-  try {
-    if (!db) {
-      return visaVotesMemoryCache.get(countryCode) || {};
-    }
-    const q = collection(db, "visa_guide_votes", countryCode, "visas");
-    const snapshot = await getDocs(q);
-    const result: Record<string, VisaVotesData> = {};
-    snapshot.forEach((docSnap) => {
-      const data = docSnap.data();
-      result[docSnap.id] = {
-        helpfulVotes: data.helpfulVotes || 0,
-        difficultyRating: data.difficultyRating || 3,
-        totalReviews: data.totalReviews || 1,
-      };
-    });
-    visaVotesMemoryCache.set(countryCode, result);
-    return result;
-  } catch (err) {
-    console.warn("Could not fetch visa votes from Firestore, using in-memory fallback:", err);
-    return visaVotesMemoryCache.get(countryCode) || {};
-  }
+  if (!db) throw new Error("Firestore is not configured");
+
+  const snapshot = await getDocs(
+    query(collection(db, "visa_guide_votes"), where("countryCode", "==", countryCode))
+  );
+
+  const result: Record<string, VisaVotesData> = {};
+  snapshot.forEach((docSnap) => {
+    const visaId = docSnap.data().visaId;
+    if (typeof visaId !== "string") return;
+    result[visaId] = { helpfulVotes: (result[visaId]?.helpfulVotes ?? 0) + 1 };
+  });
+  return result;
+}
+
+/** Whether this user has already marked this visa as useful. */
+export function visaVoteId(userId: string, countryCode: string, visaId: string): string {
+  return `${userId}__${countryCode}__${visaId}`;
 }
 
 /**
- * Save / upvote a specific visa in Firestore with fallback
+ * Records one vote and returns the new count.
+ *
+ * Throws rather than falling back. The previous version answered a failed write
+ * with an invented number from an in-memory cache, so a denied write and a
+ * successful one looked identical on screen.
  */
-export async function voteVisaHelpful(countryCode: string, visaId: string): Promise<number> {
-  try {
-    if (db) {
-      const docRef = doc(db, "visa_guide_votes", countryCode, "visas", visaId);
-      await setDoc(
-        docRef,
-        {
-          helpfulVotes: increment(1),
-          lastVotedAt: new Date().toISOString(),
-        },
-        { merge: true }
-      );
-      const snap = await getDoc(docRef);
-      return snap.data()?.helpfulVotes || 1;
-    }
-  } catch (err) {
-    console.warn("Firestore vote failed, updating local store:", err);
-  }
+export async function voteVisaHelpful(
+  userId: string,
+  countryCode: string,
+  visaId: string
+): Promise<number> {
+  if (!db) throw new Error("Firestore is not configured");
 
-  // In-memory fallback for the current session.
-  const existing = visaVotesMemoryCache.get(countryCode) || {};
-  const current = existing[visaId]?.helpfulVotes || 12;
-  const updated = current + 1;
-  existing[visaId] = {
-    ...(existing[visaId] || { difficultyRating: 3, totalReviews: 5 }),
-    helpfulVotes: updated,
-  };
-  visaVotesMemoryCache.set(countryCode, existing);
-  return updated;
+  await setDoc(doc(db, "visa_guide_votes", visaVoteId(userId, countryCode, visaId)), {
+    userId,
+    countryCode,
+    visaId,
+    createdAt: new Date().toISOString(),
+  });
+
+  const counted = await getCountFromServer(
+    query(
+      collection(db, "visa_guide_votes"),
+      where("countryCode", "==", countryCode),
+      where("visaId", "==", visaId)
+    )
+  );
+  return counted.data().count;
 }

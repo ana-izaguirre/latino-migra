@@ -206,7 +206,19 @@ export interface DocumentItem {
 
 export interface CostItem {
   category: string;
-  range: string;
+  /**
+   * The range as the destination itself quotes it, in `currency`.
+   *
+   * These were single strings — "€400 - €750" — which is why the guide showed
+   * euros to a reader who had chosen lempiras (#75). A number can be converted;
+   * a string can only be printed.
+   */
+  min: number;
+  max: number;
+  /** What the destination actually charges in. Rent in Berlin is in euros. */
+  currency: string;
+  /** Australia quotes rent by the week; everywhere else quotes by the month. */
+  period: "mes" | "semana";
   percentage: number; // for progress bar
   color: string;
 }
