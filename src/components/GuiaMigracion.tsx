@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Compass,
   Clock,
@@ -17,72 +17,133 @@ import {
   Check,
   ThumbsUp,
 } from "lucide-react";
-import { NavigationTab } from "../types";
+import { NavigationTab, VisaType } from "../types";
 import { useLanguage } from "../lib/i18n";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { MIGRATION_GUIDES_DATA } from "../data/migrationGuides";
 import { COUNTRY_ANTI_SCAM_DATA } from "../data/antiScamData";
 import { Disclosure } from "./ui/Disclosure";
+import { FilterChipGroup } from "./ui/FilterChipGroup";
 import { CalendarAgendaButton } from "./CalendarAgendaButton";
 import { fetchVisaGuideVotes, voteVisaHelpful, VisaVotesData } from "../lib/firebase";
+import { GoogleUser } from "../types";
 import { usePreferences } from "../lib/PreferencesContext";
+import { useCurrency } from "../lib/CurrencyContext";
+import { convertCostRange, formatCostRange } from "../lib/currency";
 
 interface GuiaMigracionProps {
   setActiveTab: (tab: NavigationTab) => void;
   onAskAIAboutGuide: (countryName: string, visaName?: string) => void;
+  /** Voting needs an identity: the vote document is keyed by it. */
+  currentUser?: GoogleUser | null;
+  onOpenAuthModal?: () => void;
 }
 
 export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
   setActiveTab,
   onAskAIAboutGuide,
+  currentUser,
+  onOpenAuthModal,
 }) => {
   const { t } = useLanguage();
   // Country selection is shared app-wide, so opening a guide for Alemania also
   // moves the planner, calculator, consular map and alerts to Alemania.
   const { destinationCountryCode, setDestinationCountryByCode } = usePreferences();
+  const { currency } = useCurrency();
   const selectedCountryCode = destinationCountryCode || "ES";
   const setSelectedCountryCode = setDestinationCountryByCode;
   const [selectedCategory, setSelectedCategory] = useState<string>("todos");
+
   const [visaVotes, setVisaVotes] = useState<Record<string, VisaVotesData>>({});
   const [userVotedVisas, setUserVotedVisas] = useState<Record<string, boolean>>({});
 
+  /**
+   * How the vote counts are going.
+   *
+   * The counter used to print `helpfulVotes || 18` — so a country with no votes
+   * at all, which is every country while the collection is empty, claimed
+   * eighteen people had found each visa useful. A count that could not be read
+   * now renders as no count (#79).
+   */
+  const [votesStatus, setVotesStatus] = useState<"loading" | "loaded" | "failed">("loading");
+  const [voteError, setVoteError] = useState<string | null>(null);
+
   const guide = MIGRATION_GUIDES_DATA[selectedCountryCode] || MIGRATION_GUIDES_DATA["ES"];
 
-  // Fetch real-time votes & stats for the active country from Firestore DB
+  // Community vote counts for the active country.
   useEffect(() => {
     let isMounted = true;
-    async function loadVotes() {
-      try {
-        const data = await fetchVisaGuideVotes(selectedCountryCode);
-        if (isMounted) {
-          setVisaVotes(data);
-        }
-      } catch (e) {
+    setVotesStatus("loading");
+    fetchVisaGuideVotes(selectedCountryCode)
+      .then((data) => {
+        if (!isMounted) return;
+        setVisaVotes(data);
+        setVotesStatus("loaded");
+      })
+      .catch((e) => {
         console.warn("Could not load visa votes:", e);
-      }
-    }
-    loadVotes();
+        if (isMounted) setVotesStatus("failed");
+      });
     return () => {
       isMounted = false;
     };
   }, [selectedCountryCode]);
 
+  // A vote belongs to a person, so the tab change carries no votes with it.
+  useEffect(() => {
+    setUserVotedVisas({});
+  }, [selectedCountryCode, currentUser?.id]);
+
   const handleVoteVisa = async (visaId: string) => {
+    if (!currentUser?.id) {
+      onOpenAuthModal?.();
+      return;
+    }
     if (userVotedVisas[visaId]) return;
-    setUserVotedVisas((prev) => ({ ...prev, [visaId]: true }));
+
+    setVoteError(null);
     try {
-      const newCount = await voteVisaHelpful(selectedCountryCode, visaId);
-      setVisaVotes((prev) => ({
-        ...prev,
-        [visaId]: {
-          ...(prev[visaId] || { difficultyRating: 3, totalReviews: 1 }),
-          helpfulVotes: newCount,
-        },
-      }));
+      const newCount = await voteVisaHelpful(currentUser.id, selectedCountryCode, visaId);
+      setUserVotedVisas((prev) => ({ ...prev, [visaId]: true }));
+      setVisaVotes((prev) => ({ ...prev, [visaId]: { helpfulVotes: newCount } }));
+      setVotesStatus("loaded");
     } catch (e) {
+      // The write used to be answered with an invented number from an
+      // in-memory cache, so a denied write looked exactly like a successful
+      // one. A failure has to be visible somewhere.
       console.warn("Vote error:", e);
+      setVoteError(
+        t("guia.voteFailed", "No pudimos registrar tu voto. Inténtalo de nuevo más tarde.")
+      );
     }
   };
+
+  /**
+   * Moving to another country resets the category filter and reloads the
+   * checklist: the document ids differ per country, so keeping the old state
+   * would tick boxes for documents the new country does not ask for.
+   */
+  const selectCategory = (category: string) => setSelectedCategory(category);
+
+  const selectCountry = (code: string) => {
+    const next = MIGRATION_GUIDES_DATA[code];
+    if (!next) return;
+    setSelectedCountryCode(code);
+    setSelectedCategory("todos");
+    const newDocs: Record<string, boolean> = {};
+    next.documents.forEach((d) => (newDocs[d.id] = d.completed));
+    setDocState(newDocs);
+  };
+
+  const countryOptions = useMemo(
+    () =>
+      Object.values(MIGRATION_GUIDES_DATA).map((item) => ({
+        id: item.id,
+        label: `${item.flag} ${item.country}`,
+        count: item.visas.length,
+      })),
+    []
+  );
 
   const [docState, setDocState] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
@@ -125,14 +186,33 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
     URL.revokeObjectURL(url);
   };
 
-  const filteredVisas = guide.visas.filter((v) => {
-    if (selectedCategory === "todos") return true;
-    return v.category === selectedCategory;
-  });
+  /**
+   * One definition of the rule, used by the list and by the counts beside it.
+   *
+   * Written twice they drift, and the chips start promising a number the list
+   * does not have — the defect the scholarship filters were opened about.
+   */
+  const matchesCategory = (visa: VisaType, category: string) =>
+    category === "todos" || visa.category === category;
 
-  const availableCategories = Array.from(
-    new Set(guide.visas.map((v) => v.category).filter(Boolean))
-  ) as string[];
+  const filteredVisas = useMemo(
+    () => guide.visas.filter((visa) => matchesCategory(visa, selectedCategory)),
+    [guide.visas, selectedCategory]
+  );
+
+  const categoryOptions = useMemo(
+    () => [
+      { id: "todos", label: t("guia.categoryAll", "Todas"), count: guide.visas.length },
+      ...(Array.from(new Set(guide.visas.map((v) => v.category).filter(Boolean))) as string[]).map(
+        (category) => ({
+          id: category,
+          label: category,
+          count: guide.visas.filter((visa) => matchesCategory(visa, category)).length,
+        })
+      ),
+    ],
+    [guide.visas, t]
+  );
 
   const roadmapSteps = [
     { num: 1, title: "Decisión y Búsqueda", desc: "Programa académico, idiomas o contrato" },
@@ -177,33 +257,27 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
             )}
           </div>
 
-          {/* Country Selector Buttons */}
-          <div className="flex flex-wrap items-center gap-2">
-            {Object.values(MIGRATION_GUIDES_DATA).map((item) => {
-              const isSelected = item.id === selectedCountryCode;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setSelectedCountryCode(item.id);
-                    setSelectedCategory("todos");
-                    const newDocs: Record<string, boolean> = {};
-                    item.documents.forEach((d) => (newDocs[d.id] = d.completed));
-                    setDocState(newDocs);
-                  }}
-                  id={`guide-country-${item.id}`}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs md:text-sm font-bold transition-all cursor-pointer ${
-                    isSelected
-                      ? "bg-primary dark:bg-sky-600 text-white shadow-md scale-105"
-                      : "bg-surface dark:bg-slate-700 text-on-surface dark:text-slate-200 hover:bg-surface-container border border-outline-variant/30 dark:border-slate-600"
-                  }`}
-                >
-                  <span className="text-base">{item.flag}</span>
-                  <span>{item.country}</span>
-                </button>
-              );
-            })}
-          </div>
+          {/*
+            One swipeable row, not a wrapped grid of blocks.
+
+            Seven full-size buttons in a `flex-wrap` row took three lines at
+            375px, sat between the title and the content, and the selected one
+            carried `scale-105`, so it overlapped its neighbours. The chips are
+            the pattern the scholarship filters already use (#50); a third
+            pattern for the same job is the problem, not the styling.
+
+            The count is the number of visa routes for that country — the same
+            list the selection leads to, so the chip cannot promise a screen
+            the guide does not have.
+          */}
+          <FilterChipGroup
+            label={t("guia.countryLabel", "País de destino")}
+            icon={<Compass className="w-4 h-4 text-secondary dark:text-teal-400" />}
+            options={countryOptions}
+            value={selectedCountryCode}
+            onChange={selectCountry}
+            idPrefix="guide-country"
+          />
         </div>
       </div>
 
@@ -286,33 +360,51 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
             </button>
           </div>
 
-          {/* Visa Category Filter Chips */}
-          {availableCategories.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              <button
-                onClick={() => setSelectedCategory("todos")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-                  selectedCategory === "todos"
-                    ? "bg-primary dark:bg-sky-600 text-white shadow-sm"
-                    : "bg-surface dark:bg-slate-800 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container"
-                }`}
+          {/*
+            Where the vote counts came from. A denied read used to be swallowed
+            by a catch and replaced with an invented 18 per visa, so a broken
+            collection and a working one looked identical (#79, #24).
+          */}
+          <div role="status" aria-live="polite" className="empty:hidden">
+            {votesStatus === "failed" && (
+              <p
+                id="visa-votes-failed-status"
+                className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400"
               >
-                Todas ({guide.visas.length})
-              </button>
-              {availableCategories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-                    selectedCategory === cat
-                      ? "bg-primary dark:bg-sky-600 text-white shadow-sm"
-                      : "bg-surface dark:bg-slate-800 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                {t(
+                  "guia.votesUnavailable",
+                  "No pudimos cargar cuántas personas marcaron estas guías como útiles."
+                )}
+              </p>
+            )}
+            {voteError && (
+              <p
+                id="visa-vote-error"
+                className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400"
+              >
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                {voteError}
+              </p>
+            )}
+          </div>
+
+          {/*
+            Chips with a live count, the same component the country picker and
+            the scholarship filters use. The counts come from the predicate the
+            list itself uses, so a chip cannot promise routes the list will not
+            show.
+          */}
+          {categoryOptions.length > 1 && (
+            <FilterChipGroup
+              label={t("guia.categoryLabel", "Tipo de vía")}
+              icon={<Briefcase className="w-4 h-4 text-secondary dark:text-teal-400" />}
+              options={categoryOptions}
+              value={selectedCategory}
+              onChange={selectCategory}
+              idPrefix="visa-category"
+              onClear={selectedCategory !== "todos" ? () => selectCategory("todos") : undefined}
+            />
           )}
 
           <div className="space-y-5">
@@ -439,8 +531,13 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
                       <button
                         onClick={() => handleVoteVisa(visa.id)}
                         disabled={userVotedVisas[visa.id]}
-                        title="Votar información útil"
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
+                        id={`visa-vote-${visa.id}`}
+                        title={
+                          currentUser
+                            ? t("guia.voteTitle", "Marcar esta información como útil")
+                            : t("guia.voteSignIn", "Inicia sesión para marcar esta guía como útil")
+                        }
+                        className={`inline-flex items-center gap-1.5 min-h-[44px] px-2.5 py-1 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
                           userVotedVisas[visa.id]
                             ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
                             : "bg-surface hover:bg-surface-container text-on-surface-variant dark:bg-slate-900 dark:text-slate-300 border-outline-variant/40 dark:border-slate-800"
@@ -449,7 +546,18 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
                         <ThumbsUp
                           className={`w-3.5 h-3.5 ${userVotedVisas[visa.id] ? "fill-current" : ""}`}
                         />
-                        <span>{visaVotes[visa.id]?.helpfulVotes || 18} útiles</span>
+                        {/*
+                          A count is shown only when one was read. No vote yet
+                          is "sé el primero", not a number — the control used to
+                          print 18 for every visa in the product.
+                        */}
+                        <span>
+                          {votesStatus === "loaded" && visaVotes[visa.id]
+                            ? `${visaVotes[visa.id].helpfulVotes} ${t("guia.voteCount", "útiles")}`
+                            : votesStatus === "loaded"
+                              ? t("guia.voteFirst", "Sé el primero en marcarla útil")
+                              : t("guia.voteUseful", "Marcar como útil")}
+                        </span>
                       </button>
                     </div>
 
@@ -490,40 +598,57 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
                   {t("guia.costTitle", "Costo de Vida Estimado")}
                 </h3>
               </div>
-              <button
-                onClick={() => setActiveTab("calculadora")}
-                className="text-xs font-bold text-secondary dark:text-teal-300 hover:underline"
-              >
-                {t("guia.openCalculator", "Abrir Calculadora")}
-              </button>
             </div>
             <p className="text-xs text-on-surface-variant dark:text-slate-400">
-              Promedio mensual estimado para un estudiante o profesional en {guide.country}.
+              {t("guia.costsIntro", "Promedio estimado para un estudiante o profesional en")}{" "}
+              {guide.country}.
             </p>
 
             <div className="space-y-4 pt-2">
-              {guide.costs.map((cost, idx) => (
-                <div key={idx} className="space-y-1.5">
-                  <div className="flex justify-between text-xs font-semibold text-on-surface dark:text-slate-200">
-                    <span>{cost.category}</span>
-                    <span className="font-bold text-primary dark:text-sky-300">{cost.range}</span>
+              {guide.costs.map((cost, idx) => {
+                /*
+                  Two lines, not one. The first is what the destination
+                  actually charges: rent in Berlin is quoted in euros and
+                  paying it in lempiras is not a thing. The second is the same
+                  range in the currency the visitor chose, marked as an
+                  approximation — presenting a conversion as the price would
+                  be quoting a number nobody published.
+                */
+                const local = formatCostRange(cost.min, cost.max, cost.currency);
+                const converted = convertCostRange(cost.min, cost.max, cost.currency, currency);
+
+                return (
+                  <div key={idx} className="space-y-1.5">
+                    <div className="flex flex-wrap justify-between gap-x-3 text-xs font-semibold text-on-surface dark:text-slate-200">
+                      <span>{cost.category}</span>
+                      <span className="font-bold text-primary dark:text-sky-300 whitespace-nowrap">
+                        {local} / {cost.period}
+                      </span>
+                    </div>
+                    {converted && (
+                      <p className="text-[11px] text-on-surface-variant dark:text-slate-400 text-right">
+                        ≈ {converted} / {cost.period}
+                      </p>
+                    )}
+                    <div className="w-full bg-surface-container dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${cost.color}`}
+                        style={{ width: `${cost.percentage}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full bg-surface-container dark:bg-slate-700 h-2 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${cost.color}`}
-                      style={{ width: `${cost.percentage}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
-            <button
-              onClick={() => setActiveTab("calculadora")}
-              className="w-full mt-2 py-2.5 px-4 bg-surface dark:bg-slate-900 hover:bg-surface-container text-xs font-bold text-primary dark:text-sky-300 rounded-xl border border-outline-variant/40 dark:border-slate-700 transition-colors text-center block"
-            >
-              📊 Simular en mi moneda local (COP, MXN, PEN, ARS...)
-            </button>
+            {guide.costs.some((cost) => cost.currency !== currency) && (
+              <p className="text-[11px] text-on-surface-variant dark:text-slate-400 pt-1">
+                {t(
+                  "guia.conversionNotice",
+                  "La segunda cifra es una conversión aproximada a la moneda que elegiste, no un precio publicado. Cámbiala en Preferencias."
+                )}
+              </p>
+            )}
           </div>
 
           {/* Community Tip Card */}

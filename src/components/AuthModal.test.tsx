@@ -224,6 +224,48 @@ describe("AuthModal Component", () => {
   });
 
   /**
+   * Regression for #88. The list was nine countries written into the markup, so
+   * someone from Panamá, Paraguay or Uruguay could not say where they were
+   * from — on a platform whose audience is Latin America.
+   */
+  describe("country of origin", () => {
+    it("offers every Latin American country the platform knows about", () => {
+      render(<AuthModal {...defaultProps} />);
+
+      const select = document.getElementById("auth-origin-country") as HTMLSelectElement;
+      const offered = Array.from(select.options).map((option) => option.value);
+
+      expect(offered).toHaveLength(LATIN_AMERICAN_COUNTRIES.length);
+      for (const country of LATIN_AMERICAN_COUNTRIES) {
+        expect(offered, country.name).toContain(country.name);
+      }
+      // The ones the hardcoded list left out.
+      for (const missing of ["Panamá", "Paraguay", "Uruguay", "Bolivia", "Brasil"]) {
+        expect(offered, missing).toContain(missing);
+      }
+    });
+
+    it("is sorted, so the reader can find their country", () => {
+      render(<AuthModal {...defaultProps} />);
+
+      const select = document.getElementById("auth-origin-country") as HTMLSelectElement;
+      const offered = Array.from(select.options).map((option) => option.value);
+
+      expect(offered).toEqual([...offered].sort((a, b) => a.localeCompare(b, "es")));
+      expect(new Set(offered).size).toBe(offered.length);
+    });
+
+    it("labels the control, so it is announced", () => {
+      render(<AuthModal {...defaultProps} />);
+
+      const select = document.getElementById("auth-origin-country")!;
+      const label = document.querySelector('label[for="auth-origin-country"]');
+      expect(label).toBeInTheDocument();
+      expect(select.tagName).toBe("SELECT");
+    });
+  });
+
+  /**
    * Regression for #80. The modal rendered entirely in Spanish whatever the
    * chosen language — including the strings it asks for personal data with.
    */

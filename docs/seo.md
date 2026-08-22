@@ -38,7 +38,7 @@ achieve.
 **No routing.** Navigation is `useState` in `App.tsx`, so the entire application
 lives at one URL. There is no page for a scholarship, a country guide or a
 consulate. A crawler can only index the home screen, regardless of the 22
-scholarships, 57 visa types and 32 consular records the app contains. A sitemap
+scholarships, 24 visa types and 32 consular records the app contains. A sitemap
 would have exactly one entry.
 
 **No server-side rendering.** `server.ts` runs Vite in `appType: "spa"`, and on

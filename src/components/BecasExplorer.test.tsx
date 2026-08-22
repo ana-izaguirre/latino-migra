@@ -132,6 +132,76 @@ describe("BecasExplorer Component", () => {
     });
   });
 
+  /**
+   * Regression for #82. Favourites held bare scholarship ids, so a language
+   * certification or a vocational programme could be found and not kept — and
+   * with two catalogues on one screen a bare id no longer identifies anything.
+   */
+  describe("favourites across both catalogues", () => {
+    const openStudies = async () => {
+      const user = userEvent.setup();
+      const result = render(<BecasExplorer {...defaultProps} />);
+      await user.click(screen.getByRole("tab", { name: /Cursos, Certificados y FP/i }));
+      return { ...result, user };
+    };
+
+    it("saves a study programme and shows it in the saved tab", async () => {
+      const { user } = await openStudies();
+
+      const heart = document.querySelector('[id^="estudio-fav-"]') as HTMLElement;
+      expect(heart).toBeTruthy();
+      expect(heart).toHaveAttribute("aria-pressed", "false");
+
+      const programmeId = heart.id.replace("estudio-fav-", "");
+      fireEvent.click(heart);
+      expect(heart).toHaveAttribute("aria-pressed", "true");
+
+      await user.click(screen.getByRole("tab", { name: /Mis Guardados/i }));
+
+      expect(document.getElementById("saved-programmes")).toBeInTheDocument();
+      expect(document.getElementById(`estudio-card-${programmeId}`)).toBeInTheDocument();
+    });
+
+    it("counts saved scholarships and programmes together", async () => {
+      const { user } = await openStudies();
+
+      fireEvent.click(document.querySelector('[id^="estudio-fav-"]') as HTMLElement);
+      await user.click(screen.getByRole("tab", { name: /Todas las Convocatorias/i }));
+
+      const scholarshipHeart = document.querySelector(
+        'button[title*="favoritos"], button[title*="beca"]'
+      ) as HTMLElement;
+      fireEvent.click(scholarshipHeart);
+
+      expect(screen.getByRole("tab", { name: /Mis Guardados\s*2/i })).toBeInTheDocument();
+    });
+
+    it("restores a bookmark written before the change as a scholarship", async () => {
+      // Documents written before #82 carry `scholarshipId` and no kind. They
+      // must still resolve, or every reader's saved list empties on deploy.
+      vi.spyOn(firebase, "fetchUserBookmarks").mockResolvedValue([
+        "scholarship:beca-carolina-2026",
+      ]);
+
+      render(
+        <BecasExplorer
+          {...defaultProps}
+          currentUser={{
+            id: "u1",
+            name: "Ana",
+            email: "ana@example.com",
+            avatar: "",
+            signedInAt: "hoy",
+          }}
+        />
+      );
+
+      await waitFor(() =>
+        expect(screen.getByRole("tab", { name: /Mis Guardados\s*1/i })).toBeInTheDocument()
+      );
+    });
+  });
+
   it("opens suggest scholarship modal when clicking Sugerir Beca Oficial", () => {
     render(<BecasExplorer {...defaultProps} />);
     const suggestBtn = screen.getByRole("button", { name: /Sugerir Beca Oficial/i });
@@ -229,10 +299,10 @@ describe("BecasExplorer Component", () => {
     // The view switcher is a real tablist, so the triggers carry `role="tab"`,
     // and they activate on pointer-down rather than on a bare click event —
     // hence `userEvent`, which fires the whole pointer sequence.
-    const favTab = screen.getByRole("tab", { name: /Mis Becas Favoritas/i });
+    const favTab = screen.getByRole("tab", { name: /Mis Guardados/i });
     expect(favTab).toBeInTheDocument();
     await user.click(favTab);
-    expect(screen.getByText(/Sección: Mis Becas Guardadas/i)).toBeInTheDocument();
+    expect(screen.getByText(/Sección: Mis Guardados/i)).toBeInTheDocument();
 
     // Switch back to all. The empty-favourites state also renders a
     // "Ver Todas las Convocatorias" call to action, so target the tab by id.
@@ -248,7 +318,7 @@ describe("BecasExplorer Component", () => {
     fireEvent.click(favButtons[0]);
 
     // The favourites tab counter reflects the new selection.
-    expect(screen.getByRole("tab", { name: /Mis Becas Favoritas\s*1/i })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Mis Guardados\s*1/i })).toBeInTheDocument();
   });
 
   it("persists nothing to browser storage", () => {
