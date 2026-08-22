@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Compass,
   Clock,
@@ -17,12 +17,13 @@ import {
   Check,
   ThumbsUp,
 } from "lucide-react";
-import { NavigationTab } from "../types";
+import { NavigationTab, VisaType } from "../types";
 import { useLanguage } from "../lib/i18n";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { MIGRATION_GUIDES_DATA } from "../data/migrationGuides";
 import { COUNTRY_ANTI_SCAM_DATA } from "../data/antiScamData";
 import { Disclosure } from "./ui/Disclosure";
+import { FilterChipGroup } from "./ui/FilterChipGroup";
 import { CalendarAgendaButton } from "./CalendarAgendaButton";
 import { fetchVisaGuideVotes, voteVisaHelpful, VisaVotesData } from "../lib/firebase";
 import { GoogleUser } from "../types";
@@ -52,6 +53,7 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
   const selectedCountryCode = destinationCountryCode || "ES";
   const setSelectedCountryCode = setDestinationCountryByCode;
   const [selectedCategory, setSelectedCategory] = useState<string>("todos");
+
   const [visaVotes, setVisaVotes] = useState<Record<string, VisaVotesData>>({});
   const [userVotedVisas, setUserVotedVisas] = useState<Record<string, boolean>>({});
 
@@ -116,6 +118,33 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
     }
   };
 
+  /**
+   * Moving to another country resets the category filter and reloads the
+   * checklist: the document ids differ per country, so keeping the old state
+   * would tick boxes for documents the new country does not ask for.
+   */
+  const selectCategory = (category: string) => setSelectedCategory(category);
+
+  const selectCountry = (code: string) => {
+    const next = MIGRATION_GUIDES_DATA[code];
+    if (!next) return;
+    setSelectedCountryCode(code);
+    setSelectedCategory("todos");
+    const newDocs: Record<string, boolean> = {};
+    next.documents.forEach((d) => (newDocs[d.id] = d.completed));
+    setDocState(newDocs);
+  };
+
+  const countryOptions = useMemo(
+    () =>
+      Object.values(MIGRATION_GUIDES_DATA).map((item) => ({
+        id: item.id,
+        label: `${item.flag} ${item.country}`,
+        count: item.visas.length,
+      })),
+    []
+  );
+
   const [docState, setDocState] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     guide.documents.forEach((d) => (initial[d.id] = d.completed));
@@ -157,14 +186,33 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
     URL.revokeObjectURL(url);
   };
 
-  const filteredVisas = guide.visas.filter((v) => {
-    if (selectedCategory === "todos") return true;
-    return v.category === selectedCategory;
-  });
+  /**
+   * One definition of the rule, used by the list and by the counts beside it.
+   *
+   * Written twice they drift, and the chips start promising a number the list
+   * does not have — the defect the scholarship filters were opened about.
+   */
+  const matchesCategory = (visa: VisaType, category: string) =>
+    category === "todos" || visa.category === category;
 
-  const availableCategories = Array.from(
-    new Set(guide.visas.map((v) => v.category).filter(Boolean))
-  ) as string[];
+  const filteredVisas = useMemo(
+    () => guide.visas.filter((visa) => matchesCategory(visa, selectedCategory)),
+    [guide.visas, selectedCategory]
+  );
+
+  const categoryOptions = useMemo(
+    () => [
+      { id: "todos", label: t("guia.categoryAll", "Todas"), count: guide.visas.length },
+      ...(Array.from(new Set(guide.visas.map((v) => v.category).filter(Boolean))) as string[]).map(
+        (category) => ({
+          id: category,
+          label: category,
+          count: guide.visas.filter((visa) => matchesCategory(visa, category)).length,
+        })
+      ),
+    ],
+    [guide.visas, t]
+  );
 
   const roadmapSteps = [
     { num: 1, title: "Decisión y Búsqueda", desc: "Programa académico, idiomas o contrato" },
@@ -209,33 +257,27 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
             )}
           </div>
 
-          {/* Country Selector Buttons */}
-          <div className="flex flex-wrap items-center gap-2">
-            {Object.values(MIGRATION_GUIDES_DATA).map((item) => {
-              const isSelected = item.id === selectedCountryCode;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setSelectedCountryCode(item.id);
-                    setSelectedCategory("todos");
-                    const newDocs: Record<string, boolean> = {};
-                    item.documents.forEach((d) => (newDocs[d.id] = d.completed));
-                    setDocState(newDocs);
-                  }}
-                  id={`guide-country-${item.id}`}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs md:text-sm font-bold transition-all cursor-pointer ${
-                    isSelected
-                      ? "bg-primary dark:bg-sky-600 text-white shadow-md scale-105"
-                      : "bg-surface dark:bg-slate-700 text-on-surface dark:text-slate-200 hover:bg-surface-container border border-outline-variant/30 dark:border-slate-600"
-                  }`}
-                >
-                  <span className="text-base">{item.flag}</span>
-                  <span>{item.country}</span>
-                </button>
-              );
-            })}
-          </div>
+          {/*
+            One swipeable row, not a wrapped grid of blocks.
+
+            Seven full-size buttons in a `flex-wrap` row took three lines at
+            375px, sat between the title and the content, and the selected one
+            carried `scale-105`, so it overlapped its neighbours. The chips are
+            the pattern the scholarship filters already use (#50); a third
+            pattern for the same job is the problem, not the styling.
+
+            The count is the number of visa routes for that country — the same
+            list the selection leads to, so the chip cannot promise a screen
+            the guide does not have.
+          */}
+          <FilterChipGroup
+            label={t("guia.countryLabel", "País de destino")}
+            icon={<Compass className="w-4 h-4 text-secondary dark:text-teal-400" />}
+            options={countryOptions}
+            value={selectedCountryCode}
+            onChange={selectCountry}
+            idPrefix="guide-country"
+          />
         </div>
       </div>
 
@@ -347,33 +389,22 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
             )}
           </div>
 
-          {/* Visa Category Filter Chips */}
-          {availableCategories.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              <button
-                onClick={() => setSelectedCategory("todos")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-                  selectedCategory === "todos"
-                    ? "bg-primary dark:bg-sky-600 text-white shadow-sm"
-                    : "bg-surface dark:bg-slate-800 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container"
-                }`}
-              >
-                Todas ({guide.visas.length})
-              </button>
-              {availableCategories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-                    selectedCategory === cat
-                      ? "bg-primary dark:bg-sky-600 text-white shadow-sm"
-                      : "bg-surface dark:bg-slate-800 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+          {/*
+            Chips with a live count, the same component the country picker and
+            the scholarship filters use. The counts come from the predicate the
+            list itself uses, so a chip cannot promise routes the list will not
+            show.
+          */}
+          {categoryOptions.length > 1 && (
+            <FilterChipGroup
+              label={t("guia.categoryLabel", "Tipo de vía")}
+              icon={<Briefcase className="w-4 h-4 text-secondary dark:text-teal-400" />}
+              options={categoryOptions}
+              value={selectedCategory}
+              onChange={selectCategory}
+              idPrefix="visa-category"
+              onClear={selectedCategory !== "todos" ? () => selectCategory("todos") : undefined}
+            />
           )}
 
           <div className="space-y-5">

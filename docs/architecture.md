@@ -100,7 +100,7 @@ Two decisions constrain them:
 
 | Dataset | Records | Size |
 |---|---|---|
-| `migrationGuides.ts` | 7 countries, 57 visas | 48 KB |
+| `migrationGuides.ts` | 7 countries, 24 visas | 48 KB |
 | `scholarships.ts` | 22 | 35 KB |
 | `locations.ts` | 32 consulates and campuses | 20 KB |
 | `antiScamData.ts` | anti-scam guidance per country | 15 KB |
