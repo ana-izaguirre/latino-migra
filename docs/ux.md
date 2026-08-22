@@ -256,6 +256,11 @@ Recently addressed and verified by tests:
   The breakpoint sits on a wrapper rather than on the control itself:
   `lg:hidden` and a display utility on one element let the emitted order pick
   the winner, and it picked `inline-flex`.
+- The usefulness counter shows a number only when one was read. It printed
+  `helpfulVotes || 18` for every visa, so a country with no votes claimed
+  eighteen people had found each visa useful; a failed read now says so and a
+  visa with no votes invites the first one. Voting requires signing in, because
+  the vote document is keyed by the person casting it.
 - The migration route no longer marks a phase as the one you are on.
   `activeRoadmapStep` started at 2, so phase two was flagged as current for
   every visitor on every load, and tapping a card moved a marker that meant

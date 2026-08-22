@@ -82,6 +82,7 @@ vi.mock("firebase/firestore", () => ({
   updateDoc: vi.fn(() => Promise.resolve()),
   deleteDoc: vi.fn(() => Promise.resolve()),
   increment: vi.fn(),
+  getCountFromServer: vi.fn(() => Promise.resolve({ data: () => ({ count: 0 }) })),
   onSnapshot: vi.fn((query, cb) => {
     cb({ docs: [] });
     return () => {};
