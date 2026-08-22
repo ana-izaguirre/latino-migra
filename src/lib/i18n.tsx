@@ -53,6 +53,7 @@ export const TRANSLATIONS: TranslationDictionary = {
   },
   "auth.continueWithGoogle": { es: "Continuar con Google", en: "Continue with Google" },
   "auth.signOut": { es: "Cerrar Sesión", en: "Sign out" },
+  "auth.unnamedAccount": { es: "Cuenta sin nombre", en: "Unnamed account" },
   "auth.verifiedAccount": { es: "Cuenta Google Verificada", en: "Verified Google account" },
   "auth.roleLabel": { es: "Rol de Cuenta:", en: "Account role:" },
   "auth.roleAdmin": { es: "🔑 Administrador", en: "🔑 Administrator" },
@@ -105,6 +106,10 @@ export const TRANSLATIONS: TranslationDictionary = {
   // Navigation
   "nav.planificador": { es: "Planificador 360°", en: "360° Planner" },
   "nav.calculadora": { es: "Calculadora Costo de Vida", en: "Cost of Living Calculator" },
+  "auth.notConfigured": {
+    es: "El inicio de sesión no está disponible en esta versión de la aplicación. Puedes seguir usando las becas, las guías y el asistente sin cuenta.",
+    en: "Sign-in is not available in this build. You can still use the scholarships, the guides and the assistant without an account.",
+  },
   "nav.becas": { es: "Becas & Estudios", en: "Scholarships & Studies" },
   "nav.voluntariados": { es: "Voluntariados & Intercambios", en: "Volunteering & Exchanges" },
   "nav.guia": { es: "Guía de Migración", en: "Migration Guide" },
