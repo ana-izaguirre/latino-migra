@@ -213,6 +213,17 @@ Recently addressed and verified by tests:
   heading with its own count.
 - A favourite is stored as `"{kind}:{id}"`. A bare id stopped identifying
   anything once two catalogues shared a screen.
+## Scholarship filters in the mobile sheet
+
+- Each of the six groups is one swipeable row of chips, the same as the quick
+  filters directly above the sheet. They used `wrap` in both the sidebar and the
+  sheet: on a phone that made every group a block — the country group alone was
+  356px — and the six ran to **1435px inside a 716px dialog**, so reaching the
+  last filter meant scrolling past five others.
+- The sidebar keeps `wrap`. There is vertical room on a desktop, and showing
+  every option at once is worth it there. The layout differs because the
+  surfaces do.
+- Measured after: 679px of content, which fits the sheet.
 
 ## Estudios (cursos, certificados y FP)
 
@@ -226,6 +237,10 @@ Recently addressed and verified by tests:
   `lg` behind the same `Disclosure` the guides and the scholarship detail use.
   The official-source button is never inside the collapse: it is why the entry
   exists.
+- Four filters and a name search, migration route first: whether a programme
+  opens a way to migrate is why someone is on this platform rather than on a
+  course aggregator. An entry nobody has checked shows "sin verificar" rather
+  than borrowing an answer, and that is one of the filter's options.
 - The list pages in sixes through one control, matching the scholarship list
   beside it. Measured at 375px it is 5390px against the catalogue's 5403px;
   rendering all thirteen at once was 9463px.

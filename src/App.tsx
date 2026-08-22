@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { NavigationTab, ThemeMode, Scholarship, GoogleUser } from "./types";
+import { ChatMessage, NavigationTab, ThemeMode, Scholarship, GoogleUser } from "./types";
 import { TopNavBar } from "./components/TopNavBar";
 import { HeroLanding } from "./components/HeroLanding";
 import { BecasExplorer } from "./components/BecasExplorer";
@@ -44,6 +44,8 @@ export default function App() {
   });
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [chatInitialPrompt, setChatInitialPrompt] = useState<string>("");
+  /** The exchange the floating bubble hands over when it is maximised (#4). */
+  const [chatHandover, setChatHandover] = useState<ChatMessage[] | undefined>(undefined);
   const [selectedScholarshipForChat, setSelectedScholarshipForChat] = useState<Scholarship | null>(
     null
   );
@@ -292,6 +294,7 @@ export default function App() {
           <main className="animate-fade-in">
             <ChatIA
               initialPrompt={chatInitialPrompt}
+              initialHistory={chatHandover}
               scholarshipContext={selectedScholarshipForChat}
             />
           </main>
@@ -301,7 +304,8 @@ export default function App() {
       {/* Floating Popup Chatbot */}
       <FloatingChatWidget
         currentUser={currentUser}
-        onNavigateToFullChat={(prompt) => {
+        onNavigateToFullChat={(prompt, history) => {
+          setChatHandover(history);
           if (prompt) setChatInitialPrompt(prompt);
           setActiveTab("chat");
         }}

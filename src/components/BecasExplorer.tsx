@@ -611,6 +611,17 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
    * mobile sheet. Both can be in the DOM at once, so each copy scopes its
    * element ids.
    */
+  /**
+   * The six advanced filters, in the sidebar and in the mobile sheet.
+   *
+   * The layout differs because the surfaces do. On the desktop sidebar there is
+   * vertical room, so `wrap` shows every option at once. In the sheet `wrap`
+   * turned each group into a block — the country group alone was 356px — and
+   * the six of them ran to 1435px inside a 716px dialog, so reaching the last
+   * filter meant scrolling past five others and the apply button went with
+   * them. One swipeable row per group is also what the quick filters directly
+   * above the sheet already do; the sheet was the odd one out.
+   */
   const renderFilterGroups = (scope: "sidebar" | "sheet") => (
     <>
       <FilterChipGroup
@@ -620,7 +631,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
         value={selectedCountry}
         onChange={setSelectedCountry}
         idPrefix={`${scope}-country`}
-        layout="wrap"
+        layout={scope === "sidebar" ? "wrap" : "scroll"}
       />
       <FilterChipGroup
         label={t("becas.levelLabel", "Nivel Educativo")}
@@ -629,7 +640,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
         value={selectedEducationLevel}
         onChange={setSelectedEducationLevel}
         idPrefix={`${scope}-education`}
-        layout="wrap"
+        layout={scope === "sidebar" ? "wrap" : "scroll"}
       />
       <FilterChipGroup
         label={t("becas.areaLabel", "Área de Estudio")}
@@ -638,7 +649,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
         value={selectedArea}
         onChange={setSelectedArea}
         idPrefix={`${scope}-area`}
-        layout="wrap"
+        layout={scope === "sidebar" ? "wrap" : "scroll"}
       />
       <FilterChipGroup
         label={t("becas.supportLabel", "Tipo de Apoyo")}
@@ -647,7 +658,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
         value={selectedSupportType}
         onChange={setSelectedSupportType}
         idPrefix={`${scope}-support`}
-        layout="wrap"
+        layout={scope === "sidebar" ? "wrap" : "scroll"}
       />
       <FilterChipGroup
         label={t("becas.institutionLabel", "Tipo de Entidad")}
@@ -656,7 +667,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
         value={selectedInstitutionType}
         onChange={setSelectedInstitutionType}
         idPrefix={`${scope}-institution`}
-        layout="wrap"
+        layout={scope === "sidebar" ? "wrap" : "scroll"}
       />
       <FilterChipGroup
         label={t("becas.deadlineLabel", "Fecha de Cierre")}
@@ -665,7 +676,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
         value={selectedDateRange}
         onChange={setSelectedDateRange}
         idPrefix={`${scope}-deadline`}
-        layout="wrap"
+        layout={scope === "sidebar" ? "wrap" : "scroll"}
       />
     </>
   );

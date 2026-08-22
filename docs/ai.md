@@ -54,22 +54,36 @@ Express Entry age points, Stamp 2 conditions. These duplicate values that also
 exist in `src/data/migrationGuides.ts` and can drift from it. Updating them
 requires editing the prompt and redeploying.
 
-## Two chat surfaces that behave differently
+## One assistant, two presentations
 
 | Surface | Component | Backend |
 |---|---|---|
-| Chat IA tab | `ChatIA.tsx` (857 lines) | `POST /api/chat` → Gemini |
-| Floating bubble | `FloatingChatWidget.tsx` (273 lines) | Hardcoded `if/else` over keywords |
+| Chat IA tab | `ChatIA.tsx` | `POST /api/chat` → Gemini |
+| Floating bubble | `FloatingChatWidget.tsx` | `POST /api/chat` → Gemini |
 
-`FloatingChatWidget.handleSendMessage` matches five keyword branches — scams,
-empadronamiento, budget, student work, and a generic fallback — and returns a
-fixed string. It makes no network call. The bubble is rendered on every screen,
-so it is the more prominent entry point.
+Both call `useMigrationChat` in `src/lib/useMigrationChat.ts`, which is the only
+place the request is made. The bubble is the shell; `ChatIA` is the full view.
 
-The consequence: the same question produces different answers depending on where
-it is asked. The fixed replies also embed their own figures (350–650 € rent,
-2,500–4,000 € starting buffer), a third copy of numbers that exist in the prompt
-and in the datasets.
+Until #4 they were different assistants. `FloatingChatWidget.handleSendMessage`
+matched five keyword branches — scams, empadronamiento, budget, student work,
+and a generic fallback — and returned a fixed string with no network call at
+all. The bubble renders on every screen, so the more prominent entry point was
+the one that could not answer, and the same question gave different answers
+depending on where it was asked. The fixed replies also embedded their own
+figures (350–650 € rent, a 2,500–4,000 € buffer), a third copy of numbers that
+exist in the prompt and in the datasets.
+
+Three things follow from having one implementation:
+
+- **Maximising carries the conversation.** The bubble hands its messages to
+  `ChatIA` through `initialHistory`; it used to pass only the draft, so seeing
+  the exchange in a bigger window meant losing it.
+- **A failure is visible.** A non-2xx response or a body with no reply throws,
+  and both surfaces render the same "no pudimos conectar" message. Reading
+  `data.reply` from a 429 body used to produce "No se pudo obtener la
+  respuesta." rendered as though the assistant had said it.
+- **Sources come from the answer or not at all.** They used to fall back to two
+  fixed portals, so every reply was credited to sources it had never cited.
 
 ## Retrieval
 
@@ -77,8 +91,10 @@ There is none. The model answers from its training data. The application's own
 verified content — 57 visa records, 22 scholarships, anti-scam guidance, consular
 addresses — is never passed as context.
 
-`ChatIA` already renders a `sources` array on assistant messages, but the backend
-never populates it, so citations only appear on the seeded example conversation.
+`ChatIA` renders a `sources` array on assistant messages, but the backend never
+populates it, so no citation appears. It used to appear to work because every
+reply was given two hardcoded sources and the screen opened on a seeded example
+conversation; both are gone (#4).
 
 ## Entry points into the chat
 
