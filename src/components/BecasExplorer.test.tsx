@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { renderWithProviders as render } from "../test/renderWithProviders";
 import { BecasExplorer } from "./BecasExplorer";
 import * as firebase from "../lib/firebase";
+import { STUDY_BATCH_SIZE } from "../lib/useStudyFilters";
 
 describe("BecasExplorer Component", () => {
   const defaultProps = {
@@ -532,6 +533,150 @@ describe("BecasExplorer Component", () => {
       // The sheet is portalled to `document.body`, so it is outside the
       // render container that the other assertions use.
       expect(sheet.querySelector("#sheet-country-España")).toBeInTheDocument();
+    });
+
+    /*
+      The studies half of the screen used to render its own filter block,
+      full-width above the results, while the scholarships used a sticky
+      sidebar and a sheet. One screen, two products (#105).
+    */
+    describe("parity with the studies tab", () => {
+      /**
+       * The tab triggers activate on pointer-down rather than on a bare click
+       * event, so the whole pointer sequence has to be fired.
+       */
+      const openStudies = async () => {
+        const user = userEvent.setup();
+        const result = render(<BecasExplorer {...defaultProps} />);
+        await user.click(result.container.querySelector("#tab-estudios")!);
+        return result;
+      };
+
+      it("puts the study filters in the same sidebar as the scholarship ones", async () => {
+        const { container } = await openStudies();
+
+        const sidebar = container.querySelector("aside")!;
+        expect(sidebar.querySelector("#sidebar-estudios-route-chip-directa")).toBeInTheDocument();
+        expect(sidebar.querySelector("#sidebar-estudios-country-chip-Todos")).toBeInTheDocument();
+        // The scholarship chips are not rendered beside them: two filter sets
+        // on one list is how the favourites tab started lying about itself.
+        expect(sidebar.querySelector("#sidebar-country-Todos")).toBeNull();
+      });
+
+      it("opens the same sheet on a phone, with the study filters inside", async () => {
+        const { container } = await openStudies();
+
+        // The trigger lives in the mobile bar, which used to render only for
+        // scholarships — leaving the studies tab with no filters at all below
+        // `lg`, since the sidebar is `hidden lg:block`.
+        fireEvent.click(container.querySelector("#btn-open-mobile-filters")!);
+        const sheet = screen.getByRole("dialog");
+        expect(sheet.querySelector("#sheet-estudios-kind-chip-curso")).toBeInTheDocument();
+        expect(sheet.querySelectorAll("select")).toHaveLength(0);
+      });
+
+      it("clears the filters of the catalogue that is showing", async () => {
+        const { container } = await openStudies();
+
+        const list = () => container.querySelector("#estudios-list");
+        const before = list()!.children.length;
+
+        fireEvent.click(container.querySelector("#sidebar-estudios-kind-chip-certificado")!);
+        expect(list()!.children.length).toBeLessThan(before);
+
+        // Same control as the scholarships use. Wired to `clearFilters` it
+        // reset the scholarship state and left this list narrowed.
+        fireEvent.click(container.querySelector("#clear-filters-btn")!);
+        expect(list()!.children.length).toBe(before);
+      });
+
+      it("renames the whole screen, not just the list", async () => {
+        const { container } = await openStudies();
+
+        // Reported from a live screenshot: the page still announced itself as
+        // "Directorio Oficial de Becas" while showing a list of courses, and
+        // offered to suggest a scholarship.
+        expect(screen.queryByText(/Directorio Oficial de Becas/i)).not.toBeInTheDocument();
+        expect(
+          screen.getByRole("heading", { name: /Estudiar sin beca/i, level: 1 })
+        ).toBeInTheDocument();
+        expect(screen.getByText(/Rutas de estudio que no dependen/i)).toBeInTheDocument();
+        expect(container.querySelector("#suggest-scholarship-btn")).toHaveTextContent(
+          /Sugerir Curso Oficial/i
+        );
+
+        // The crumb names the sub-page rather than stopping at the directory.
+        expect(
+          within(container.querySelector('[aria-label="Breadcrumbs"]')!).getByText(
+            /Cursos, Certificados y FP/i
+          )
+        ).toBeInTheDocument();
+      });
+
+      it("renames the suggestion form to match the catalogue", async () => {
+        const { container } = await openStudies();
+        fireEvent.click(container.querySelector("#suggest-scholarship-btn")!);
+
+        const dialog = screen.getByRole("dialog");
+        expect(within(dialog).getByText(/Sugerir Curso, Certificado o FP/i)).toBeInTheDocument();
+        expect(within(dialog).getByText(/Nombre del Programa/i)).toBeInTheDocument();
+        expect(within(dialog).queryByText(/Sugerir Beca Universitaria/i)).not.toBeInTheDocument();
+      });
+
+      it("renders one heading for the screen, not two stacked", async () => {
+        await openStudies();
+
+        // The section repeated the page title inside the content column.
+        expect(screen.getAllByText(/Estudiar sin beca/i)).toHaveLength(1);
+        expect(document.getElementById("estudios-heading")).not.toBeInTheDocument();
+      });
+
+      it("reports its size in the same toolbar the scholarships use", async () => {
+        const { container } = await openStudies();
+
+        const toolbar = container.querySelector("#estudios-toolbar");
+        expect(toolbar).toBeInTheDocument();
+        expect(toolbar).toHaveTextContent(/Mostrando/i);
+        // A bordered container, not a bare paragraph.
+        expect(toolbar?.className).toMatch(/rounded-2xl/);
+        expect(toolbar?.className).toMatch(/border/);
+      });
+
+      it("gives each card the cover the scholarship cards have", async () => {
+        const { container } = await openStudies();
+
+        const cover = container.querySelector('[id^="estudio-cover-"]');
+        expect(cover).toBeInTheDocument();
+        // The heart sits on the cover, as it does on a scholarship card.
+        expect(container.querySelector('[id^="estudio-fav-"]')).toBeInTheDocument();
+      });
+
+      it("orders the list by what a programme actually carries", async () => {
+        const { container } = await openStudies();
+
+        const sort = container.querySelector("#estudios-sort-select");
+        expect(sort).toBeInTheDocument();
+        // A programme has no closing date, so the scholarship options would
+        // sort by a field no record carries.
+        expect(sort).not.toHaveTextContent(/Cierre/i);
+        expect(sort).toHaveTextContent(/Nombre/i);
+
+        const titles = () =>
+          Array.from(container.querySelectorAll('[id^="estudio-card-"] h3')).map(
+            (h) => h.textContent ?? ""
+          );
+        const rendered = titles();
+        expect(rendered).toEqual([...rendered].sort((a, b) => a.localeCompare(b, "es")));
+      });
+
+      it("pages the study list in the same batches", async () => {
+        const { container } = await openStudies();
+
+        const shown = () => container.querySelector("#estudios-list")!.children.length;
+        expect(shown()).toBe(STUDY_BATCH_SIZE);
+        fireEvent.click(container.querySelector("#btn-load-more-estudios")!);
+        expect(shown()).toBe(STUDY_BATCH_SIZE * 2);
+      });
     });
   });
 

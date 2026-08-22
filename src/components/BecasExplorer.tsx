@@ -51,6 +51,7 @@ import { Modal } from "./ui/Modal";
 import { ImageWithFallback } from "./ui/ImageWithFallback";
 import { Disclosure } from "./ui/Disclosure";
 import { EstudiosSection } from "./EstudiosSection";
+import { STUDY_SORT_OPTIONS, StudySortOption, useStudyFilters } from "../lib/useStudyFilters";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card";
@@ -267,6 +268,59 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
    * screen is an interface lying about its own behaviour.
    */
   const showingStudies = viewModeTab === "estudios";
+  const studyFilters = useStudyFilters(STUDY_PROGRAMMES_DATA);
+
+  /**
+   * What the screen calls the catalogue on show (#105).
+   *
+   * Becas and Estudios are one screen, so every piece of chrome that names the
+   * content — the crumb, the eyebrow, the title, the description, the suggest
+   * control and its form — reads from one place. Written as ternaries at each
+   * site they drift, and the screen ends up offering to suggest a scholarship
+   * while showing a list of courses.
+   */
+  const catalogueCopy = showingStudies
+    ? {
+        crumb: t("becas.tabStudies", "Cursos, Certificados y FP"),
+        eyebrow: t("estudios.eyebrow", "Programas y portales oficiales"),
+        title: t("estudios.title", "Estudiar sin beca: cursos, certificados y FP"),
+        subtitle: t(
+          "estudios.subtitle",
+          "Rutas de estudio que no dependen de financiación: formación profesional, certificaciones de idioma y cursos oficiales. Cada una enlaza a la fuente oficial que la publica."
+        ),
+        suggest: t("estudios.suggest", "Sugerir Curso Oficial"),
+        suggestModalTitle: t("estudios.suggestModalTitle", "Sugerir un programa oficial"),
+        suggestHeading: t("estudios.suggestHeading", "Sugerir Curso, Certificado o FP"),
+        suggestIntro: t(
+          "estudios.suggestIntro",
+          "Agrega programas publicados directamente en el portal oficial de la institución que los imparte, para que nuestro equipo los verifique e incorpore al catálogo."
+        ),
+        suggestNameLabel: t("estudios.suggestNameLabel", "Nombre del Programa *"),
+        suggestNamePlaceholder: t(
+          "estudios.suggestNamePlaceholder",
+          "Ej. Certificado de Español DELE B2…"
+        ),
+        suggestSent: t("estudios.suggestSent", "¡Programa enviado para verificación!"),
+      }
+    : {
+        crumb: undefined,
+        eyebrow: t("becas.eyebrow", "Convocatorias y Portales Oficiales Verificados 2026-2027"),
+        title: t("becas.title", "Directorio Oficial de Becas"),
+        subtitle: t(
+          "becas.subtitle",
+          "Encuentra becas directas de universidades internacionales, convenios gubernamentales y organismos iberoamericanos."
+        ),
+        suggest: t("becas.suggest", "Sugerir Beca Oficial"),
+        suggestModalTitle: t("becas.suggestModalTitle", "Sugerir una convocatoria oficial"),
+        suggestHeading: t("becas.suggestHeading", "Sugerir Beca Universitaria"),
+        suggestIntro: t(
+          "becas.suggestIntro",
+          "Agrega becas y ayudas publicadas directamente en portales universitarios (.edu, .es, .de, etc.) para que nuestro equipo y la IA las verifiquen e incorporen al directorio."
+        ),
+        suggestNameLabel: t("becas.suggestNameLabel", "Nombre de la Beca *"),
+        suggestNamePlaceholder: t("becas.suggestNamePlaceholder", "Ej. Ayuda de Matrícula Máster…"),
+        suggestSent: t("becas.suggestSent", "¡Beca enviada para verificación!"),
+      };
 
   /**
    * What the Estudios tab will actually show — not `STUDY_PROGRAMMES_DATA.length`.
@@ -591,6 +645,17 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
     (selectedCountry !== "Todos" ? 1 : 0) +
     (selectedEducationLevel !== "todos" ? 1 : 0);
 
+  /*
+    The sidebar, the sheet and the mobile filter bar are shared by both
+    catalogues since #105, so the clear control and the number beside it have
+    to speak for whichever one is on screen. Reading the scholarship filters
+    while the studies list is showing is exactly the "value from the wrong
+    source" the option counts already got wrong once.
+  */
+  const clearActiveFilters = showingStudies ? studyFilters.clearFilters : clearFilters;
+  const activeFilterTotal = showingStudies ? studyFilters.activeFilterCount : activeFilterCount;
+  const sheetFilterCount = showingStudies ? studyFilters.activeFilterCount : advancedFilterCount;
+
   /**
    * The whole filter set, rendered identically in the desktop sidebar and the
    * mobile sheet. Both can be in the DOM at once, so each copy scopes its
@@ -748,25 +813,24 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 space-y-6">
       {/* Breadcrumbs */}
-      <Breadcrumbs activeTab="becas" setActiveTab={setActiveTab} />
+      <Breadcrumbs
+        activeTab="becas"
+        setActiveTab={setActiveTab}
+        subPageTitle={catalogueCopy.crumb}
+      />
 
       {/* View Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-outline-variant/30 dark:border-slate-800 pb-6">
         <div>
           <div className="flex items-center gap-2 text-secondary dark:text-teal-300 text-xs font-bold uppercase tracking-wider mb-1">
             <ShieldCheck className="w-4 h-4 text-emerald-500" />
-            <span>
-              {t("becas.eyebrow", "Convocatorias y Portales Oficiales Verificados 2026-2027")}
-            </span>
+            <span>{catalogueCopy.eyebrow}</span>
           </div>
           <h1 className="font-headline-lg text-3xl md:text-4xl font-extrabold text-primary dark:text-sky-300">
-            {t("becas.title", "Directorio Oficial de Becas")}
+            {catalogueCopy.title}
           </h1>
           <p className="text-on-surface-variant dark:text-slate-300 text-sm md:text-base mt-1">
-            {t(
-              "becas.subtitle",
-              "Encuentra becas directas de universidades internacionales, convenios gubernamentales y organismos iberoamericanos."
-            )}
+            {catalogueCopy.subtitle}
           </p>
         </div>
 
@@ -795,27 +859,69 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
             className="inline-flex items-center gap-2 bg-secondary/10 dark:bg-teal-500/20 text-secondary dark:text-teal-300 hover:bg-secondary hover:text-white dark:hover:bg-teal-600 font-bold text-xs px-3.5 py-2.5 rounded-xl border border-secondary/30 dark:border-teal-500/30 transition-colors shrink-0 cursor-pointer"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>{t("becas.suggest", "Sugerir Beca Oficial")}</span>
+            <span>{catalogueCopy.suggest}</span>
           </button>
 
-          {!showingStudies && (
-            <div className="relative flex-1 min-w-[200px] md:w-64">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t(
-                  "becas.searchPlaceholder",
-                  "Buscar por nombre, país, área o universidad..."
-                )}
-                id="becas-search-input"
-                aria-label="Buscar convocatorias"
-                className="pl-9"
-              />
-            </div>
-          )}
+          {/*
+            One search box for both tabs. The studies half had its own, sitting
+            above its own filter block, so the two halves of one screen looked
+            like two products (#105). It drives whichever catalogue is showing.
+          */}
+          <div className="relative flex-1 min-w-[200px] md:w-64">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400" />
+            <Input
+              value={showingStudies ? studyFilters.filters.search : searchQuery}
+              onChange={(e) =>
+                showingStudies
+                  ? studyFilters.setFilter("search", e.target.value)
+                  : setSearchQuery(e.target.value)
+              }
+              placeholder={
+                showingStudies
+                  ? t("estudios.searchPlaceholder", "Buscar por nombre o institución…")
+                  : t("becas.searchPlaceholder", "Buscar por nombre, país, área o universidad...")
+              }
+              id="becas-search-input"
+              aria-label={
+                showingStudies
+                  ? t("estudios.searchLabel", "Buscar programa o institución")
+                  : t("becas.searchLabel", "Buscar convocatorias")
+              }
+              className="pl-9"
+            />
+          </div>
 
-          {!showingStudies && (
+          {/*
+            Both tabs order their list. The options differ because the records
+            do — a programme has no closing date, so offering "cierre más
+            próximo" here would sort by a field it does not carry.
+          */}
+          {showingStudies ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-on-surface-variant dark:text-slate-400 whitespace-nowrap">
+                {t("estudios.sortLabel", "Ordenar por:")}
+              </span>
+              <Select
+                value={studyFilters.sortBy}
+                onValueChange={(value) => studyFilters.setSortBy(value as StudySortOption)}
+              >
+                <SelectTrigger
+                  id="estudios-sort-select"
+                  aria-label={t("estudios.sortLabel", "Ordenar por:")}
+                  className="w-auto min-w-[13rem]"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {STUDY_SORT_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {label("studySort", option)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-on-surface-variant dark:text-slate-400 whitespace-nowrap">
                 {t("becas.sortBy", "Ordenar por:")}
@@ -1010,67 +1116,71 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
         {/* Mobile quick filters. Country comes before education level: the
             destination is the decision people arrive with, and fixing it first
             is what makes the level counts mean anything. */}
-        {!showingStudies && (
-          <div className="lg:hidden bg-surface-container-lowest dark:bg-slate-800 p-3.5 rounded-2xl border border-outline-variant/40 dark:border-slate-700 space-y-3.5">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5 font-bold text-xs text-primary dark:text-sky-300">
-                <SlidersHorizontal className="w-4 h-4 text-secondary dark:text-teal-400" />
-                <span>{t("becas.quickFilters", "Filtros Rápidos")}</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {activeFilterCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={clearFilters}
-                    className="text-xs font-semibold text-secondary dark:text-teal-400 hover:underline flex items-center gap-1 cursor-pointer active:scale-95"
-                  >
-                    <RotateCcw className="w-3 h-3" />
-                    <span>Limpiar</span>
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setMobileFiltersOpen(true)}
-                  id="btn-open-mobile-filters"
-                  className="inline-flex items-center gap-1.5 min-h-[44px] bg-primary dark:bg-sky-600 text-white text-xs font-bold py-2 px-3.5 rounded-xl shadow-xs cursor-pointer active:scale-95 transition-all"
-                >
-                  <Filter className="w-3.5 h-3.5" />
-                  <span>{t("becas.moreFilters", "Más Filtros")}</span>
-                  {advancedFilterCount > 0 && (
-                    <span className="bg-white/20 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                      {advancedFilterCount}
-                    </span>
-                  )}
-                </button>
-              </div>
+        <div className="lg:hidden bg-surface-container-lowest dark:bg-slate-800 p-3.5 rounded-2xl border border-outline-variant/40 dark:border-slate-700 space-y-3.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 font-bold text-xs text-primary dark:text-sky-300">
+              <SlidersHorizontal className="w-4 h-4 text-secondary dark:text-teal-400" />
+              <span>{t("becas.quickFilters", "Filtros Rápidos")}</span>
             </div>
 
-            <FilterChipGroup
-              label={t("becas.countryLabel", "País Destino")}
-              icon={<Globe2 className="w-4 h-4 text-secondary dark:text-teal-400" />}
-              options={countryOptions}
-              value={selectedCountry}
-              onChange={setSelectedCountry}
-              idPrefix="country-chip"
-              onClear={selectedCountry !== "Todos" ? () => setSelectedCountry("Todos") : undefined}
-            />
-
-            <FilterChipGroup
-              label={t("becas.levelLabel", "Nivel Educativo")}
-              icon={<GraduationCap className="w-4 h-4 text-secondary dark:text-teal-400" />}
-              options={educationOptions}
-              value={selectedEducationLevel}
-              onChange={setSelectedEducationLevel}
-              idPrefix="edu-level-chip"
-              onClear={
-                selectedEducationLevel !== "todos"
-                  ? () => setSelectedEducationLevel("todos")
-                  : undefined
-              }
-            />
+            <div className="flex items-center gap-2">
+              {activeFilterTotal > 0 && (
+                <button
+                  type="button"
+                  onClick={clearActiveFilters}
+                  className="text-xs font-semibold text-secondary dark:text-teal-400 hover:underline flex items-center gap-1 cursor-pointer active:scale-95"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Limpiar</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setMobileFiltersOpen(true)}
+                id="btn-open-mobile-filters"
+                className="inline-flex items-center gap-1.5 min-h-[44px] bg-primary dark:bg-sky-600 text-white text-xs font-bold py-2 px-3.5 rounded-xl shadow-xs cursor-pointer active:scale-95 transition-all"
+              >
+                <Filter className="w-3.5 h-3.5" />
+                <span>{t("becas.moreFilters", "Más Filtros")}</span>
+                {sheetFilterCount > 0 && (
+                  <span className="bg-white/20 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                    {sheetFilterCount}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
-        )}
+
+          {!showingStudies && (
+            <>
+              <FilterChipGroup
+                label={t("becas.countryLabel", "País Destino")}
+                icon={<Globe2 className="w-4 h-4 text-secondary dark:text-teal-400" />}
+                options={countryOptions}
+                value={selectedCountry}
+                onChange={setSelectedCountry}
+                idPrefix="country-chip"
+                onClear={
+                  selectedCountry !== "Todos" ? () => setSelectedCountry("Todos") : undefined
+                }
+              />
+
+              <FilterChipGroup
+                label={t("becas.levelLabel", "Nivel Educativo")}
+                icon={<GraduationCap className="w-4 h-4 text-secondary dark:text-teal-400" />}
+                options={educationOptions}
+                value={selectedEducationLevel}
+                onChange={setSelectedEducationLevel}
+                idPrefix="edu-level-chip"
+                onClear={
+                  selectedEducationLevel !== "todos"
+                    ? () => setSelectedEducationLevel("todos")
+                    : undefined
+                }
+              />
+            </>
+          )}
+        </div>
 
         {/* Mobile Filters Slide-over / Bottom Sheet Modal */}
         {mobileFiltersOpen && (
@@ -1090,7 +1200,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                 </div>
                 <button
                   type="button"
-                  onClick={clearFilters}
+                  onClick={clearActiveFilters}
                   className="shrink-0 text-xs font-semibold text-secondary dark:text-teal-400 hover:underline px-2 py-1 active:scale-95"
                 >
                   {t("becas.clearAll", "Limpiar todo")}
@@ -1123,7 +1233,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                 </button>
               </div>
 
-              {renderFilterGroups("sheet")}
+              {showingStudies ? studyFilters.renderGroups("sheet") : renderFilterGroups("sheet")}
             </div>
 
             {/* Bottom Apply Action */}
@@ -1139,7 +1249,13 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                 className="w-full py-3.5 bg-primary dark:bg-sky-600 hover:bg-primary-container text-white font-bold text-sm rounded-xl shadow-md cursor-pointer active:scale-95 transition-all text-center flex items-center justify-center gap-2"
               >
                 <CheckCircle2 className="w-4 h-4" />
-                <span>Ver {filteredScholarships.length} Convocatorias</span>
+                <span>
+                  {t("becas.applyFilters", "Ver")}{" "}
+                  {showingStudies ? studyFilters.matching.length : filteredScholarships.length}{" "}
+                  {showingStudies
+                    ? t("becas.programmesNoun", "programas")
+                    : t("becas.scholarshipsNoun", "convocatorias")}
+                </span>
               </button>
             </div>
           </Modal>
@@ -1147,7 +1263,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Sidebar Filters (Desktop Only: hidden on mobile to avoid 500px dead scroll) */}
-          {!showingStudies && (
+          {
             <aside className="hidden lg:block lg:col-span-3 bg-surface-container-lowest dark:bg-slate-800 p-6 rounded-2xl border border-outline-variant/40 dark:border-slate-700 space-y-6 sticky top-24">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 font-bold text-primary dark:text-sky-300">
@@ -1155,7 +1271,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                   <span>{t("becas.advancedFilters", "Filtros Avanzados")}</span>
                 </div>
                 <button
-                  onClick={clearFilters}
+                  onClick={clearActiveFilters}
                   id="clear-filters-btn"
                   className="text-xs font-semibold text-secondary dark:text-teal-300 hover:underline flex items-center gap-1 cursor-pointer active:scale-95"
                 >
@@ -1191,9 +1307,11 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                 </button>
               </div>
 
-              {renderFilterGroups("sidebar")}
+              {showingStudies
+                ? studyFilters.renderGroups("sidebar")
+                : renderFilterGroups("sidebar")}
             </aside>
-          )}
+          }
 
           {/* Scholarships Grid & Pagination Container */}
           {/* The panel sits inside <main> rather than replacing it: Radix puts
@@ -1202,7 +1320,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
           <main
             ref={mainListRef}
             id="scholarships-main-section"
-            className={showingStudies ? "lg:col-span-12" : "lg:col-span-9"}
+            className="lg:col-span-9"
             aria-busy={!showingStudies && catalogueStatus === "loading"}
           >
             <TabsContent value={viewModeTab} className="space-y-6">
@@ -1238,6 +1356,8 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                   onOpenScholarship={(scholarship) => setSelectedScholarship(scholarship)}
                   favourites={favorites}
                   onToggleFavourite={(id) => toggleFavorite("programme", id)}
+                  filterState={studyFilters}
+                  hideHeading
                 />
               ) : (
                 <>
@@ -1561,7 +1681,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
           onOpenChange={(next) => {
             if (!next) setShowSuggestModal(false);
           }}
-          title="Sugerir una convocatoria oficial"
+          title={catalogueCopy.suggestModalTitle}
           size="md"
           id="suggest-scholarship-modal"
         >
@@ -1571,18 +1691,17 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
               <span>Verificación de Fuentes Oficiales</span>
             </div>
             <h2 className="font-headline-md text-2xl font-extrabold text-primary dark:text-sky-300">
-              Sugerir Beca Universitaria
+              {catalogueCopy.suggestHeading}
             </h2>
             <p className="text-xs text-on-surface-variant dark:text-slate-300">
-              Agrega becas y ayudas publicadas directamente en portales universitarios (.edu, .es,
-              .de, etc.) para que nuestro equipo y la IA las verifiquen e incorporen al directorio.
+              {catalogueCopy.suggestIntro}
             </p>
           </div>
 
           {suggestSuccess ? (
             <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30 text-emerald-800 dark:text-emerald-200 p-4 rounded-2xl text-center space-y-2">
               <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
-              <h4 className="font-bold text-sm">¡Beca enviada para verificación!</h4>
+              <h4 className="font-bold text-sm">{catalogueCopy.suggestSent}</h4>
               <p className="text-xs">
                 Revisaremos el enlace institucional para integrarla al catálogo oficial de
                 LatinoMigra.
@@ -1626,7 +1745,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
 
                 <div>
                   <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block mb-1">
-                    Nombre de la Beca *
+                    {catalogueCopy.suggestNameLabel}
                   </label>
                   <input
                     type="text"
@@ -1635,7 +1754,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                     onChange={(e) =>
                       setSuggestForm({ ...suggestForm, scholarshipName: e.target.value })
                     }
-                    placeholder="Ej. Ayuda de Matrícula Máster..."
+                    placeholder={catalogueCopy.suggestNamePlaceholder}
                     className="w-full px-3.5 py-2.5 bg-surface dark:bg-slate-900 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs outline-none focus:ring-2 focus:ring-secondary"
                   />
                 </div>

@@ -46,81 +46,26 @@ describe("EstudiosSection", () => {
     expect(link).toHaveAttribute("target", "_blank");
   });
 
-  it("collapses requirements behind a control that only exists below lg", () => {
+  it("opens the requirements in the same detail modal a scholarship uses", () => {
     render(
       <EstudiosSection scholarships={[]} onOpenScholarship={vi.fn()} programmes={[programme()]} />
     );
 
-    const control = document.getElementById("estudio-details-programa-uno");
-    expect(control).toBeTruthy();
-    // The breakpoint is on the wrapper, not on the control: `lg:hidden` and
-    // `inline-flex` on one element let Tailwind's emission order decide.
-    expect(control?.parentElement).toHaveClass("lg:hidden");
-    expect(control).toHaveAttribute("aria-expanded", "false");
+    // The card is a preview: the requirements are behind the control, so a
+    // study card is the height of the scholarship card beside it (#105).
+    expect(screen.queryByText("Bachillerato homologado")).not.toBeInTheDocument();
 
-    fireEvent.click(control!);
-    expect(control).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByText("Bachillerato homologado")).toBeVisible();
-  });
+    fireEvent.click(document.getElementById("estudio-details-programa-uno")!);
 
-  it("filters by country, modality, migration route and name", () => {
-    render(
-      <EstudiosSection
-        scholarships={[]}
-        onOpenScholarship={vi.fn()}
-        programmes={[
-          programme({ migrationRoute: "directa", migrationRouteNote: "Da acceso al visado." }),
-          programme({
-            id: "programa-dos",
-            title: "Curso en línea",
-            institution: "UNED",
-            kind: "curso",
-            country: "Alemania",
-            modality: "En línea",
-            migrationRoute: "ninguna",
-            migrationRouteNote: "No genera estancia.",
-          }),
-        ]}
-      />
+    const modal = screen.getByRole("dialog");
+    expect(modal).toHaveAccessibleName(/Formación Profesional de prueba/i);
+    expect(within(modal).getByText("Bachillerato homologado")).toBeVisible();
+    expect(within(modal).getByText("Título de Técnico Superior")).toBeVisible();
+    // The official source is in the panel too: it is why the entry exists.
+    expect(modal.querySelector("#estudio-modal-official-link-programa-uno")).toHaveAttribute(
+      "href",
+      "https://www.todofp.es"
     );
-
-    const list = () => document.getElementById("estudios-list");
-    expect(list()?.children).toHaveLength(2);
-
-    fireEvent.click(document.getElementById("estudios-country-chip-Alemania")!);
-    expect(list()?.children).toHaveLength(1);
-    expect(document.getElementById("estudio-card-programa-dos")).toBeInTheDocument();
-
-    fireEvent.click(document.getElementById("estudios-clear-filters")!);
-    expect(list()?.children).toHaveLength(2);
-
-    fireEvent.click(document.getElementById("estudios-route-chip-directa")!);
-    expect(list()?.children).toHaveLength(1);
-    expect(document.getElementById("estudio-card-programa-uno")).toBeInTheDocument();
-
-    fireEvent.click(document.getElementById("estudios-clear-filters")!);
-    fireEvent.change(document.getElementById("estudios-search-input")!, {
-      target: { value: "uned" },
-    });
-    expect(list()?.children).toHaveLength(1);
-    expect(document.getElementById("estudio-card-programa-dos")).toBeInTheDocument();
-  });
-
-  it("says which filters emptied the list", () => {
-    render(
-      <EstudiosSection
-        scholarships={[]}
-        onOpenScholarship={vi.fn()}
-        programmes={[programme({ country: "España", kind: "fp" })]}
-      />
-    );
-
-    fireEvent.change(document.getElementById("estudios-search-input")!, {
-      target: { value: "no existe" },
-    });
-
-    expect(screen.getByText(/Ningún programa con estos filtros/i)).toBeInTheDocument();
-    expect(screen.getByText(/"no existe"/)).toBeInTheDocument();
   });
 
   it("says an unchecked migration route is unchecked rather than guessing", () => {
@@ -133,30 +78,6 @@ describe("EstudiosSection", () => {
     const card = document.getElementById("estudio-card-programa-uno")!;
     expect(within(card).getByText("Sin verificar")).toBeInTheDocument();
     expect(within(card).queryByText(/Sin vía migratoria/)).not.toBeInTheDocument();
-  });
-
-  it("narrows the list by kind, with counts that match what renders", () => {
-    render(
-      <EstudiosSection
-        scholarships={[]}
-        onOpenScholarship={vi.fn()}
-        programmes={[
-          programme(),
-          programme({ id: "programa-dos", title: "Curso de prueba", kind: "curso" }),
-        ]}
-      />
-    );
-
-    expect(document.getElementById("estudios-list")?.children).toHaveLength(2);
-
-    // Addressed by id, not by its Spanish label: the chip's text now comes
-    // from the shared label module and changes with the language.
-    fireEvent.click(document.getElementById("estudios-kind-chip-curso") as HTMLElement);
-
-    const list = document.getElementById("estudios-list");
-    expect(list?.children).toHaveLength(1);
-    expect(within(list!).getByText("Curso de prueba")).toBeInTheDocument();
-    expect(within(list!).queryByText("Formación Profesional de prueba")).not.toBeInTheDocument();
   });
 
   it("reports a rejected entry instead of dropping it silently", () => {
@@ -201,6 +122,8 @@ describe("EstudiosSection", () => {
       />
     );
 
+    fireEvent.click(document.getElementById("estudio-details-programa-uno")!);
+
     // The id is named by the entry but absent from the catalogue on screen:
     // rendering a link to it would be inventing a record.
     expect(document.getElementById(`estudio-beca-link-${beca.id}`)).not.toBeInTheDocument();
@@ -217,6 +140,9 @@ describe("EstudiosSection", () => {
     expect(link).toBeInTheDocument();
     fireEvent.click(link!);
     expect(onOpenScholarship).toHaveBeenCalledWith(beca);
+    // Two stacked panels would trap focus in the one underneath, so the
+    // programme's closes as the scholarship's opens.
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("ships a catalogue where every entry links to an official source", () => {

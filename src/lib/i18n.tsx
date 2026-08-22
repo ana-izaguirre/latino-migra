@@ -409,11 +409,7 @@ export const TRANSLATIONS: TranslationDictionary = {
   "estudios.cost": { es: "Coste", en: "Cost" },
   "estudios.outcome": { es: "Qué obtienes", en: "What you end up with" },
   "estudios.requirements": { es: "Requisitos", en: "Requirements" },
-  "estudios.showDetails": {
-    es: "Ver requisitos y titulación",
-    en: "Show requirements and qualification",
-  },
-  "estudios.hideDetails": { es: "Ocultar requisitos", en: "Hide requirements" },
+  "estudios.viewDetails": { es: "Ver Detalles", en: "View details" },
   "estudios.relatedScholarships": { es: "Becas para esta ruta", en: "Scholarships for this route" },
   "estudios.seeAll": { es: "Ver todos los programas", en: "See every programme" },
   "estudios.emptyFilterTitle": {
@@ -468,6 +464,55 @@ export const TRANSLATIONS: TranslationDictionary = {
   "becas.quickFilters": { es: "Filtros Rápidos", en: "Quick Filters" },
   "becas.clear": { es: "Limpiar", en: "Clear" },
   "becas.moreFilters": { es: "Más Filtros", en: "More Filters" },
+  "becas.searchLabel": { es: "Buscar convocatorias", en: "Search calls" },
+  "becas.suggestModalTitle": {
+    es: "Sugerir una convocatoria oficial",
+    en: "Suggest an official call",
+  },
+  "becas.suggestHeading": { es: "Sugerir Beca Universitaria", en: "Suggest a university grant" },
+  "becas.suggestIntro": {
+    es: "Agrega becas y ayudas publicadas directamente en portales universitarios (.edu, .es, .de, etc.) para que nuestro equipo y la IA las verifiquen e incorporen al directorio.",
+    en: "Add grants published directly on university portals (.edu, .es, .de and so on) so our team and the assistant can verify them and add them to the directory.",
+  },
+  "becas.suggestNameLabel": { es: "Nombre de la Beca *", en: "Grant name *" },
+  "becas.suggestNamePlaceholder": {
+    es: "Ej. Ayuda de Matrícula Máster…",
+    en: "e.g. Master's tuition support…",
+  },
+  "becas.suggestSent": {
+    es: "¡Beca enviada para verificación!",
+    en: "Grant sent for verification.",
+  },
+  "estudios.suggest": { es: "Sugerir Curso Oficial", en: "Suggest an official course" },
+  "estudios.suggestModalTitle": {
+    es: "Sugerir un programa oficial",
+    en: "Suggest an official programme",
+  },
+  "estudios.suggestHeading": {
+    es: "Sugerir Curso, Certificado o FP",
+    en: "Suggest a course, certificate or vocational programme",
+  },
+  "estudios.suggestIntro": {
+    es: "Agrega programas publicados directamente en el portal oficial de la institución que los imparte, para que nuestro equipo los verifique e incorpore al catálogo.",
+    en: "Add programmes published directly on the official portal of the institution that runs them, so our team can verify them and add them to the catalogue.",
+  },
+  "estudios.suggestNameLabel": { es: "Nombre del Programa *", en: "Programme name *" },
+  "estudios.suggestNamePlaceholder": {
+    es: "Ej. Certificado de Español DELE B2…",
+    en: "e.g. DELE B2 Spanish certificate…",
+  },
+  "estudios.suggestSent": {
+    es: "¡Programa enviado para verificación!",
+    en: "Programme sent for verification.",
+  },
+  "estudios.savedCount": { es: "guardados", en: "saved" },
+  "estudios.sortLabel": { es: "Ordenar por:", en: "Sort by:" },
+  "estudios.sortName": { es: "Nombre (A-Z)", en: "Name (A-Z)" },
+  "estudios.sortCountry": { es: "País (A-Z)", en: "Country (A-Z)" },
+  "estudios.sortInstitution": { es: "Institución (A-Z)", en: "Institution (A-Z)" },
+  "becas.applyFilters": { es: "Ver", en: "See" },
+  "becas.programmesNoun": { es: "programas", en: "programmes" },
+  "becas.scholarshipsNoun": { es: "convocatorias", en: "calls" },
   "becas.searchFilters": { es: "Filtros de Búsqueda", en: "Search Filters" },
   "becas.clearAll": { es: "Limpiar todo", en: "Clear all" },
   "becas.onlyFavorites": { es: "Ver solo mis favoritas", en: "Show only my saved ones" },

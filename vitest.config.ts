@@ -41,9 +41,9 @@ export default defineConfig({
       // pass — write the test instead.
       thresholds: {
         statements: 64,
-        branches: 57,
-        functions: 60,
-        lines: 64,
+        branches: 58,
+        functions: 61,
+        lines: 65,
         "src/lib/PreferencesContext.tsx": {
           statements: 95,
           branches: 85,

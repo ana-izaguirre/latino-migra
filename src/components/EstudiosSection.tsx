@@ -1,39 +1,40 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import {
   AlertCircle,
   ArrowDownCircle,
+  BookOpen,
   CheckCircle2,
   ExternalLink,
-  Globe2,
   GraduationCap,
   Heart,
   Landmark,
+  MapPin,
   Link2,
   Plane,
-  RotateCcw,
-  Search,
-  Wifi,
 } from "lucide-react";
 
 import { STUDY_PROGRAMMES_DATA } from "../data/studyProgrammes";
 import { useLanguage } from "../lib/i18n";
 import { useLabels } from "../lib/labels";
-import {
-  EMPTY_STUDY_FILTERS,
-  REJECTION_REASONS,
-  StudyFilters,
-  countByOption,
-  matchesStudyFilters,
-  validateStudyProgrammes,
-} from "../lib/studyProgrammes";
-import { MigrationRoute, Scholarship, StudyProgramme, StudyProgrammeKind } from "../types";
+import { STUDY_BATCH_SIZE, StudyFilterState, useStudyFilters } from "../lib/useStudyFilters";
+import { REJECTION_REASONS } from "../lib/studyProgrammes";
+import { Scholarship, StudyProgramme, StudyProgrammeKind } from "../types";
 import { isFavourite } from "../lib/favourites";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardFooter } from "./ui/card";
-import { Input } from "./ui/input";
-import { Disclosure } from "./ui/Disclosure";
-import { FilterChipGroup } from "./ui/FilterChipGroup";
+import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
+import { Modal } from "./ui/Modal";
+
+/**
+ * The cover band per kind, standing in for the photograph a scholarship has.
+ * The colours are the ones the kind badge already uses, so a card reads the
+ * same way at a glance whether the reader is looking at the band or the badge.
+ */
+const KIND_COVER: Record<StudyProgrammeKind, string> = {
+  curso: "bg-gradient-to-br from-sky-600 to-sky-900",
+  certificado: "bg-gradient-to-br from-teal-600 to-teal-900",
+  fp: "bg-gradient-to-br from-indigo-600 to-indigo-900",
+};
 
 interface EstudiosSectionProps {
   /**
@@ -47,6 +48,11 @@ interface EstudiosSectionProps {
   onOpenScholarship: (scholarship: Scholarship) => void;
   /** Catalogue used instead of the bundled one. Tests pass their own. */
   programmes?: StudyProgramme[];
+  /**
+   * Filter state owned by the caller, so the chips can render in the shared
+   * sidebar and sheet. Omitted by callers that show a fixed list.
+   */
+  filterState?: StudyFilterState;
   /** Favourite keys, shared with the scholarship half of the screen (#82). */
   favourites?: string[];
   /** Omitted when saving is not offered — the heart is then not rendered. */
@@ -54,38 +60,6 @@ interface EstudiosSectionProps {
   /** Hides the section heading, for the favourites tab which has its own. */
   hideHeading?: boolean;
 }
-
-const KIND_ORDER: StudyProgrammeKind[] = ["curso", "certificado", "fp"];
-
-const ROUTE_ORDER: MigrationRoute[] = ["directa", "requisito", "ninguna"];
-
-/**
- * How many programmes each "Ver más" adds.
- *
- * The whole catalogue at once is 9463px on a 375px viewport — eleven screens,
- * the density #54 was opened about. The sibling scholarship list already pages
- * in sixes, and two catalogues on one screen behaving differently is worse
- * than either behaviour.
- */
-const STUDY_BATCH_SIZE = 6;
-
-/**
- * Filter options with the count each one would give.
- *
- * Hoisted out of the component so the count and the list are one call to one
- * predicate, and so the memos that build the options declare a complete
- * dependency list rather than closing over a helper redefined on every render.
- */
-const optionsFor = <T extends string>(
-  programmes: StudyProgramme[],
-  filters: StudyFilters,
-  axis: keyof StudyFilters,
-  entries: { id: T; label: string }[]
-) =>
-  entries.map((entry) => ({
-    ...entry,
-    count: countByOption(programmes, filters, axis, entry.id),
-  }));
 
 /**
  * Courses, certificates and vocational training — the half of "Becas &
@@ -102,104 +76,27 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
   favourites = [],
   onToggleFavourite,
   hideHeading = false,
+  filterState,
 }) => {
   const { t } = useLanguage();
   const label = useLabels();
-  const [filters, setFilters] = useState<StudyFilters>(EMPTY_STUDY_FILTERS);
-  const [visibleCount, setVisibleCount] = useState(STUDY_BATCH_SIZE);
-
-  /** Narrowing the list starts it again from the top of the new list. */
-  const setFilter = <K extends keyof StudyFilters>(axis: K, value: StudyFilters[K]) => {
-    setFilters((prev) => ({ ...prev, [axis]: value }));
-    setVisibleCount(STUDY_BATCH_SIZE);
-  };
-
-  const clearFilters = () => {
-    setFilters(EMPTY_STUDY_FILTERS);
-    setVisibleCount(STUDY_BATCH_SIZE);
-  };
-
-  const activeFilterCount = (Object.keys(EMPTY_STUDY_FILTERS) as (keyof StudyFilters)[]).filter(
-    (axis) => filters[axis] !== EMPTY_STUDY_FILTERS[axis]
-  ).length;
-
-  const { valid, rejected } = useMemo(() => validateStudyProgrammes(programmes), [programmes]);
-
-  const matching = useMemo(
-    () => valid.filter((programme) => matchesStudyFilters(programme, filters)),
-    [valid, filters]
-  );
-
-  const visible = matching.slice(0, visibleCount);
-
-  /**
-   * Every count is this same predicate with one axis relaxed, so the number on
-   * a chip is exactly what selecting it renders. Two definitions of one rule
-   * drift, and the interface starts lying about its own behaviour.
-   */
-  const kindOptions = useMemo(
-    () =>
-      optionsFor(valid, filters, "kind", [
-        { id: "todos", label: t("estudios.filterAll", "Todos") },
-        ...KIND_ORDER.map((kind) => ({ id: kind, label: label("programmeKind", kind) })),
-      ]),
-    [valid, filters, t]
-  );
-
-  const countryOptions = useMemo(
-    () =>
-      optionsFor(valid, filters, "country", [
-        { id: "Todos", label: t("estudios.filterAll", "Todos") },
-        ...Array.from(new Set(valid.map((p) => p.country)))
-          .sort((a, b) => a.localeCompare(b, "es"))
-          .map((country) => ({ id: country, label: label("country", country) })),
-      ]),
-    [valid, filters, t, label]
-  );
-
-  const modalityOptions = useMemo(
-    () =>
-      optionsFor(valid, filters, "modality", [
-        { id: "Todas", label: t("estudios.filterAllF", "Todas") },
-        ...Array.from(new Set(valid.map((p) => p.modality)))
-          .sort((a, b) => a.localeCompare(b, "es"))
-          .map((modality) => ({ id: modality, label: label("modality", modality) })),
-      ]),
-    [valid, filters, t, label]
-  );
-
-  /**
-   * "Sin verificar" is an option rather than a silent omission: an entry whose
-   * route nobody checked carries no value, and hiding those would let the
-   * filter imply the catalogue knows more than it does.
-   */
-  const routeOptions = useMemo(
-    () =>
-      optionsFor(valid, filters, "migrationRoute", [
-        { id: "todas", label: t("estudios.filterAllF", "Todas") },
-        ...ROUTE_ORDER.map((route) => ({ id: route, label: label("migrationRoute", route) })),
-        { id: "sin-verificar", label: t("estudios.routeUnverified", "Sin verificar") },
-      ]),
-    [valid, filters, t, label]
-  );
-
-  /**
-   * Which filters are narrowing the list, in words.
-   *
-   * An empty state that says "no results" without saying which of four filters
-   * caused it leaves the reader guessing at the one to relax.
-   */
-  const activeFilterSummary = [
-    filters.search.trim() && `"${filters.search.trim()}"`,
-    filters.country !== "Todos" && label("country", filters.country),
-    filters.kind !== "todos" && label("programmeKind", filters.kind),
-    filters.modality !== "Todas" && label("modality", filters.modality),
-    filters.migrationRoute === "sin-verificar"
-      ? t("estudios.routeUnverified", "Sin verificar")
-      : filters.migrationRoute !== "todas" && label("migrationRoute", filters.migrationRoute),
-  ].filter((entry): entry is string => Boolean(entry));
-
-  /** Scholarships an entry names, keeping only the ones actually loaded. */
+  /*
+    The detail panel, opened from the card exactly as a scholarship's is. The
+    requirements used to sit inline behind a Disclosure, which made a study
+    card three times the height of the scholarship card beside it (#105).
+  */
+  const [selectedProgramme, setSelectedProgramme] = useState<StudyProgramme | null>(null);
+  /*
+    The filters live outside this component so they can be rendered in the
+    same sidebar and the same sheet as the scholarship ones (#105). A caller
+    that has no filter state of its own — the saved-programmes strip inside
+    favourites — gets one here.
+  */
+  const ownState = useStudyFilters(programmes);
+  const state = filterState ?? ownState;
+  const { clearFilters, activeFilterSummary, valid, rejected, matching, visible, loadMore } = state;
+  /** Saved programmes, for the toolbar badge the scholarship list also shows. */
+  const savedCount = favourites.filter((entry) => entry.startsWith("programme:")).length;
   const relatedScholarships = (programme: StudyProgramme): Scholarship[] =>
     (programme.relatedScholarshipIds ?? [])
       .map((id) => scholarships.find((s) => s.id === id))
@@ -249,85 +146,6 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
         </div>
       )}
 
-      <div className="space-y-3.5 bg-surface-container-lowest dark:bg-slate-800 p-3.5 rounded-2xl border border-outline-variant/40 dark:border-slate-700">
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search
-              className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400"
-              aria-hidden="true"
-            />
-            <Input
-              value={filters.search}
-              onChange={(e) => setFilter("search", e.target.value)}
-              id="estudios-search-input"
-              aria-label={t("estudios.searchLabel", "Buscar programa o institución")}
-              placeholder={t("estudios.searchPlaceholder", "Buscar por nombre o institución…")}
-              className="pl-9"
-            />
-          </div>
-          {activeFilterCount > 0 && (
-            <button
-              type="button"
-              onClick={clearFilters}
-              id="estudios-clear-filters"
-              className="inline-flex items-center gap-1.5 min-h-[44px] px-3 text-xs font-semibold text-secondary dark:text-teal-400 hover:underline cursor-pointer active:scale-95"
-            >
-              <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>{t("estudios.clearFilters", "Limpiar")}</span>
-            </button>
-          )}
-        </div>
-
-        {/*
-          Migration first. It is the reason somebody is here rather than on a
-          course aggregator, and putting it under three other filters would bury
-          the one question this platform exists to answer.
-        */}
-        <FilterChipGroup
-          label={t("estudios.routeLabel", "¿Abre vía migratoria?")}
-          icon={<Plane className="w-4 h-4 text-secondary dark:text-teal-400" />}
-          options={routeOptions}
-          value={filters.migrationRoute}
-          onChange={(id) => setFilter("migrationRoute", id as StudyFilters["migrationRoute"])}
-          idPrefix="estudios-route-chip"
-          onClear={
-            filters.migrationRoute !== "todas"
-              ? () => setFilter("migrationRoute", "todas")
-              : undefined
-          }
-        />
-
-        <FilterChipGroup
-          label={t("estudios.countryLabel", "País")}
-          icon={<Globe2 className="w-4 h-4 text-secondary dark:text-teal-400" />}
-          options={countryOptions}
-          value={filters.country}
-          onChange={(id) => setFilter("country", id)}
-          idPrefix="estudios-country-chip"
-          onClear={filters.country !== "Todos" ? () => setFilter("country", "Todos") : undefined}
-        />
-
-        <FilterChipGroup
-          label={t("estudios.kindLabel", "Tipo de programa")}
-          icon={<GraduationCap className="w-4 h-4 text-secondary dark:text-teal-400" />}
-          options={kindOptions}
-          value={filters.kind}
-          onChange={(id) => setFilter("kind", id as StudyFilters["kind"])}
-          idPrefix="estudios-kind-chip"
-          onClear={filters.kind !== "todos" ? () => setFilter("kind", "todos") : undefined}
-        />
-
-        <FilterChipGroup
-          label={t("estudios.modalityLabel", "Modalidad")}
-          icon={<Wifi className="w-4 h-4 text-secondary dark:text-teal-400" />}
-          options={modalityOptions}
-          value={filters.modality}
-          onChange={(id) => setFilter("modality", id)}
-          idPrefix="estudios-modality-chip"
-          onClear={filters.modality !== "Todas" ? () => setFilter("modality", "Todas") : undefined}
-        />
-      </div>
-
       {visible.length === 0 ? (
         <div className="bg-surface-container-lowest dark:bg-slate-800 rounded-2xl p-10 text-center space-y-4 border border-outline-variant/40 dark:border-slate-700">
           <h3 className="font-headline-sm text-lg font-bold text-primary dark:text-sky-300">
@@ -351,22 +169,90 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
         </div>
       ) : (
         <>
-          <p className="text-xs md:text-sm text-on-surface-variant dark:text-slate-300">
-            {t("estudios.showing", "Mostrando")} <strong>{visible.length}</strong>{" "}
-            {t("estudios.of", "de")} <strong>{matching.length}</strong>{" "}
-            {t("estudios.programmes", "programas oficiales")}
-          </p>
+          {/*
+            The same toolbar the scholarship list uses. It was a bare paragraph,
+            so the two halves of one screen reported their size differently
+            (#105).
+          */}
+          <div
+            id="estudios-toolbar"
+            className="bg-surface-container-lowest dark:bg-slate-800 p-4 rounded-2xl border border-outline-variant/40 dark:border-slate-700 flex flex-wrap items-center gap-3"
+          >
+            <span className="text-xs md:text-sm text-on-surface-variant dark:text-slate-300">
+              {t("estudios.showing", "Mostrando")} <strong>{visible.length}</strong>{" "}
+              {t("estudios.of", "de")} <strong>{matching.length}</strong>{" "}
+              {t("estudios.programmes", "programas oficiales")}
+            </span>
+            {savedCount > 0 && (
+              <span className="text-secondary dark:text-teal-300 font-semibold bg-secondary/10 dark:bg-teal-900/30 px-2 py-0.5 rounded-full text-xs">
+                ♥ {savedCount} {t("estudios.savedCount", "guardados")}
+              </span>
+            )}
+          </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-5" id="estudios-list">
-            {visible.map((programme) => {
-              const related = relatedScholarships(programme);
+            {visible.map((programme) => (
+              <Card
+                key={programme.id}
+                id={`estudio-card-${programme.id}`}
+                className="hover:shadow-xl transition-all group"
+              >
+                <div>
+                  {/*
+                    The cover the scholarship card has, at the same height and
+                    carrying the same two controls. A programme has no
+                    photograph and inventing one would put a stock campus
+                    behind a certificate nobody photographed, so the band is
+                    drawn from the kind instead.
+                  */}
+                  <CardHeader className={`h-44 overflow-hidden ${KIND_COVER[programme.kind]}`}>
+                    <div
+                      className="absolute inset-0 grid place-items-center text-white/25 group-hover:scale-105 transition-transform duration-500"
+                      aria-hidden="true"
+                      id={`estudio-cover-${programme.id}`}
+                    >
+                      <GraduationCap className="w-20 h-20" />
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
-              return (
-                <Card key={programme.id} id={`estudio-card-${programme.id}`}>
+                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-semibold">
+                        <MapPin className="w-3.5 h-3.5 text-sky-400" aria-hidden="true" />
+                        <span>{label("country", programme.country)}</span>
+                      </div>
+                      {onToggleFavourite && (
+                        <button
+                          type="button"
+                          id={`estudio-fav-${programme.id}`}
+                          onClick={() => onToggleFavourite(programme.id)}
+                          aria-pressed={isFavourite(favourites, "programme", programme.id)}
+                          title={
+                            isFavourite(favourites, "programme", programme.id)
+                              ? t("estudios.removeFavourite", "Quitar de mis guardados")
+                              : t("estudios.addFavourite", "Guardar este programa")
+                          }
+                          className="grid place-items-center w-11 h-11 rounded-full bg-black/60 backdrop-blur-md text-red-400 hover:text-red-300 cursor-pointer active:scale-95 transition-transform"
+                        >
+                          <Heart
+                            className={`w-5 h-5 ${
+                              isFavourite(favourites, "programme", programme.id)
+                                ? "fill-current"
+                                : ""
+                            }`}
+                            aria-hidden="true"
+                          />
+                        </button>
+                      )}
+                    </div>
+
+                    <h3 className="absolute bottom-3 left-3 right-3 text-lg font-bold text-white text-pretty line-clamp-2">
+                      {programme.title}
+                    </h3>
+                  </CardHeader>
+
                   <CardContent className="flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <Badge variant="level">{label("programmeKindBadge", programme.kind)}</Badge>
-                      <Badge variant="institution">{label("country", programme.country)}</Badge>
                       <Badge variant="support">{label("modality", programme.modality)}</Badge>
                       {/*
                         Absent, not guessed. An entry nobody has checked says so
@@ -381,41 +267,12 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
                       </Badge>
                     </div>
 
-                    <div className="flex items-start gap-2">
-                      <h3 className="flex-1 text-lg font-bold text-primary dark:text-sky-300 text-pretty">
-                        {programme.title}
-                      </h3>
-                      {onToggleFavourite && (
-                        <button
-                          type="button"
-                          id={`estudio-fav-${programme.id}`}
-                          onClick={() => onToggleFavourite(programme.id)}
-                          aria-pressed={isFavourite(favourites, "programme", programme.id)}
-                          title={
-                            isFavourite(favourites, "programme", programme.id)
-                              ? t("estudios.removeFavourite", "Quitar de mis guardados")
-                              : t("estudios.addFavourite", "Guardar este programa")
-                          }
-                          className="shrink-0 grid place-items-center w-11 h-11 -mt-1.5 -mr-1.5 rounded-full text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 cursor-pointer active:scale-95 transition-transform"
-                        >
-                          <Heart
-                            className={`w-5 h-5 ${
-                              isFavourite(favourites, "programme", programme.id)
-                                ? "fill-current"
-                                : ""
-                            }`}
-                            aria-hidden="true"
-                          />
-                        </button>
-                      )}
-                    </div>
-
                     <p className="flex items-center gap-1.5 text-xs font-semibold text-on-surface-variant dark:text-slate-300">
                       <Landmark className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                       {programme.institution}
                     </p>
 
-                    <p className="text-sm text-on-surface-variant dark:text-slate-400 leading-relaxed">
+                    <p className="text-sm text-on-surface-variant dark:text-slate-400 line-clamp-2 leading-relaxed">
                       {programme.description}
                     </p>
 
@@ -437,102 +294,48 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
                         </dd>
                       </div>
                     </dl>
-
-                    {/*
-                      The bulk of the card collapses below `lg` and stays open
-                      above it — the same Disclosure the guides (#54) and the
-                      scholarship detail panel (#53) use. The official link is
-                      never inside it: it is why the entry exists.
-                    */}
-                    <Disclosure
-                      id={`estudio-details-${programme.id}`}
-                      label={t("estudios.showDetails", "Ver requisitos y titulación")}
-                      labelWhenOpen={t("estudios.hideDetails", "Ocultar requisitos")}
-                    >
-                      {programme.migrationRouteNote && (
-                        <div className="space-y-1">
-                          <p className="flex items-center gap-1.5 text-xs font-bold text-on-surface dark:text-slate-200">
-                            <Plane className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-                            {t("estudios.routeHeading", "Vía migratoria")}
-                          </p>
-                          <p className="text-xs text-on-surface-variant dark:text-slate-400">
-                            {programme.migrationRouteNote}
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="space-y-1">
-                        <p className="text-xs font-bold text-on-surface dark:text-slate-200">
-                          {t("estudios.outcome", "Qué obtienes")}
-                        </p>
-                        <p className="text-xs text-on-surface-variant dark:text-slate-400">
-                          {programme.outcome}
-                        </p>
-                      </div>
-
-                      <div className="space-y-1">
-                        <p className="text-xs font-bold text-on-surface dark:text-slate-200">
-                          {t("estudios.requirements", "Requisitos")}
-                        </p>
-                        <ul className="list-disc pl-4 space-y-1 text-xs text-on-surface-variant dark:text-slate-400">
-                          {programme.requirements.map((requirement) => (
-                            <li key={requirement}>{requirement}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </Disclosure>
-
-                    {related.length > 0 && (
-                      <div className="space-y-1.5 pt-1">
-                        <p className="flex items-center gap-1.5 text-xs font-bold text-secondary dark:text-teal-300">
-                          <Link2 className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-                          {t("estudios.relatedScholarships", "Becas para esta ruta")}
-                        </p>
-                        <ul className="space-y-1">
-                          {related.map((scholarship) => (
-                            <li key={scholarship.id}>
-                              <button
-                                type="button"
-                                id={`estudio-beca-link-${scholarship.id}`}
-                                onClick={() => onOpenScholarship(scholarship)}
-                                className="text-xs font-semibold text-secondary dark:text-teal-300 hover:underline text-left min-h-[44px] sm:min-h-0 cursor-pointer"
-                              >
-                                {scholarship.title}
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
                   </CardContent>
+                </div>
 
-                  <CardFooter>
-                    <Button variant="secondary" size="sm" className="flex-1" asChild>
-                      <a
-                        href={programme.officialUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        id={`estudio-official-link-${programme.id}`}
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
-                        <span className="truncate">{programme.officialPortalName}</span>
-                      </a>
-                    </Button>
-                  </CardFooter>
-                </Card>
-              );
-            })}
+                <CardFooter>
+                  <Button
+                    variant="soft"
+                    size="sm"
+                    className="flex-1"
+                    id={`estudio-details-${programme.id}`}
+                    onClick={() => setSelectedProgramme(programme)}
+                  >
+                    <BookOpen className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>{t("estudios.viewDetails", "Ver Detalles")}</span>
+                  </Button>
+
+                  {/*
+                    `truncate` only ellipses when the flex item is allowed to
+                    shrink. Without `min-w-0` the label ran past the button's
+                    own edge instead — a long portal name is the common case
+                    here, not the exception.
+                  */}
+                  <Button variant="secondary" size="sm" className="min-w-0 flex-1" asChild>
+                    <a
+                      href={programme.officialUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      id={`estudio-official-link-${programme.id}`}
+                    >
+                      <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                      <span className="truncate">{programme.officialPortalName}</span>
+                    </a>
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
           </div>
 
           {/* One way through the catalogue, matching the scholarship list. */}
           {matching.length > STUDY_BATCH_SIZE && (
             <div className="pt-1 text-center">
               {visible.length < matching.length ? (
-                <Button
-                  variant="secondary"
-                  id="btn-load-more-estudios"
-                  onClick={() => setVisibleCount((count) => count + STUDY_BATCH_SIZE)}
-                >
+                <Button variant="secondary" id="btn-load-more-estudios" onClick={loadMore}>
                   <ArrowDownCircle className="w-4 h-4" aria-hidden="true" />
                   <span>
                     {t("estudios.loadMore", "Ver más programas")} (+
@@ -551,6 +354,136 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
             </div>
           )}
         </>
+      )}
+
+      {selectedProgramme && (
+        <Modal
+          open={selectedProgramme !== null}
+          onOpenChange={(next) => {
+            if (!next) setSelectedProgramme(null);
+          }}
+          title={selectedProgramme.title}
+          size="lg"
+          id="estudio-detail-modal"
+        >
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Badge variant="level">{label("programmeKindBadge", selectedProgramme.kind)}</Badge>
+              <Badge variant="institution">{label("country", selectedProgramme.country)}</Badge>
+              <Badge variant="support">{label("modality", selectedProgramme.modality)}</Badge>
+              <Badge
+                variant={selectedProgramme.migrationRoute === "directa" ? "official" : "neutral"}
+              >
+                {selectedProgramme.migrationRoute
+                  ? label("migrationRouteBadge", selectedProgramme.migrationRoute)
+                  : t("estudios.routeUnverified", "Sin verificar")}
+              </Badge>
+            </div>
+
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-on-surface-variant dark:text-slate-300">
+              <Landmark className="w-4 h-4 shrink-0" aria-hidden="true" />
+              {selectedProgramme.institution}
+            </p>
+
+            <p className="text-sm text-on-surface-variant dark:text-slate-300 leading-relaxed">
+              {selectedProgramme.description}
+            </p>
+
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+              <div>
+                <dt className="font-bold text-on-surface dark:text-slate-200">
+                  {t("estudios.duration", "Duración")}
+                </dt>
+                <dd className="text-on-surface-variant dark:text-slate-400">
+                  {selectedProgramme.duration}
+                </dd>
+              </div>
+              <div>
+                <dt className="font-bold text-on-surface dark:text-slate-200">
+                  {t("estudios.cost", "Coste")}
+                </dt>
+                <dd className="text-on-surface-variant dark:text-slate-400">
+                  {selectedProgramme.cost}
+                </dd>
+              </div>
+            </dl>
+
+            {/* Present only when somebody checked it. Never inferred. */}
+            {selectedProgramme.migrationRouteNote && (
+              <div className="space-y-1">
+                <p className="flex items-center gap-1.5 text-sm font-bold text-on-surface dark:text-slate-200">
+                  <Plane className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  {t("estudios.routeHeading", "Vía migratoria")}
+                </p>
+                <p className="text-sm text-on-surface-variant dark:text-slate-400">
+                  {selectedProgramme.migrationRouteNote}
+                </p>
+              </div>
+            )}
+
+            <div className="space-y-1">
+              <p className="text-sm font-bold text-on-surface dark:text-slate-200">
+                {t("estudios.outcome", "Qué obtienes")}
+              </p>
+              <p className="text-sm text-on-surface-variant dark:text-slate-400">
+                {selectedProgramme.outcome}
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-sm font-bold text-on-surface dark:text-slate-200">
+                {t("estudios.requirements", "Requisitos")}
+              </p>
+              <ul className="list-disc pl-5 space-y-1 text-sm text-on-surface-variant dark:text-slate-400">
+                {selectedProgramme.requirements.map((requirement) => (
+                  <li key={requirement}>{requirement}</li>
+                ))}
+              </ul>
+            </div>
+
+            {/*
+              Linked only when the catalogue on screen holds the record. An id
+              that resolves to nothing gets no link rather than a dead one.
+            */}
+            {relatedScholarships(selectedProgramme).length > 0 && (
+              <div className="space-y-1.5">
+                <p className="flex items-center gap-1.5 text-sm font-bold text-secondary dark:text-teal-300">
+                  <Link2 className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  {t("estudios.relatedScholarships", "Becas para esta ruta")}
+                </p>
+                <ul className="space-y-1">
+                  {relatedScholarships(selectedProgramme).map((scholarship) => (
+                    <li key={scholarship.id}>
+                      <button
+                        type="button"
+                        id={`estudio-beca-link-${scholarship.id}`}
+                        onClick={() => {
+                          setSelectedProgramme(null);
+                          onOpenScholarship(scholarship);
+                        }}
+                        className="text-sm font-semibold text-secondary dark:text-teal-300 hover:underline text-left min-h-[44px] sm:min-h-0 cursor-pointer"
+                      >
+                        {scholarship.title}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <Button variant="secondary" className="w-full min-w-0" asChild>
+              <a
+                href={selectedProgramme.officialUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                id={`estudio-modal-official-link-${selectedProgramme.id}`}
+              >
+                <ExternalLink className="w-4 h-4 shrink-0" aria-hidden="true" />
+                <span className="truncate">{selectedProgramme.officialPortalName}</span>
+              </a>
+            </Button>
+          </div>
+        </Modal>
       )}
     </section>
   );
