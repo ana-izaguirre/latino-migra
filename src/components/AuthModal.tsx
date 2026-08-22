@@ -5,6 +5,7 @@ import { signInWithGoogle, isUserAdmin } from "../lib/firebase";
 import { getSafeImageUrl } from "../lib/sanitize";
 import { Modal } from "./ui/Modal";
 import { useLanguage } from "../lib/i18n";
+import { LATIN_AMERICAN_COUNTRIES } from "../data/countriesData";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -16,6 +17,19 @@ interface AuthModalProps {
 
 /** Resolves a key to the visitor's language. `useLanguage().t`, in practice. */
 type Translate = (key: string, fallback?: string) => string;
+
+/**
+ * Every country the platform is for, alphabetically.
+ *
+ * The modal listed nine, written into the markup: someone from Honduras could
+ * say so, someone from Panamá, Paraguay or Uruguay could not — on a platform
+ * whose audience is Latin America (#88). `countriesData.ts` already holds all
+ * twenty, so the list comes from there rather than from a second copy beside
+ * it that has to be kept in step.
+ */
+const originCountries = [...LATIN_AMERICAN_COUNTRIES].sort((a, b) =>
+  a.name.localeCompare(b.name, "es")
+);
 
 /**
  * What to tell the visitor when sign-in did not complete.
@@ -267,23 +281,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           {/* Country Selection */}
           <div className="space-y-1.5 pt-2">
-            <label className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block">
+            <label
+              htmlFor="auth-origin-country"
+              className="text-xs font-bold text-on-surface-variant dark:text-slate-300 block"
+            >
               {t("auth.originCountry", "País de origen (para personalización de visas):")}
             </label>
             <select
+              id="auth-origin-country"
               value={selectedCountry}
               onChange={(e) => setSelectedCountry(e.target.value)}
               className="w-full p-2.5 bg-surface dark:bg-slate-800 rounded-xl border border-outline-variant/60 dark:border-slate-700 text-xs font-semibold"
             >
-              <option value="Colombia">Colombia 🇨🇴</option>
-              <option value="México">México 🇲🇽</option>
-              <option value="Argentina">Argentina 🇦🇷</option>
-              <option value="Perú">Perú 🇵🇪</option>
-              <option value="Chile">Chile 🇨🇱</option>
-              <option value="Ecuador">Ecuador 🇪🇨</option>
-              <option value="Venezuela">Venezuela 🇻🇪</option>
-              <option value="Guatemala">Guatemala 🇬🇹</option>
-              <option value="Honduras">Honduras 🇭🇳</option>
+              {originCountries.map((country) => (
+                <option key={country.code} value={country.name}>
+                  {country.name} {country.flag}
+                </option>
+              ))}
             </select>
           </div>
 
