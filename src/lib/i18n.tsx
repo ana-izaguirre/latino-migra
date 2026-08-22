@@ -124,6 +124,24 @@ export const TRANSLATIONS: TranslationDictionary = {
     es: "Plataforma de Migración, Becas & Intercambios para Latinoamérica",
     en: "Migration, Scholarships & Exchange Platform for Latin America",
   },
+  "image.unavailable": { es: "Imagen no disponible", en: "Image unavailable" },
+  "hero.searchScholarships": { es: "Buscar Becas", en: "Search scholarships" },
+  "becas.sortLabel": { es: "Ordenar convocatorias", en: "Sort calls" },
+  "guia.antiScamHeading": {
+    es: "Guía Anti-Estafas Oficial para",
+    en: "Official anti-scam guide for",
+  },
+  "bottomNav.home": { es: "Inicio", en: "Home" },
+  "bottomNav.becas": { es: "Becas", en: "Grants" },
+  "bottomNav.guia": { es: "Guías", en: "Guides" },
+  "bottomNav.chat": { es: "Chat IA", en: "AI Chat" },
+  "bottomNav.label": { es: "Navegación principal", en: "Primary navigation" },
+  "bottomNav.openMenu": { es: "Abrir menú completo", en: "Open full menu" },
+  "bottomNav.menu": { es: "Menú", en: "Menu" },
+  "nav.taglineShort": {
+    es: "Migración & Becas Oficiales",
+    en: "Official migration & scholarships",
+  },
   "nav.menu": { es: "Menú", en: "Menu" },
   "nav.close": { es: "Cerrar", en: "Close" },
   "nav.search": {
@@ -670,6 +688,103 @@ export const TRANSLATIONS: TranslationDictionary = {
   "footer.madeWith": {
     es: "Hecho con amor para toda Latinoamérica",
     en: "Made with love for all of Latin America",
+  },
+
+  // Chrome that appears on every screen (#51). The Spanish here is the copy
+  // these components already rendered; only the mechanism changed.
+
+  // Breadcrumbs. Its own tabLabels dictionary used to restate every screen
+  // name a second time, beside the nav labels, so the two could drift.
+  "breadcrumb.label": { es: "Rutas de navegación", en: "Breadcrumbs" },
+  "breadcrumb.home": { es: "Inicio", en: "Home" },
+  "breadcrumb.planificador": { es: "Planificador 360°", en: "360° Planner" },
+  "breadcrumb.calculadora": {
+    es: "Calculadora de Costo de Vida",
+    en: "Cost of Living Calculator",
+  },
+  "breadcrumb.becas": { es: "Catálogo de Becas", en: "Scholarship Directory" },
+  "breadcrumb.voluntariados": {
+    es: "Voluntariados e Intercambios",
+    en: "Volunteering & Exchanges",
+  },
+  "breadcrumb.guia": { es: "Guía de Migración", en: "Migration Guide" },
+  "breadcrumb.mapa": { es: "Mapa y Directorio Consular", en: "Consular Directory & Map" },
+  "breadcrumb.comunidad": { es: "Comunidad y Experiencias", en: "Community & Forum" },
+  "breadcrumb.feedback": { es: "Sugerencias y Mejoras", en: "Feedback & Roadmap" },
+  "breadcrumb.chat": { es: "Asistente IA", en: "AI Assistant" },
+  "breadcrumb.admin": { es: "Panel de Administración", en: "Admin Dashboard" },
+
+  // Floating scroll controls. The aria-labels were hardcoded English, so a
+  // Spanish screen reader announced "Scroll to top".
+  "scroll.top": { es: "Subir al inicio", en: "Scroll to Top" },
+  "scroll.bottom": { es: "Bajar al final", en: "Scroll to Bottom" },
+
+  // Top bar and drawer.
+  "nav.tools": { es: "Herramientas", en: "Tools" },
+  "nav.alertsTitle": {
+    es: "Configurar Alertas y Avisos",
+    en: "Configure alerts and notifications",
+  },
+  "nav.themeLabel": { es: "Cambiar tema visual", en: "Change the visual theme" },
+  "nav.homeLabel": { es: "LatinoMigra Inicio", en: "LatinoMigra home" },
+  "nav.closeMenu": { es: "Cerrar menú", en: "Close menu" },
+  "nav.preferences": { es: "Preferencias", en: "Preferences" },
+  "nav.prefsCleared": { es: "Preferencias borradas", en: "Preferences cleared" },
+  "nav.showPricesIn": { es: "Mostrar precios en", en: "Show prices in" },
+  "nav.language": { es: "Idioma", en: "Language" },
+  "nav.appearance": { es: "Apariencia", en: "Appearance" },
+  "nav.themeLight": { es: "Claro", en: "Light" },
+  "nav.themeDark": { es: "Oscuro", en: "Dark" },
+  "nav.themeToDark": { es: "Cambiar a Modo Oscuro", en: "Switch to dark mode" },
+  "nav.themeToLight": { es: "Cambiar a Modo Claro", en: "Switch to light mode" },
+  "nav.modeDark": { es: "Modo Oscuro", en: "Dark Mode" },
+  "nav.modeLight": { es: "Modo Claro", en: "Light Mode" },
+  "nav.clearPrefs": { es: "Borrar mis preferencias", en: "Clear my preferences" },
+  "nav.signInShort": { es: "Acceder con Google", en: "Sign In" },
+  "nav.manageAlerts": {
+    es: "Gestionar Alertas y Avisos",
+    en: "Manage Alerts & Notices",
+  },
+  "nav.sectionModules": { es: "Módulos & Herramientas", en: "Navigation" },
+  "nav.preferredCurrency": { es: "Moneda Preferida", en: "Preferred Currency" },
+
+  // Footer.
+  "footer.evaluateProfile": { es: "Evaluar Perfil con IA", en: "Evaluate Profile with AI" },
+  "footer.aiConsultant": {
+    es: "Consultor Migratorio con IA",
+    en: "AI Migration Consultant",
+  },
+  "footer.forLatam": { es: "para Latinoamérica", en: "for Latin America" },
+  "footer.legalInfo": { es: "Información legal", en: "Legal information" },
+  "footer.termsFull": {
+    es: "Términos y Condiciones de Uso",
+    en: "Terms & Conditions",
+  },
+  "footer.privacyFull": {
+    es: "Política de Privacidad y Manejo de Datos",
+    en: "Privacy Policy",
+  },
+  "footer.guidelinesFull": {
+    es: "Normas de Convivencia de la Comunidad",
+    en: "Community Guidelines",
+  },
+  "footer.contactFull": { es: "Contacto y Asistencia", en: "Contact & Support" },
+  "footer.closeModal": { es: "Entendido y Cerrar", en: "Close" },
+  "footer.mission": {
+    es: "Empoderando a la comunidad estudiantil y profesional de América Latina para estudiar y trabajar en el extranjero con datos oficiales y apoyo mutuo.",
+    en: "Empowering Latin American students and professionals to study, work, and settle abroad with verified data, scholarships, and active peer support.",
+  },
+  "footer.volunteering": {
+    es: "Voluntariados e Intercambios",
+    en: "Volunteering & Exchanges",
+  },
+  "footer.forum": {
+    es: "Foro de Migrantes & Consejos",
+    en: "Community Forum & Experiences",
+  },
+  "footer.suggest": {
+    es: "Sugerir Nueva Beca o Función",
+    en: "Suggest New Feature or Scholarship",
   },
 };
 

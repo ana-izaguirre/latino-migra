@@ -226,6 +226,27 @@ Recently addressed and verified by tests:
 - Measured at 375px: 7350px before, 8078px after. The screen is long, and the
   hero is most of it — worth its own look.
 
+## Chrome in the reader's language
+
+- The parts that surround every screen — the breadcrumb, the top bar, the
+  bottom bar, the footer and the scroll controls — carried their own
+  `language === "en" ? … : …` ternaries, and each one they missed stayed in a
+  single language whatever the reader chose (#51). The breadcrumb announced
+  itself to a screen reader as "Breadcrumbs" on a Spanish page, and the scroll
+  controls paired a Spanish `title` with an English `aria-label`, so the two
+  disagreed in both languages.
+- Everything user-visible now goes through `t()`, `aria-label` and `title`
+  included. A label only a screen reader hears is still user-visible text.
+- The breadcrumb reads one label per screen from the dictionary instead of
+  keeping its own `tabLabels` map beside the `nav.*` entries — the same rule
+  written twice, which is how it came to name a screen something the
+  navigation did not.
+- It carries `id="breadcrumbs"`; tests address it by that rather than by its
+  `aria-label`, which is now translated copy.
+- Verified in a browser: with English selected, a scan of every text node and
+  every `aria-label` and `title` across Home, Becas, Guías and Chat returns
+  zero Spanish strings.
+
 ## Favourites
 
 - The tab is "Mis Guardados" and holds both catalogues: a language

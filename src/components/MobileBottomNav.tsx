@@ -22,14 +22,17 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   setActiveTab,
   onOpenMenu,
 }) => {
-  const { language } = useLanguage();
-  const es = language !== "en";
+  const { t } = useLanguage();
 
   const allItems: { id: NavigationTab; label: string; icon: React.ReactNode }[] = [
-    { id: "home", label: es ? "Inicio" : "Home", icon: <Home className="w-5 h-5" /> },
-    { id: "becas", label: es ? "Becas" : "Grants", icon: <GraduationCap className="w-5 h-5" /> },
-    { id: "guia", label: es ? "Guías" : "Guides", icon: <BookOpen className="w-5 h-5" /> },
-    { id: "chat", label: es ? "Chat IA" : "AI Chat", icon: <Sparkles className="w-5 h-5" /> },
+    { id: "home", label: t("bottomNav.home", "Inicio"), icon: <Home className="w-5 h-5" /> },
+    {
+      id: "becas",
+      label: t("bottomNav.becas", "Becas"),
+      icon: <GraduationCap className="w-5 h-5" />,
+    },
+    { id: "guia", label: t("bottomNav.guia", "Guías"), icon: <BookOpen className="w-5 h-5" /> },
+    { id: "chat", label: t("bottomNav.chat", "Chat IA"), icon: <Sparkles className="w-5 h-5" /> },
   ];
 
   // None of these four are hidden today, but the bar reads the same list
@@ -44,7 +47,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   return (
     <nav
       id="mobile-bottom-nav"
-      aria-label={es ? "Navegación principal" : "Primary navigation"}
+      aria-label={t("bottomNav.label", "Navegación principal")}
       className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-surface-container-lowest dark:bg-slate-900 border-t border-outline-variant/40 dark:border-slate-800 pb-[var(--safe-bottom)] px-[var(--safe-left)] shadow-[0_-2px_12px_-4px_rgba(0,0,0,0.15)]"
     >
       <ul className="flex items-stretch justify-around h-16">
@@ -85,11 +88,13 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           <button
             onClick={onOpenMenu}
             id="bottom-nav-menu"
-            aria-label={es ? "Abrir menú completo" : "Open full menu"}
+            aria-label={t("bottomNav.openMenu", "Abrir menú completo")}
             className="w-full h-full min-h-[44px] flex flex-col items-center justify-center gap-0.5 text-on-surface-variant dark:text-slate-400 transition-colors active:scale-95"
           >
             <Menu className="w-5 h-5" />
-            <span className="text-[10px] leading-none font-medium">{es ? "Menú" : "Menu"}</span>
+            <span className="text-[10px] leading-none font-medium">
+              {t("bottomNav.menu", "Menú")}
+            </span>
           </button>
         </li>
       </ul>

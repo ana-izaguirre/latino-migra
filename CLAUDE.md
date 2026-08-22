@@ -595,6 +595,19 @@ node dist/server.cjs &   # not `npm run dev`: Vite watches the test files and
 PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium npx playwright test
 ```
 
+**Do not edit any file while the suite is running.** `dist/server.cjs` runs
+Vite in middleware mode unless `NODE_ENV=production`, so it is still watching
+the tree: a save mid-run reloads the page and fails whichever tests were in
+flight. The failures land on unrelated specs and move between runs, which
+reads as flakiness and is not. A run interrupted this way proves nothing —
+leave the tree alone and run it again.
+
+**And do not reach for `NODE_ENV=production` to avoid that.** In production
+mode `staticLimiter` applies to the assets — 600 requests per 15 minutes — and
+the suite exceeds it partway through, so every later test gets a 429 and the
+page never loads. It looks like a mass failure of the application. Both were
+tried here: 22 failures under production against 0 in dev mode.
+
 `playwright.config.ts` reads `PLAYWRIGHT_CHROMIUM_PATH` and passes it as
 `executablePath`. It is unset in CI, where `npx playwright install` runs.
 Do **not** add a second Playwright config to the tree for this; it was tried,

@@ -770,7 +770,8 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
                 </span>
               </div>
               <h3 className="font-headline-md text-xl md:text-2xl font-bold text-rose-950 dark:text-rose-200">
-                Guía Anti-Estafas Oficial para {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].country}{" "}
+                {t("guia.antiScamHeading", "Guía Anti-Estafas Oficial para")}{" "}
+                {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].country}{" "}
                 {COUNTRY_ANTI_SCAM_DATA[selectedCountryCode].flag}
               </h3>
               <p className="text-xs text-rose-900/80 dark:text-rose-300/80 max-w-2xl leading-relaxed">

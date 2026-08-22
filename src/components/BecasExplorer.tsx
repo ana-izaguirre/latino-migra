@@ -957,7 +957,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
               <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
                 <SelectTrigger
                   id="becas-sort-select"
-                  aria-label="Ordenar convocatorias"
+                  aria-label={t("becas.sortLabel", "Ordenar convocatorias")}
                   className="w-auto min-w-[13rem]"
                 >
                   <SelectValue />
@@ -1159,7 +1159,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                   className="text-xs font-semibold text-secondary dark:text-teal-400 hover:underline flex items-center gap-1 cursor-pointer active:scale-95"
                 >
                   <RotateCcw className="w-3 h-3" />
-                  <span>Limpiar</span>
+                  <span>{t("becas.clear", "Limpiar")}</span>
                 </button>
               )}
               <button
@@ -1308,7 +1308,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                   className="text-xs font-semibold text-secondary dark:text-teal-300 hover:underline flex items-center gap-1 cursor-pointer active:scale-95"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Limpiar</span>
+                  <span>{t("becas.clear", "Limpiar")}</span>
                 </button>
               </div>
 
@@ -1472,11 +1472,13 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                   <div className="bg-surface-container-lowest dark:bg-slate-800 p-4 rounded-2xl border border-outline-variant/40 dark:border-slate-700 flex flex-wrap items-center gap-3">
                     <span className="text-xs md:text-sm text-on-surface-variant dark:text-slate-300">
                       {filteredScholarships.length === 0 ? (
-                        "0 convocatorias encontradas"
+                        t("becas.noneFound", "0 convocatorias encontradas")
                       ) : (
                         <>
-                          Mostrando <strong>{displayedScholarships.length}</strong> de{" "}
-                          <strong>{filteredScholarships.length}</strong> convocatorias
+                          {t("becas.showing", "Mostrando")}{" "}
+                          <strong>{displayedScholarships.length}</strong> {t("becas.of", "de")}{" "}
+                          <strong>{filteredScholarships.length}</strong>{" "}
+                          {t("becas.scholarshipsNoun", "convocatorias")}
                         </>
                       )}
                     </span>
