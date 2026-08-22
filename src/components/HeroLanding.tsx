@@ -136,11 +136,11 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ setActiveTab, currentU
               <button
                 onClick={() => setActiveTab("becas")}
                 id="hero-btn-becas"
-                aria-label="Buscar Becas"
+                aria-label={t("hero.searchScholarships", "Buscar Becas")}
                 className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-primary dark:bg-sky-600 px-4 text-sm font-bold text-on-primary dark:text-white shadow-md transition-all hover:bg-primary-container hover:shadow-lg active:scale-95 cursor-pointer"
               >
                 <Search className="w-4 h-4 shrink-0" aria-hidden="true" />
-                <span>Buscar Becas</span>
+                <span>{t("hero.searchScholarships", "Buscar Becas")}</span>
               </button>
 
               <button

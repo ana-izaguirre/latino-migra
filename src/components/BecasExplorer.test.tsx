@@ -686,9 +686,7 @@ describe("BecasExplorer Component", () => {
 
         // The crumb names the sub-page rather than stopping at the directory.
         expect(
-          within(container.querySelector('[aria-label="Breadcrumbs"]')!).getByText(
-            /Cursos, Certificados y FP/i
-          )
+          within(container.querySelector("#breadcrumbs")!).getByText(/Cursos, Certificados y FP/i)
         ).toBeInTheDocument();
       });
 

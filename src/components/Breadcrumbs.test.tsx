@@ -1,7 +1,19 @@
 import { describe, it, expect, vi } from "vitest";
-import { screen, fireEvent } from "@testing-library/react";
+import { screen, fireEvent, act } from "@testing-library/react";
+import React from "react";
 import { renderWithProviders as render } from "../test/renderWithProviders";
 import { Breadcrumbs } from "./Breadcrumbs";
+import { useLanguage } from "../lib/i18n";
+
+/** Flips the shared language from inside the provider tree. */
+const LanguageSwitch: React.FC = () => {
+  const { setLanguage } = useLanguage();
+  return (
+    <button type="button" onClick={() => setLanguage("en")}>
+      switch-to-english
+    </button>
+  );
+};
 
 describe("Breadcrumbs", () => {
   const defaultProps = { activeTab: "becas" as const, setActiveTab: vi.fn() };
@@ -12,9 +24,43 @@ describe("Breadcrumbs", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("names the trail for assistive technology", () => {
-    render(<Breadcrumbs {...defaultProps} />);
-    expect(screen.getByRole("navigation")).toHaveAccessibleName(/breadcrumb/i);
+  it("names the trail for assistive technology, in the reader's language", () => {
+    render(
+      <>
+        <LanguageSwitch />
+        <Breadcrumbs {...defaultProps} />
+      </>
+    );
+
+    // The label was the literal "Breadcrumbs" — English announced to a screen
+    // reader on a Spanish page, which is the half-and-half state of #51.
+    expect(screen.getByRole("navigation")).toHaveAccessibleName(/rutas de navegación/i);
+
+    act(() => {
+      screen.getByRole("button", { name: "switch-to-english" }).click();
+    });
+    expect(screen.getByRole("navigation")).toHaveAccessibleName(/breadcrumbs/i);
+  });
+
+  it("names the screen in the reader's language", () => {
+    render(
+      <>
+        <LanguageSwitch />
+        <Breadcrumbs {...defaultProps} />
+      </>
+    );
+
+    expect(screen.getByText("Catálogo de Becas")).toBeInTheDocument();
+
+    act(() => {
+      screen.getByRole("button", { name: "switch-to-english" }).click();
+    });
+
+    // The crumb carried its own label map beside the dictionary's `nav.*`
+    // entries, so it kept naming the screen in Spanish after the switch.
+    expect(screen.getByText("Scholarship Directory")).toBeInTheDocument();
+    expect(screen.queryByText("Catálogo de Becas")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Home$/ })).toBeInTheDocument();
   });
 
   it("offers a way back to the first screen", () => {

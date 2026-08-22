@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { ImageOff } from "lucide-react";
+import { useLanguage } from "../../lib/i18n";
 
 interface ImageWithFallbackProps {
   src?: string;
@@ -28,6 +29,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   className = "",
   id,
 }) => {
+  const { t } = useLanguage();
   const [failed, setFailed] = useState(false);
 
   // An empty or absent `src` is a failure too — the browser resolves it
@@ -37,11 +39,13 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
       <div
         id={id}
         role="img"
-        aria-label={`Imagen no disponible: ${alt}`}
+        aria-label={`${t("image.unavailable", "Imagen no disponible")}: ${alt}`}
         className={`flex flex-col items-center justify-center gap-1.5 bg-surface-container dark:bg-slate-900 text-on-surface-variant/70 dark:text-slate-500 ${className}`}
       >
         <ImageOff className="w-7 h-7" aria-hidden="true" />
-        <span className="text-[11px] font-semibold">Imagen no disponible</span>
+        <span className="text-[11px] font-semibold">
+          {t("image.unavailable", "Imagen no disponible")}
+        </span>
       </div>
     );
   }

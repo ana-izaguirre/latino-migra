@@ -30,7 +30,7 @@ interface FooterProps {
 type ModalType = "terms" | "privacy" | "guidelines" | "contact" | null;
 
 export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   const [activeModal, setActiveModal] = useState<ModalType>(null);
 
   const handleNavigate = (tab: NavigationTab) => {
@@ -56,9 +56,10 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               </span>
             </div>
             <p className="text-xs text-on-surface-variant dark:text-slate-400 leading-relaxed">
-              {language === "en"
-                ? "Empowering Latin American students and professionals to study, work, and settle abroad with verified data, scholarships, and active peer support."
-                : "Empoderando a la comunidad estudiantil y profesional de América Latina para estudiar y trabajar en el extranjero con datos oficiales y apoyo mutuo."}
+              {t(
+                "footer.mission",
+                "Empoderando a la comunidad estudiantil y profesional de América Latina para estudiar y trabajar en el extranjero con datos oficiales y apoyo mutuo."
+              )}
             </p>
             <div className="pt-1">
               <button
@@ -66,9 +67,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                 className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-secondary/10 dark:bg-teal-950/40 text-secondary dark:text-teal-300 text-xs font-bold border border-secondary/20 hover:bg-secondary/20 transition-all active:scale-95 cursor-pointer shadow-xs"
               >
                 <Sparkles className="w-4 h-4 text-amber-500" />
-                <span>
-                  {language === "en" ? "Evaluate Profile with AI" : "Evaluar Perfil con IA"}
-                </span>
+                <span>{t("footer.evaluateProfile", "Evaluar Perfil con IA")}</span>
               </button>
             </div>
           </div>
@@ -117,11 +116,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                     className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
                   >
                     <HeartHandshake className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                    <span>
-                      {language === "en"
-                        ? "Volunteering & Exchanges"
-                        : "Voluntariados e Intercambios"}
-                    </span>
+                    <span>{t("footer.volunteering", "Voluntariados e Intercambios")}</span>
                   </button>
                 </li>
               )}
@@ -161,11 +156,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                     className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
                   >
                     <MessageSquare className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                    <span>
-                      {language === "en"
-                        ? "Community Forum & Experiences"
-                        : "Foro de Migrantes & Consejos"}
-                    </span>
+                    <span>{t("footer.forum", "Foro de Migrantes & Consejos")}</span>
                   </button>
                 </li>
               )}
@@ -176,11 +167,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                     className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
                   >
                     <MessageSquarePlus className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                    <span>
-                      {language === "en"
-                        ? "Suggest New Feature or Scholarship"
-                        : "Sugerir Nueva Beca o Función"}
-                    </span>
+                    <span>{t("footer.suggest", "Sugerir Nueva Beca o Función")}</span>
                   </button>
                 </li>
               )}
@@ -190,9 +177,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                   className="footer-link w-full min-h-[44px] sm:min-h-0 flex items-center gap-2 py-2.5 sm:py-1 px-2 -mx-2 rounded-lg hover:bg-surface-container dark:hover:bg-slate-800 hover:text-primary dark:hover:text-sky-300 transition-all text-left"
                 >
                   <Bot className="w-3.5 h-3.5 text-purple-500 shrink-0" />
-                  <span>
-                    {language === "en" ? "AI Migration Consultant" : "Consultor Migratorio con IA"}
-                  </span>
+                  <span>{t("footer.aiConsultant", "Consultor Migratorio con IA")}</span>
                 </button>
               </li>
             </ul>
@@ -254,7 +239,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
           <span className="flex items-center gap-1.5">
             <span>{t("footer.madeWith", "Hecho con")}</span>
             <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500 animate-pulse" />
-            <span>{language === "en" ? "for Latin America" : "para Latinoamérica"}</span>
+            <span>{t("footer.forLatam", "para Latinoamérica")}</span>
           </span>
         </div>
       </div>
@@ -266,7 +251,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
           onOpenChange={(next) => {
             if (!next) setActiveModal(null);
           }}
-          title={language === "en" ? "Legal information" : "Información legal"}
+          title={t("footer.legalInfo", "Información legal")}
           size="lg"
           header={
             <div className="border-b border-outline-variant/30 dark:border-slate-700 pb-3">
@@ -277,17 +262,12 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                 {activeModal === "contact" && <Mail className="w-5 h-5 text-indigo-400" />}
                 <span>
                   {activeModal === "terms" &&
-                    (language === "en" ? "Terms & Conditions" : "Términos y Condiciones de Uso")}
+                    t("footer.termsFull", "Términos y Condiciones de Uso")}
                   {activeModal === "privacy" &&
-                    (language === "en"
-                      ? "Privacy Policy"
-                      : "Política de Privacidad y Manejo de Datos")}
+                    t("footer.privacyFull", "Política de Privacidad y Manejo de Datos")}
                   {activeModal === "guidelines" &&
-                    (language === "en"
-                      ? "Community Guidelines"
-                      : "Normas de Convivencia de la Comunidad")}
-                  {activeModal === "contact" &&
-                    (language === "en" ? "Contact & Support" : "Contacto y Asistencia")}
+                    t("footer.guidelinesFull", "Normas de Convivencia de la Comunidad")}
+                  {activeModal === "contact" && t("footer.contactFull", "Contacto y Asistencia")}
                 </span>
               </h3>
             </div>
@@ -388,7 +368,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               onClick={() => setActiveModal(null)}
               className="px-5 py-2 rounded-xl bg-primary dark:bg-sky-600 text-white font-bold text-xs hover:bg-primary-container transition-all active:scale-95 cursor-pointer shadow-sm"
             >
-              {language === "en" ? "Close" : "Entendido y Cerrar"}
+              {t("footer.closeModal", "Entendido y Cerrar")}
             </button>
           </div>
         </Modal>

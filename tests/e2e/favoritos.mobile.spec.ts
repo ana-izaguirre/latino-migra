@@ -10,19 +10,34 @@ import { test, expect } from "@playwright/test";
  * that describe its own kind.
  */
 test.describe("Saved items on a phone", () => {
-  /** Saves one programme and one scholarship, then opens Mis Guardados. */
+  /**
+   * Saves one programme and one scholarship, then opens Mis Guardados.
+   *
+   * Each save is confirmed before the next step. Without that the helper only
+   * asserts that a click was dispatched, not that anything was saved — and a
+   * click landing before the list finished rendering left every assertion
+   * below running against an empty favourites tab, which is how this failed
+   * once in a full run while passing on its own.
+   */
   const saveOneOfEach = async (page: import("@playwright/test").Page) => {
     await page.goto("/");
     await page.locator("#bottom-nav-becas").click();
     await expect(page.locator("#btn-open-mobile-filters")).toBeVisible();
 
     await page.locator("#tab-estudios").click();
-    await page.locator('[id^="estudio-fav-"]').first().click();
+    const programmeHeart = page.locator('[id^="estudio-fav-"]').first();
+    await expect(programmeHeart).toHaveAttribute("aria-pressed", "false");
+    await programmeHeart.click();
+    await expect(programmeHeart).toHaveAttribute("aria-pressed", "true");
 
     await page.locator("#tab-all-scholarships").click();
     await page.locator('button[title*="favoritos"], button[title*="beca"]').first().click();
 
-    await page.getByRole("tab", { name: /Mis Guardados/ }).click();
+    // The counter on the tab is the app's own record of what was saved.
+    const savedTab = page.getByRole("tab", { name: /Mis Guardados/ });
+    await expect(savedTab).toContainText("2");
+
+    await savedTab.click();
     await expect(page.locator("#saved-kind-tabs")).toBeVisible();
   };
 
