@@ -204,8 +204,25 @@ export interface DocumentItem {
   notes?: string;
 }
 
+/**
+ * The kind of expense a cost row describes.
+ *
+ * The rows carried a free-form Spanish string — "Alojamiento (Habitación/
+ * Basement/Apto)" — which is both the label and the only identifier, so it
+ * could not be translated without losing the country-specific detail inside
+ * the parentheses. The key names the expense; `categoryDetail` keeps the
+ * local specifics, which are content and stay as written.
+ */
+export type CostCategory = "housing" | "food" | "transport" | "health" | "phone" | "other";
+
 export interface CostItem {
-  category: string;
+  /** Names the expense, for translation. */
+  categoryKey: CostCategory;
+  /**
+   * Country-specific detail shown beside the label — "Lidl, Aldi, Tesco",
+   * "Deutschlandticket", "Leap Card para estudiantes". Content, not copy.
+   */
+  categoryDetail?: string;
   /**
    * The range as the destination itself quotes it, in `currency`.
    *

@@ -640,6 +640,13 @@ export const TRANSLATIONS: TranslationDictionary = {
   "label.routeBadge.requirement": { es: "Requisito de visado", en: "Visa requirement" },
   "label.routeBadge.none": { es: "Sin vía migratoria", en: "No migration route" },
 
+  "label.cost.housing": { es: "Alojamiento", en: "Housing" },
+  "label.cost.food": { es: "Alimentación y supermercado", en: "Food and groceries" },
+  "label.cost.transport": { es: "Transporte", en: "Transport" },
+  "label.cost.health": { es: "Salud y seguro", en: "Health and insurance" },
+  "label.cost.phone": { es: "Telefonía y servicios", en: "Phone and utilities" },
+  "label.cost.other": { es: "Otros gastos", en: "Other costs" },
+
   // Footer
   "footer.tools": { es: "Herramientas", en: "Tools" },
   "footer.community": { es: "Comunidad & Recursos", en: "Community & Resources" },

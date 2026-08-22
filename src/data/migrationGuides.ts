@@ -97,7 +97,7 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
     ],
     costs: [
       {
-        category: "Alojamiento (Habitación/Piso)",
+        categoryKey: "housing",
         min: 400,
         max: 750,
         currency: "EUR",
@@ -106,7 +106,7 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
         color: "bg-primary",
       },
       {
-        category: "Alimentación y Supermercado",
+        categoryKey: "food",
         min: 200,
         max: 320,
         currency: "EUR",
@@ -115,7 +115,7 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
         color: "bg-secondary",
       },
       {
-        category: "Transporte Público (Abono Joven/Mes)",
+        categoryKey: "transport",
         min: 10,
         max: 40,
         currency: "EUR",
@@ -124,7 +124,7 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
         color: "bg-outline",
       },
       {
-        category: "Seguro Médico y Gastos Personales",
+        categoryKey: "health",
         min: 50,
         max: 100,
         currency: "EUR",
@@ -277,7 +277,7 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
     ],
     costs: [
       {
-        category: "Alojamiento (Habitación/Basement/Apto)",
+        categoryKey: "housing",
         min: 800,
         max: 1600,
         currency: "CAD",
@@ -286,7 +286,7 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
         color: "bg-primary",
       },
       {
-        category: "Alimentación y Supermercado",
+        categoryKey: "food",
         min: 350,
         max: 550,
         currency: "CAD",
@@ -295,7 +295,7 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
         color: "bg-secondary",
       },
       {
-        category: "Transporte Público (Pase Mensual)",
+        categoryKey: "transport",
         min: 100,
         max: 160,
         currency: "CAD",
@@ -304,7 +304,7 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
         color: "bg-outline",
       },
       {
-        category: "Telefonía Celular y Servicios",
+        categoryKey: "phone",
         min: 50,
         max: 90,
         currency: "CAD",
@@ -435,7 +435,7 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
     ],
     costs: [
       {
-        category: "Alojamiento (Habitación compartida/individual)",
+        categoryKey: "housing",
         min: 500,
         max: 950,
         currency: "EUR",
@@ -444,7 +444,8 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
         color: "bg-primary",
       },
       {
-        category: "Alimentación y Supermercado (Lidl, Aldi, Tesco)",
+        categoryKey: "food",
+        categoryDetail: "Lidl, Aldi, Tesco",
         min: 200,
         max: 300,
         currency: "EUR",
@@ -453,7 +454,8 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
         color: "bg-secondary",
       },
       {
-        category: "Transporte (Leap Card para estudiantes)",
+        categoryKey: "transport",
+        categoryDetail: "Leap Card",
         min: 40,
         max: 80,
         currency: "EUR",
@@ -462,7 +464,7 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
         color: "bg-outline",
       },
       {
-        category: "Telefonía móvil y Extras",
+        categoryKey: "phone",
         min: 20,
         max: 50,
         currency: "EUR",
@@ -609,7 +611,8 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
     ],
     costs: [
       {
-        category: "Alojamiento (WG / Habitación / Apartamento)",
+        categoryKey: "housing",
+        categoryDetail: "WG",
         min: 400,
         max: 750,
         currency: "EUR",
@@ -618,7 +621,7 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
         color: "bg-primary",
       },
       {
-        category: "Alimentación y Supermercado",
+        categoryKey: "food",
         min: 250,
         max: 360,
         currency: "EUR",
@@ -627,7 +630,8 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
         color: "bg-secondary",
       },
       {
-        category: "Seguro de Salud Público (GKV)",
+        categoryKey: "health",
+        categoryDetail: "GKV",
         min: 120,
         max: 140,
         currency: "EUR",
@@ -636,7 +640,8 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
         color: "bg-outline",
       },
       {
-        category: "Transporte (Deutschlandticket)",
+        categoryKey: "transport",
+        categoryDetail: "Deutschlandticket",
         min: 49,
         max: 58,
         currency: "EUR",
@@ -751,7 +756,7 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
     ],
     costs: [
       {
-        category: "Alojamiento (Dormitorio universitario / Apartamento)",
+        categoryKey: "housing",
         min: 800,
         max: 1600,
         currency: "USD",
@@ -760,7 +765,7 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
         color: "bg-primary",
       },
       {
-        category: "Alimentación y Supermercado",
+        categoryKey: "food",
         min: 350,
         max: 600,
         currency: "USD",
@@ -769,7 +774,7 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
         color: "bg-secondary",
       },
       {
-        category: "Seguro Médico Universitario Obligatorio",
+        categoryKey: "health",
         min: 150,
         max: 320,
         currency: "USD",
@@ -778,7 +783,7 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
         color: "bg-outline",
       },
       {
-        category: "Transporte y Telefonía",
+        categoryKey: "transport",
         min: 80,
         max: 150,
         currency: "USD",
@@ -893,7 +898,7 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
     ],
     costs: [
       {
-        category: "Alojamiento (Habitación privada)",
+        categoryKey: "housing",
         min: 350,
         max: 600,
         currency: "EUR",
@@ -902,7 +907,7 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
         color: "bg-primary",
       },
       {
-        category: "Alimentación y Supermercado",
+        categoryKey: "food",
         min: 180,
         max: 260,
         currency: "EUR",
@@ -911,7 +916,8 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
         color: "bg-secondary",
       },
       {
-        category: "Transporte Público (Passe Navegante)",
+        categoryKey: "transport",
+        categoryDetail: "Passe Navegante",
         min: 30,
         max: 40,
         currency: "EUR",
@@ -920,7 +926,7 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
         color: "bg-emerald-600",
       },
       {
-        category: "Salud y Servicios Básicos",
+        categoryKey: "health",
         min: 50,
         max: 90,
         currency: "EUR",
@@ -1038,7 +1044,7 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
     ],
     costs: [
       {
-        category: "Alojamiento (Habitación compartida/privada)",
+        categoryKey: "housing",
         min: 220,
         max: 450,
         currency: "AUD",
@@ -1047,7 +1053,7 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
         color: "bg-primary",
       },
       {
-        category: "Alimentación y Supermercado",
+        categoryKey: "food",
         min: 100,
         max: 180,
         currency: "AUD",
@@ -1056,7 +1062,8 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
         color: "bg-secondary",
       },
       {
-        category: "Transporte (Opal / Myki / Translink)",
+        categoryKey: "transport",
+        categoryDetail: "Opal / Myki / Translink",
         min: 40,
         max: 65,
         currency: "AUD",
@@ -1065,7 +1072,8 @@ export const MIGRATION_GUIDES_DATA: Record<string, CountryGuide> = {
         color: "bg-emerald-600",
       },
       {
-        category: "Seguro OSHC Obligatorio",
+        categoryKey: "health",
+        categoryDetail: "OSHC",
         min: 50,
         max: 80,
         currency: "AUD",
