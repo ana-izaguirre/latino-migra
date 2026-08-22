@@ -66,6 +66,14 @@ const KEYS: Record<string, Record<string, string>> = {
     semester: "label.deadline.90",
     later: "label.deadline.later",
   },
+  costCategory: {
+    housing: "label.cost.housing",
+    food: "label.cost.food",
+    transport: "label.cost.transport",
+    health: "label.cost.health",
+    phone: "label.cost.phone",
+    other: "label.cost.other",
+  },
   sort: {
     "deadline-asc": "label.sort.deadlineAsc",
     "deadline-desc": "label.sort.deadlineDesc",

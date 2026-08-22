@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { NavigationTab, VisaType } from "../types";
 import { useLanguage } from "../lib/i18n";
+import { useLabels } from "../lib/labels";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { MIGRATION_GUIDES_DATA } from "../data/migrationGuides";
 import { COUNTRY_ANTI_SCAM_DATA } from "../data/antiScamData";
@@ -46,6 +47,7 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
   onOpenAuthModal,
 }) => {
   const { t } = useLanguage();
+  const label = useLabels();
   // Country selection is shared app-wide, so opening a guide for Alemania also
   // moves the planner, calculator, consular map and alerts to Alemania.
   const { destinationCountryCode, setDestinationCountryByCode } = usePreferences();
@@ -620,7 +622,15 @@ export const GuiaMigracion: React.FC<GuiaMigracionProps> = ({
                 return (
                   <div key={idx} className="space-y-1.5">
                     <div className="flex flex-wrap justify-between gap-x-3 text-xs font-semibold text-on-surface dark:text-slate-200">
-                      <span>{cost.category}</span>
+                      <span>
+                        {label("costCategory", cost.categoryKey)}
+                        {cost.categoryDetail && (
+                          <span className="font-normal text-on-surface-variant dark:text-slate-400">
+                            {" "}
+                            ({cost.categoryDetail})
+                          </span>
+                        )}
+                      </span>
                       <span className="font-bold text-primary dark:text-sky-300 whitespace-nowrap">
                         {local} / {cost.period}
                       </span>

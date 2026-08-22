@@ -56,6 +56,8 @@ describe("useLabels", () => {
     ["area", "Artes y Humanidades", "Artes y Humanidades", "Arts and Humanities"],
     ["dateRange", "urgent", "⚡ Cierra en 30 días", "⚡ Closes within 30 days"],
     ["sort", "deadline-asc", "⏱️ Cierre más próximo (Inminente)", "⏱️ Closing soonest"],
+    ["costCategory", "housing", "Alojamiento", "Housing"],
+    ["costCategory", "transport", "Transporte", "Transport"],
   ])("translates %s/%s", (dimension, value, es, en) => {
     render(<Probe dimension={dimension as never} value={value} />);
     expect(read()).toBe(es);
