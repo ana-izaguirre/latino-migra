@@ -32,10 +32,11 @@ import { isAdmin } from "../lib/authUtils";
 import { SCHOLARSHIPS_DATA } from "../data/scholarships";
 import { STUDY_PROGRAMMES_DATA } from "../data/studyProgrammes";
 import { validateStudyProgrammes } from "../lib/studyProgrammes";
+import { FavouriteKind, favouriteKey, favouritesOfKind, isFavourite } from "../lib/favourites";
 import { generateGoogleCalendarUrl } from "../lib/googleCalendar";
 import {
   fetchUserBookmarks,
-  toggleBookmarkScholarship,
+  toggleBookmark,
   fetchScholarshipsFromDB,
   seedScholarshipsToDB,
   triggerScholarshipSync,
@@ -283,10 +284,8 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
    * the entries rather than the results is the "counted the whole catalogue
    * while the list was filtered" defect this screen already had.
    */
-  const studyProgrammeCount = useMemo(
-    () => validateStudyProgrammes(STUDY_PROGRAMMES_DATA).valid.length,
-    []
-  );
+  const studyProgrammes = useMemo(() => validateStudyProgrammes(STUDY_PROGRAMMES_DATA).valid, []);
+  const studyProgrammeCount = studyProgrammes.length;
 
   const [selectedScholarship, setSelectedScholarship] = useState<Scholarship | null>(null);
   const [showSuggestModal, setShowSuggestModal] = useState<boolean>(false);
@@ -378,24 +377,46 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
     }
   };
 
-  const toggleFavorite = async (id: string, e?: React.MouseEvent) => {
+  /**
+   * Saves or removes one favourite, of either catalogue.
+   *
+   * Keyed by kind as well as id: with two catalogues on one screen a bare id no
+   * longer identifies anything, and resolving one against the wrong catalogue
+   * would show the reader a record they never saved (#82).
+   */
+  const toggleFavorite = async (kind: FavouriteKind, id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    const scholarship = scholarshipsList.find((s) => s.id === id);
-    const title = scholarship?.title || id;
-    const country = scholarship?.country || "Europa";
 
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
+    const item =
+      kind === "scholarship"
+        ? scholarshipsList.find((s) => s.id === id)
+        : studyProgrammes.find((p) => p.id === id);
+    const title = item?.title ?? id;
+    const country = item?.country ?? "";
+
+    const key = favouriteKey(kind, id);
+    setFavorites((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
 
     if (currentUser?.id) {
       try {
-        await toggleBookmarkScholarship(currentUser.id, id, title, country);
+        await toggleBookmark(currentUser.id, kind, id, title, country);
       } catch (err) {
         console.error("Error guardando favorito en Firestore:", err);
       }
     }
   };
+
+  /** Saved study programmes, resolved against the catalogue that is on screen. */
+  const savedProgrammes = useMemo(() => {
+    const savedIds = favouritesOfKind(favorites, "programme");
+    return studyProgrammes.filter((programme) => savedIds.includes(programme.id));
+  }, [favorites, studyProgrammes]);
+
+  /** Saved scholarship ids, for the filters that work in ids. */
+  const favoriteScholarshipIds = useMemo(
+    () => favouritesOfKind(favorites, "scholarship"),
+    [favorites]
+  );
 
   const clearFilters = () => {
     setSelectedCountry("Todos");
@@ -508,10 +529,10 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
     (overrides: Parameters<typeof matchesFilters>[1]) =>
       scholarshipsList.filter(
         (item) =>
-          (viewModeTab !== "favorites" || favorites.includes(item.id)) &&
+          (viewModeTab !== "favorites" || favoriteScholarshipIds.includes(item.id)) &&
           matchesFilters(item, overrides)
       ).length,
-    [scholarshipsList, matchesFilters, viewModeTab, favorites]
+    [scholarshipsList, matchesFilters, viewModeTab, favoriteScholarshipIds]
   );
 
   /**
@@ -663,7 +684,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
   const filteredScholarships = useMemo(() => {
     return scholarshipsList
       .filter((item) => {
-        if (viewModeTab === "favorites" && !favorites.includes(item.id)) return false;
+        if (viewModeTab === "favorites" && !favoriteScholarshipIds.includes(item.id)) return false;
         return matchesFilters(item);
       })
       .sort((a, b) => {
@@ -683,7 +704,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
       });
     // `matchesFilters` already closes over every filter, so listing them here
     // as well only risks the two lists drifting apart.
-  }, [scholarshipsList, viewModeTab, favorites, matchesFilters, sortBy]);
+  }, [scholarshipsList, viewModeTab, favoriteScholarshipIds, matchesFilters, sortBy]);
 
   // Start from the top of the catalogue whenever the filters change: what was
   // loaded before the change says nothing about what matches after it.
@@ -892,7 +913,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
               <Heart
                 className={`w-4 h-4 ${viewModeTab === "favorites" ? "fill-white" : "text-red-500"}`}
               />
-              <span>{t("becas.tabFavorites", "Mis Becas Favoritas")}</span>
+              <span>{t("becas.tabSaved", "Mis Guardados")}</span>
               <Badge
                 variant={viewModeTab === "favorites" ? "count" : "neutral"}
                 size="sm"
@@ -945,11 +966,13 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
               </div>
               <div>
                 <h3 className="text-base font-bold text-red-900 dark:text-red-200">
-                  Sección: Mis Becas Guardadas ({favorites.length})
+                  {t("becas.savedHeading", "Sección: Mis Guardados")} ({favorites.length})
                 </h3>
                 <p className="text-xs text-red-700 dark:text-red-300 mt-0.5">
-                  Tus becas de interés están sincronizadas para que puedas consultarlas, agendarlas
-                  y comparar requisitos en cualquier momento.
+                  {t(
+                    "becas.savedIntro",
+                    "Tus becas y programas de estudio guardados, para consultarlos, agendarlos y comparar requisitos en cualquier momento."
+                  )}
                 </p>
               </div>
             </div>
@@ -1195,10 +1218,38 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
             aria-busy={!showingStudies && catalogueStatus === "loading"}
           >
             <TabsContent value={viewModeTab} className="space-y-6">
+              {/*
+                Saved study programmes, above the saved scholarships. The tab
+                holds both catalogues since #82, so a reader who saved a
+                language certification finds it where they saved it.
+              */}
+              {viewModeTab === "favorites" && savedProgrammes.length > 0 && (
+                <div className="space-y-3" id="saved-programmes">
+                  <h3 className="font-headline-sm text-lg font-bold text-primary dark:text-sky-300">
+                    {t("becas.savedProgrammes", "Programas de estudio guardados")} (
+                    {savedProgrammes.length})
+                  </h3>
+                  <EstudiosSection
+                    scholarships={scholarshipsList}
+                    onOpenScholarship={(scholarship) => setSelectedScholarship(scholarship)}
+                    programmes={savedProgrammes}
+                    favourites={favorites}
+                    onToggleFavourite={(id) => toggleFavorite("programme", id)}
+                    hideHeading
+                  />
+                  <h3 className="font-headline-sm text-lg font-bold text-primary dark:text-sky-300 pt-2">
+                    {t("becas.savedScholarships", "Becas guardadas")} (
+                    {favoriteScholarshipIds.length})
+                  </h3>
+                </div>
+              )}
+
               {showingStudies ? (
                 <EstudiosSection
                   scholarships={scholarshipsList}
                   onOpenScholarship={(scholarship) => setSelectedScholarship(scholarship)}
+                  favourites={favorites}
+                  onToggleFavourite={(id) => toggleFavorite("programme", id)}
                 />
               ) : (
                 <>
@@ -1303,7 +1354,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                       {/* Cards Grid */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {displayedScholarships.map((beca) => {
-                          const isFav = favorites.includes(beca.id);
+                          const isFav = isFavourite(favorites, "scholarship", beca.id);
                           return (
                             <Card key={beca.id} className="hover:shadow-xl transition-all group">
                               <div>
@@ -1324,7 +1375,7 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
                                     </div>
 
                                     <button
-                                      onClick={(e) => toggleFavorite(beca.id, e)}
+                                      onClick={(e) => toggleFavorite("scholarship", beca.id, e)}
                                       className={`p-2 rounded-full backdrop-blur-md transition-colors ${
                                         isFav
                                           ? "bg-red-500 text-white"
@@ -1674,10 +1725,10 @@ export const BecasExplorer: React.FC<BecasExplorerProps> = ({
               )}
               <button
                 type="button"
-                onClick={() => toggleFavorite(selectedScholarship.id)}
+                onClick={() => toggleFavorite("scholarship", selectedScholarship.id)}
                 id="modal-toggle-favorite-btn"
                 className={`btn-tactile inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ml-auto shadow-xs ${
-                  favorites.includes(selectedScholarship.id)
+                  isFavourite(favorites, "scholarship", selectedScholarship.id)
                     ? "bg-red-500 text-white"
                     : "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-300 border border-red-300 dark:border-red-800"
                 }`}

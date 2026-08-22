@@ -79,6 +79,28 @@ accepts — `uid`, `displayName`, `email`, `photoURL`, `countryOfOrigin`,
 `updatedAt`. `allow write` previously accepted any field, including `role`,
 which `App.tsx` read back as an authorization decision.
 
+### `savedScholarships` — favourites of both catalogues
+
+The name is wrong and stays wrong. Since #82 the collection holds saved study
+programmes as well as scholarships; renaming it means copying every document and
+deleting the originals, and there is no backup or restore capability (#18), so
+the risk is not worth a better name.
+
+New documents carry `itemType` (`scholarship` or `programme`) and `itemId`.
+Documents written before #82 carry `scholarshipId` and no type, and every one of
+them is a scholarship — that was the only thing that could be saved — so they
+are read as such rather than migrated. `bookmarkToKey` in
+`src/lib/favourites.ts` is the single place that reads either shape.
+
+A favourite is held in the client as `"{kind}:{id}"`. A bare id no longer
+identifies anything now that two catalogues sit on one screen: they can carry
+the same id, and resolving against the wrong one would show a reader a record
+they never saved.
+
+The rule is unchanged — a signed-in user may create and delete their own rows —
+so this needed no `firestore.rules` change.
+
+### `visa_guide_votes` — undeclared path
 ### `visa_guide_votes` — one document per (user, country, visa)
 
 The path used to be `visa_guide_votes/{countryCode}/visas`, which appeared in no

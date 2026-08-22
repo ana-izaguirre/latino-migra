@@ -204,6 +204,15 @@ Recently addressed and verified by tests:
   answer usefully about one specific call, and the handler, the prop and the
   path through `App` stay wired so restoring it is one word.
 
+## Favourites
+
+- The tab is "Mis Guardados" and holds both catalogues: a language
+  certification or a vocational programme can be saved beside a scholarship
+  (#82). The badge counts both.
+- Saved programmes render above the saved scholarships, each under its own
+  heading with its own count.
+- A favourite is stored as `"{kind}:{id}"`. A bare id stopped identifying
+  anything once two catalogues shared a screen.
 ## Scholarship filters in the mobile sheet
 
 - Each of the six groups is one swipeable row of chips, the same as the quick
