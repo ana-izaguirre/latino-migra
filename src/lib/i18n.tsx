@@ -380,8 +380,9 @@ export const TRANSLATIONS: TranslationDictionary = {
     es: "Tus becas y programas de estudio guardados, para consultarlos, agendarlos y comparar requisitos en cualquier momento.",
     en: "Your saved scholarships and study programmes, to revisit, schedule and compare whenever you like.",
   },
-  "becas.savedProgrammes": { es: "Programas de estudio guardados", en: "Saved study programmes" },
+  "becas.savedProgrammes": { es: "Programas guardados", en: "Saved programmes" },
   "becas.savedScholarships": { es: "Becas guardadas", en: "Saved scholarships" },
+  "becas.savedKindLabel": { es: "Tipo de guardado", en: "Kind of saved item" },
   "estudios.kindLabel": { es: "Tipo de programa", en: "Programme type" },
   "estudios.countryLabel": { es: "País", en: "Country" },
   "estudios.modalityLabel": { es: "Modalidad", en: "Format" },
@@ -538,6 +539,15 @@ export const TRANSLATIONS: TranslationDictionary = {
     en: "Tap the heart (♥) on any call to save it and find it quickly here.",
   },
   "becas.seeAllCalls": { es: "Ver Todas las Convocatorias", en: "See All Calls" },
+  "becas.seeAllProgrammes": { es: "Ver Todos los Programas", en: "See All Programmes" },
+  "becas.emptySavedProgrammesTitle": {
+    es: "Aún no tienes programas guardados",
+    en: "You have not saved any programmes yet",
+  },
+  "becas.emptySavedProgrammesBody": {
+    es: "Pulsa el corazón (♥) en cualquier curso, certificado o FP para guardarlo y encontrarlo aquí.",
+    en: "Tap the heart (♥) on any course, certificate or vocational programme to save it and find it here.",
+  },
   "becas.emptyFilteredTitle": {
     es: "No encontramos becas con los filtros seleccionados",
     en: "No scholarships match the filters you picked",

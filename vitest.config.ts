@@ -40,7 +40,7 @@ export default defineConfig({
       // tests, so coverage can only go up. Never lower these to make a build
       // pass — write the test instead.
       thresholds: {
-        statements: 64,
+        statements: 65,
         branches: 58,
         functions: 61,
         lines: 65,
