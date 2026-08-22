@@ -3,7 +3,7 @@
 [![Status](https://img.shields.io/badge/estado-en%20desarrollo%20activo-yellow)](https://github.com/users/ana-izaguirre/projects/4)
 [![License](https://img.shields.io/badge/licencia-MIT-blue)](./LICENSE)
 [![CI](https://github.com/ana-izaguirre/latino-migra/actions/workflows/ci.yml/badge.svg)](https://github.com/ana-izaguirre/latino-migra/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/coverage-43%25-orange)](https://github.com/ana-izaguirre/latino-migra/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/cobertura-64%25-yellow)](https://github.com/ana-izaguirre/latino-migra/actions/workflows/ci.yml)
 [![Vercel](https://img.shields.io/badge/Vercel-Deploy-000000?logo=vercel&logoColor=white)](https://vercel.com/)
 [![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev/)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%26%20Auth-orange?logo=firebase)](https://firebase.google.com/)
@@ -26,14 +26,29 @@
 
 **LatinoMigra** es una plataforma web integral diseñada para estudiantes y profesionales latinoamericanos que desean migrar a España, Europa o Norteamérica para cursar estudios de grado, máster, cursos de idiomas o formación técnica.
 
-### 🚀 Módulos Principales
-1. **🎓 Explorador de Becas y Ayudas**: Buscador con filtros por país de origen, destino y nivel educativo (Fundación Carolina, DAAD, Erasmus+, AUIP, Santander, etc.).
-2. **🤖 Asistente de IA con Gemini**: Respuestas al instante sobre visados de estudiante, seguros médicos homologados, equivalencias y coste de vida.
-3. **💬 Comunidad y Foros en la Nube**: Desarrollado con **Cloud Firestore**, con paginación optimizada por cursores, detección de dudas duplicadas y respuestas por hilo.
-4. **💰 Calculadora de Presupuesto**: Estimador mensual con desglose de alojamiento, manutención, transporte y seguro según la ciudad.
-5. **🗺️ Planificador y Hoja de Ruta**: Cronograma interactivo con pasos antes, durante y después del viaje.
-6. **📍 Directorio de Consulados y Embajadas**: Ubicación de representaciones consulares con enlaces directos a citas oficiales.
-7. **🔔 Centro de Alertas y Notificaciones**: Recordatorios de plazos de convocatorias, cambios de extranjería y notificaciones push.
+### 🚀 Qué está en pantalla hoy
+
+El producto se ha estrechado a propósito. Seis pantallas existen en el árbol y
+siguen compilando, pero nada en la navegación enlaza a ellas — la fuente de
+verdad es `HIDDEN_TABS` en
+[`src/lib/navigation.ts`](./src/lib/navigation.ts), y restaurar una es borrar
+una línea ahí.
+
+| Pantalla | Estado | Qué hace |
+| :--- | :--- | :--- |
+| **Becas y Estudios** | ✅ En vista | Convocatorias verificadas y programas de estudio, filtrados por origen, destino y nivel (Fundación Carolina, DAAD, Erasmus+, AUIP, Santander). Los guardados se separan en sus propias sub-pestañas. |
+| **Guías migratorias** | ✅ En vista | Guías de visado por país, con requisitos, costes y enlaces a la fuente consular oficial. |
+| **Asistente IA** | 🚧 En desarrollo | Gemini detrás de un proxy en el servidor, respondiendo sobre visados, seguros, homologaciones y coste de vida. Es alcanzable, pero se sigue trabajando en él. |
+| Calculadora de presupuesto | ⛔ Sin enlazar | Alojamiento, alimentación, transporte y seguro mensuales por ciudad. |
+| Planificador migratorio | ⛔ Sin enlazar | Hoja de ruta paso a paso antes, durante y después del viaje. |
+| Comunidad y foros | ⛔ Sin enlazar | Hilos sobre Firestore, con paginación por cursores y detección de duplicados. |
+| Directorio de consulados | ⛔ Sin enlazar | Consulados y embajadas, con enlaces a la cita oficial. |
+| Voluntariados | ⛔ Sin enlazar | Plazas de voluntariado e intercambio. |
+| Sugerencias | ⛔ Sin enlazar | Propuestas de lectores pendientes de verificar. |
+
+Todo lo marcado con ⛔ está construido pero no se ofrece, así que esta tabla —y
+no el árbol de archivos— es la respuesta a "qué puede usar realmente un
+visitante".
 
 ---
 
@@ -42,36 +57,46 @@
 ```mermaid
 graph TD
     subgraph Client["Cliente (Frontend - React 19 + Tailwind CSS)"]
-        UI["Interfaz de Usuario & Vistas"]
-        i18n["Internacionalización (ES / EN)"]
-        ScrollNav["Navegación Flotante (Top/Bottom)"]
+        UI["Pantallas — sin router: la navegación es useState en App.tsx"]
+        i18n["Internacionalización vía t() (ES / EN)"]
+        Prefs["preferencesStore — lo único que escribe document.cookie"]
         AuthUI["Google Sign-In (Firebase Auth)"]
     end
 
-    subgraph Server["Servidor Backend (Express + Node.js)"]
-        Proxy["Proxy Seguro de API Keys (/api/chat)"]
-        GeminiSDK["@google/genai SDK"]
+    subgraph Server["Express — guarda la clave de Gemini, sirve solo /api/*"]
+        Chat["POST /api/chat"]
+        Cron["POST /api/cron/sync-scholarships"]
+        Health["GET /api/health"]
     end
 
     subgraph FirebaseCloud["Cloud Firestore & Firebase Auth"]
         AuthService["Firebase Authentication"]
-        PostsCol["Colección /forumPosts"]
-        RepliesSub["Subcolección /replies"]
-        UsersCol["Colección /users"]
-        Rules["Firestore Security Rules"]
+        Content["scholarships · visa_guide_votes · forumPosts/replies"]
+        UserData["users · userPreferences · savedScholarships · userNotes · migrationPlans"]
+        Ops["admins · feedbackSuggestions"]
+        Rules["firestore.rules — el único control de acceso que se aplica"]
     end
 
     subgraph AI["Google GenAI"]
-        GeminiModel["Gemini 2.5 Flash"]
+        GeminiModel["gemini-3.6-flash"]
     end
 
-    UI -->|Llamadas API /api/chat| Proxy
+    UI --> Chat
     UI -->|Autenticación directa| AuthService
-    UI -->|Consultas seguras y paginadas| PostsCol
-    PostsCol --> RepliesSub
-    Proxy --> GeminiSDK
-    GeminiSDK --> GeminiModel
+    UI -->|Lecturas y escrituras directas, sin servidor de por medio| Content
+    UI --> UserData
+    Prefs -->|Con sesión: Firestore. Anónimo: cookie lm_prefs| UserData
+    Content --- Rules
+    UserData --- Rules
+    Ops --- Rules
+    Chat --> GeminiModel
+    Cron --> GeminiModel
 ```
+
+El navegador habla con Firestore directamente, así que `firestore.rules` es el
+único control de acceso que se aplica: no hay capa de validación en servidor.
+En producción Express sirve solo `/api/*`; el HTML y los assets vienen del CDN
+de Vercel. Detalles en [`docs/architecture.md`](./docs/architecture.md).
 
 ---
 

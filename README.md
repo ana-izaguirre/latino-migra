@@ -3,7 +3,7 @@
 [![Status](https://img.shields.io/badge/status-active%20development-yellow)](https://github.com/users/ana-izaguirre/projects/4)
 [![License](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 [![CI](https://github.com/ana-izaguirre/latino-migra/actions/workflows/ci.yml/badge.svg)](https://github.com/ana-izaguirre/latino-migra/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/coverage-43%25-orange)](https://github.com/ana-izaguirre/latino-migra/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-64%25-yellow)](https://github.com/ana-izaguirre/latino-migra/actions/workflows/ci.yml)
 [![Vercel](https://img.shields.io/badge/Vercel-Deploy-000000?logo=vercel&logoColor=white)](https://vercel.com/)
 [![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev/)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%26%20Auth-orange?logo=firebase)](https://firebase.google.com/)
@@ -25,14 +25,28 @@
 ### Project Overview
 **LatinoMigra** is a comprehensive web platform created for Latin American students and professionals migrating to Spain, Europe, and North America for university degrees, master's programs, language courses, or vocational training.
 
-### Key Features
-1. **Scholarships & Grants Explorer**: Filter by country of origin, destination, and study level (Fundación Carolina, DAAD, Erasmus+, AUIP, Santander, etc.).
-2. **Gemini AI Assistant**: Provides instant answers regarding student visas, medical insurance, academic homologation, and cost of living.
-3. **Cloud-Synced Community Forum**: Powered by **Cloud Firestore** with cursor pagination, real-time duplicate question alerts, and subcollections for threaded replies.
-4. **Living Cost & Budget Calculator**: Monthly breakdown of housing, food, transportation, and healthcare by city.
-5. **Interactive Migration Checklist**: Step-by-step roadmap before, during, and after arriving in the destination country.
-6. **Consulate Directory & Maps**: Consulate directory with official appointment booking links.
-7. **Alerts & Notification Center**: Custom reminders for scholarship deadlines, visa law updates, and web push notifications.
+### What is on screen today
+
+The product has been deliberately narrowed. Six screens exist in the tree and
+still compile, but nothing in the navigation links to them — the source of
+truth is `HIDDEN_TABS` in
+[`src/lib/navigation.ts`](./src/lib/navigation.ts), and restoring one is
+deleting a line there.
+
+| Screen | Status | What it does |
+| :--- | :--- | :--- |
+| **Scholarships & Studies** | ✅ Live | Verified calls and study programmes, filtered by origin, destination and level (Fundación Carolina, DAAD, Erasmus+, AUIP, Santander). Saved items split into their own sub-tabs. |
+| **Migration guides** | ✅ Live | Per-country visa guides with requirements, costs and links to the official consular source. |
+| **AI assistant** | 🚧 In progress | Gemini behind a server-side proxy, answering on visas, insurance, homologation and cost of living. Reachable, still being worked on. |
+| Budget calculator | ⛔ Not linked | Monthly housing, food, transport and insurance by city. |
+| Migration planner | ⛔ Not linked | Step-by-step roadmap before, during and after the move. |
+| Community forum | ⛔ Not linked | Firestore-backed threads with cursor pagination and duplicate detection. |
+| Consulate directory | ⛔ Not linked | Consulates and embassies with official appointment links. |
+| Volunteering | ⛔ Not linked | Volunteering and exchange placements. |
+| Suggestions hub | ⛔ Not linked | Reader submissions awaiting verification. |
+
+Everything above ⛔ is built but not offered, so treat this table rather than
+the file tree as the answer to "what can a visitor actually use".
 
 ---
 
@@ -41,36 +55,46 @@
 ```mermaid
 graph TD
     subgraph Client["Frontend Client (React 19 + Tailwind CSS)"]
-        UI["User Interface & Modular Views"]
-        i18n["Internationalization (ES / EN)"]
-        ScrollNav["Smart Floating Nav (Top/Bottom)"]
+        UI["Screens — no router: navigation is useState in App.tsx"]
+        i18n["Internationalization via t() (ES / EN)"]
+        Prefs["preferencesStore — the only writer of document.cookie"]
         AuthUI["Google Sign-In (Firebase Auth)"]
     end
 
-    subgraph Server["Backend Server (Express + Node.js)"]
-        Proxy["Secure API Key Proxy (/api/chat)"]
-        GeminiSDK["@google/genai SDK"]
+    subgraph Server["Express — holds the Gemini key, serves /api/* only"]
+        Chat["POST /api/chat"]
+        Cron["POST /api/cron/sync-scholarships"]
+        Health["GET /api/health"]
     end
 
     subgraph FirebaseCloud["Cloud Firestore & Firebase Auth"]
         AuthService["Firebase Authentication"]
-        PostsCol["Collection /forumPosts"]
-        RepliesSub["Subcollection /replies"]
-        UsersCol["Collection /users"]
-        Rules["Firestore Security Rules"]
+        Content["scholarships · visa_guide_votes · forumPosts/replies"]
+        UserData["users · userPreferences · savedScholarships · userNotes · migrationPlans"]
+        Ops["admins · feedbackSuggestions"]
+        Rules["firestore.rules — the only enforced access control"]
     end
 
     subgraph AI["Google GenAI"]
-        GeminiModel["Gemini 2.5 Flash"]
+        GeminiModel["gemini-3.6-flash"]
     end
 
-    UI -->|API Requests /api/chat| Proxy
-    UI -->|Direct Authentication| AuthService
-    UI -->|Cursor-paginated queries| PostsCol
-    PostsCol --> RepliesSub
-    Proxy --> GeminiSDK
-    GeminiSDK --> GeminiModel
+    UI --> Chat
+    UI -->|Direct authentication| AuthService
+    UI -->|Direct reads and writes, no server in between| Content
+    UI --> UserData
+    Prefs -->|Signed in: Firestore. Anonymous: lm_prefs cookie| UserData
+    Content --- Rules
+    UserData --- Rules
+    Ops --- Rules
+    Chat --> GeminiModel
+    Cron --> GeminiModel
 ```
+
+The browser talks to Firestore directly, so `firestore.rules` is the only
+enforced access control — there is no server-side validation layer. In
+production Express serves `/api/*` only; the HTML and assets come from
+Vercel's CDN. Details in [`docs/architecture.md`](./docs/architecture.md).
 
 ---
 
