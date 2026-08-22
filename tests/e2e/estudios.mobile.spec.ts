@@ -81,7 +81,7 @@ test.describe("Studies section on a phone", () => {
     await control.click();
     const modal = page.getByRole("dialog");
     await expect(modal).toBeVisible();
-    await expect(modal.getByText("Requisitos")).toBeVisible();
+    await expect(modal.getByText("Requisitos", { exact: true }).first()).toBeVisible();
     await expect(modal.locator('[id^="estudio-modal-official-link-"]')).toBeVisible();
   });
 
@@ -109,6 +109,54 @@ test.describe("Studies section on a phone", () => {
 
     await expect(page.getByText(/Ningún programa con estos filtros/)).toBeVisible();
     await expect(page.getByText(/"no existe este programa"/)).toBeVisible();
+  });
+
+  test("keeps every card's contents inside the card", async ({ page }) => {
+    /*
+      Reported from a screenshot: "Santander Open Academy (santanderopenacad…"
+      ran past the card's own right edge. The button itself was overflowing,
+      not the label inside it — `truncate` only ellipses when the flex item may
+      shrink, and a flex item's default `min-width: auto` refuses to.
+
+      Measured with the fix reverted: ten overflowing elements at 375px, the
+      worst by 107px, and five at 1440px including the reported one by 74px.
+    */
+    const overflowing = await page.evaluate(() => {
+      const bad: string[] = [];
+      for (const card of document.querySelectorAll('[id^="estudio-card-"]')) {
+        const outer = card.getBoundingClientRect();
+        for (const el of card.querySelectorAll<HTMLElement>("*")) {
+          const box = el.getBoundingClientRect();
+          // One pixel of tolerance for sub-pixel rounding.
+          if (box.width > 0 && (box.right > outer.right + 1 || box.left < outer.left - 1)) {
+            bad.push(`${el.id || el.tagName}: "${el.textContent?.slice(0, 30)}"`);
+          }
+        }
+      }
+      return bad;
+    });
+
+    expect(overflowing, overflowing.join(" | ")).toEqual([]);
+  });
+
+  test("keeps the detail modal's label inside the modal", async ({ page }) => {
+    await page.locator('[id^="estudio-details-"]').first().click();
+    const modal = page.getByRole("dialog");
+    await expect(modal).toBeVisible();
+
+    const overflowing = await modal.evaluate((dialog) => {
+      const outer = dialog.getBoundingClientRect();
+      const bad: string[] = [];
+      for (const el of dialog.querySelectorAll<HTMLElement>("*")) {
+        const box = el.getBoundingClientRect();
+        if (box.width > 0 && (box.right > outer.right + 1 || box.left < outer.left - 1)) {
+          bad.push(`${el.tagName}.${el.className}: "${el.textContent?.slice(0, 40)}"`);
+        }
+      }
+      return bad;
+    });
+
+    expect(overflowing, overflowing.join(" | ")).toEqual([]);
   });
 
   test("fits a 375px viewport without sideways scrolling", async ({ page }) => {
@@ -139,6 +187,26 @@ test.describe("Studies section on a desktop", () => {
     const sidebarBox = (await sidebar.boundingBox())!;
     const listBox = (await page.locator("#estudios-list").boundingBox())!;
     expect(listBox.x).toBeGreaterThan(sidebarBox.x + sidebarBox.width - 1);
+  });
+
+  test("keeps every card's contents inside the card", async ({ page }) => {
+    // The two-column grid makes each card narrower than the phone's, so a long
+    // portal name overflows here even when it fits at 375px.
+    const overflowing = await page.evaluate(() => {
+      const bad: string[] = [];
+      for (const card of document.querySelectorAll('[id^="estudio-card-"]')) {
+        const outer = card.getBoundingClientRect();
+        for (const el of card.querySelectorAll<HTMLElement>("*")) {
+          const box = el.getBoundingClientRect();
+          if (box.width > 0 && (box.right > outer.right + 1 || box.left < outer.left - 1)) {
+            bad.push(`${el.id || el.tagName}: "${el.textContent?.slice(0, 30)}"`);
+          }
+        }
+      }
+      return bad;
+    });
+
+    expect(overflowing, overflowing.join(" | ")).toEqual([]);
   });
 
   test("pages the catalogue in the same batches, with one way through it", async ({ page }) => {

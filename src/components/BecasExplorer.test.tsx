@@ -590,6 +590,85 @@ describe("BecasExplorer Component", () => {
         expect(list()!.children.length).toBe(before);
       });
 
+      it("renames the whole screen, not just the list", async () => {
+        const { container } = await openStudies();
+
+        // Reported from a live screenshot: the page still announced itself as
+        // "Directorio Oficial de Becas" while showing a list of courses, and
+        // offered to suggest a scholarship.
+        expect(screen.queryByText(/Directorio Oficial de Becas/i)).not.toBeInTheDocument();
+        expect(
+          screen.getByRole("heading", { name: /Estudiar sin beca/i, level: 1 })
+        ).toBeInTheDocument();
+        expect(screen.getByText(/Rutas de estudio que no dependen/i)).toBeInTheDocument();
+        expect(container.querySelector("#suggest-scholarship-btn")).toHaveTextContent(
+          /Sugerir Curso Oficial/i
+        );
+
+        // The crumb names the sub-page rather than stopping at the directory.
+        expect(
+          within(container.querySelector('[aria-label="Breadcrumbs"]')!).getByText(
+            /Cursos, Certificados y FP/i
+          )
+        ).toBeInTheDocument();
+      });
+
+      it("renames the suggestion form to match the catalogue", async () => {
+        const { container } = await openStudies();
+        fireEvent.click(container.querySelector("#suggest-scholarship-btn")!);
+
+        const dialog = screen.getByRole("dialog");
+        expect(within(dialog).getByText(/Sugerir Curso, Certificado o FP/i)).toBeInTheDocument();
+        expect(within(dialog).getByText(/Nombre del Programa/i)).toBeInTheDocument();
+        expect(within(dialog).queryByText(/Sugerir Beca Universitaria/i)).not.toBeInTheDocument();
+      });
+
+      it("renders one heading for the screen, not two stacked", async () => {
+        await openStudies();
+
+        // The section repeated the page title inside the content column.
+        expect(screen.getAllByText(/Estudiar sin beca/i)).toHaveLength(1);
+        expect(document.getElementById("estudios-heading")).not.toBeInTheDocument();
+      });
+
+      it("reports its size in the same toolbar the scholarships use", async () => {
+        const { container } = await openStudies();
+
+        const toolbar = container.querySelector("#estudios-toolbar");
+        expect(toolbar).toBeInTheDocument();
+        expect(toolbar).toHaveTextContent(/Mostrando/i);
+        // A bordered container, not a bare paragraph.
+        expect(toolbar?.className).toMatch(/rounded-2xl/);
+        expect(toolbar?.className).toMatch(/border/);
+      });
+
+      it("gives each card the cover the scholarship cards have", async () => {
+        const { container } = await openStudies();
+
+        const cover = container.querySelector('[id^="estudio-cover-"]');
+        expect(cover).toBeInTheDocument();
+        // The heart sits on the cover, as it does on a scholarship card.
+        expect(container.querySelector('[id^="estudio-fav-"]')).toBeInTheDocument();
+      });
+
+      it("orders the list by what a programme actually carries", async () => {
+        const { container } = await openStudies();
+
+        const sort = container.querySelector("#estudios-sort-select");
+        expect(sort).toBeInTheDocument();
+        // A programme has no closing date, so the scholarship options would
+        // sort by a field no record carries.
+        expect(sort).not.toHaveTextContent(/Cierre/i);
+        expect(sort).toHaveTextContent(/Nombre/i);
+
+        const titles = () =>
+          Array.from(container.querySelectorAll('[id^="estudio-card-"] h3')).map(
+            (h) => h.textContent ?? ""
+          );
+        const rendered = titles();
+        expect(rendered).toEqual([...rendered].sort((a, b) => a.localeCompare(b, "es")));
+      });
+
       it("pages the study list in the same batches", async () => {
         const { container } = await openStudies();
 

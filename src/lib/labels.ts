@@ -72,6 +72,12 @@ const KEYS: Record<string, Record<string, string>> = {
     "support-first": "label.sort.supportFirst",
     "title-asc": "label.sort.titleAsc",
   },
+  /** The study list orders by what a programme actually carries. */
+  studySort: {
+    name: "estudios.sortName",
+    country: "estudios.sortCountry",
+    institution: "estudios.sortInstitution",
+  },
   /** Plural, for the filter chips. */
   programmeKind: {
     curso: "label.kind.course",

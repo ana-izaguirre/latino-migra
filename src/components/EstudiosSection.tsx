@@ -8,6 +8,7 @@ import {
   GraduationCap,
   Heart,
   Landmark,
+  MapPin,
   Link2,
   Plane,
 } from "lucide-react";
@@ -17,12 +18,23 @@ import { useLanguage } from "../lib/i18n";
 import { useLabels } from "../lib/labels";
 import { STUDY_BATCH_SIZE, StudyFilterState, useStudyFilters } from "../lib/useStudyFilters";
 import { REJECTION_REASONS } from "../lib/studyProgrammes";
-import { Scholarship, StudyProgramme } from "../types";
+import { Scholarship, StudyProgramme, StudyProgrammeKind } from "../types";
 import { isFavourite } from "../lib/favourites";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardFooter } from "./ui/card";
+import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
 import { Modal } from "./ui/Modal";
+
+/**
+ * The cover band per kind, standing in for the photograph a scholarship has.
+ * The colours are the ones the kind badge already uses, so a card reads the
+ * same way at a glance whether the reader is looking at the band or the badge.
+ */
+const KIND_COVER: Record<StudyProgrammeKind, string> = {
+  curso: "bg-gradient-to-br from-sky-600 to-sky-900",
+  certificado: "bg-gradient-to-br from-teal-600 to-teal-900",
+  fp: "bg-gradient-to-br from-indigo-600 to-indigo-900",
+};
 
 interface EstudiosSectionProps {
   /**
@@ -83,6 +95,8 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
   const ownState = useStudyFilters(programmes);
   const state = filterState ?? ownState;
   const { clearFilters, activeFilterSummary, valid, rejected, matching, visible, loadMore } = state;
+  /** Saved programmes, for the toolbar badge the scholarship list also shows. */
+  const savedCount = favourites.filter((entry) => entry.startsWith("programme:")).length;
   const relatedScholarships = (programme: StudyProgramme): Scholarship[] =>
     (programme.relatedScholarshipIds ?? [])
       .map((id) => scholarships.find((s) => s.id === id))
@@ -155,88 +169,133 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
         </div>
       ) : (
         <>
-          <p className="text-xs md:text-sm text-on-surface-variant dark:text-slate-300">
-            {t("estudios.showing", "Mostrando")} <strong>{visible.length}</strong>{" "}
-            {t("estudios.of", "de")} <strong>{matching.length}</strong>{" "}
-            {t("estudios.programmes", "programas oficiales")}
-          </p>
+          {/*
+            The same toolbar the scholarship list uses. It was a bare paragraph,
+            so the two halves of one screen reported their size differently
+            (#105).
+          */}
+          <div
+            id="estudios-toolbar"
+            className="bg-surface-container-lowest dark:bg-slate-800 p-4 rounded-2xl border border-outline-variant/40 dark:border-slate-700 flex flex-wrap items-center gap-3"
+          >
+            <span className="text-xs md:text-sm text-on-surface-variant dark:text-slate-300">
+              {t("estudios.showing", "Mostrando")} <strong>{visible.length}</strong>{" "}
+              {t("estudios.of", "de")} <strong>{matching.length}</strong>{" "}
+              {t("estudios.programmes", "programas oficiales")}
+            </span>
+            {savedCount > 0 && (
+              <span className="text-secondary dark:text-teal-300 font-semibold bg-secondary/10 dark:bg-teal-900/30 px-2 py-0.5 rounded-full text-xs">
+                ♥ {savedCount} {t("estudios.savedCount", "guardados")}
+              </span>
+            )}
+          </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-5" id="estudios-list">
             {visible.map((programme) => (
-              <Card key={programme.id} id={`estudio-card-${programme.id}`}>
-                <CardContent className="flex-1">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <Badge variant="level">{label("programmeKindBadge", programme.kind)}</Badge>
-                    <Badge variant="institution">{label("country", programme.country)}</Badge>
-                    <Badge variant="support">{label("modality", programme.modality)}</Badge>
-                    {/*
+              <Card
+                key={programme.id}
+                id={`estudio-card-${programme.id}`}
+                className="hover:shadow-xl transition-all group"
+              >
+                <div>
+                  {/*
+                    The cover the scholarship card has, at the same height and
+                    carrying the same two controls. A programme has no
+                    photograph and inventing one would put a stock campus
+                    behind a certificate nobody photographed, so the band is
+                    drawn from the kind instead.
+                  */}
+                  <CardHeader className={`h-44 overflow-hidden ${KIND_COVER[programme.kind]}`}>
+                    <div
+                      className="absolute inset-0 grid place-items-center text-white/25 group-hover:scale-105 transition-transform duration-500"
+                      aria-hidden="true"
+                      id={`estudio-cover-${programme.id}`}
+                    >
+                      <GraduationCap className="w-20 h-20" />
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-semibold">
+                        <MapPin className="w-3.5 h-3.5 text-sky-400" aria-hidden="true" />
+                        <span>{label("country", programme.country)}</span>
+                      </div>
+                      {onToggleFavourite && (
+                        <button
+                          type="button"
+                          id={`estudio-fav-${programme.id}`}
+                          onClick={() => onToggleFavourite(programme.id)}
+                          aria-pressed={isFavourite(favourites, "programme", programme.id)}
+                          title={
+                            isFavourite(favourites, "programme", programme.id)
+                              ? t("estudios.removeFavourite", "Quitar de mis guardados")
+                              : t("estudios.addFavourite", "Guardar este programa")
+                          }
+                          className="grid place-items-center w-11 h-11 rounded-full bg-black/60 backdrop-blur-md text-red-400 hover:text-red-300 cursor-pointer active:scale-95 transition-transform"
+                        >
+                          <Heart
+                            className={`w-5 h-5 ${
+                              isFavourite(favourites, "programme", programme.id)
+                                ? "fill-current"
+                                : ""
+                            }`}
+                            aria-hidden="true"
+                          />
+                        </button>
+                      )}
+                    </div>
+
+                    <h3 className="absolute bottom-3 left-3 right-3 text-lg font-bold text-white text-pretty line-clamp-2">
+                      {programme.title}
+                    </h3>
+                  </CardHeader>
+
+                  <CardContent className="flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Badge variant="level">{label("programmeKindBadge", programme.kind)}</Badge>
+                      <Badge variant="support">{label("modality", programme.modality)}</Badge>
+                      {/*
                         Absent, not guessed. An entry nobody has checked says so
                         rather than borrowing the answer from a similar one.
                       */}
-                    <Badge
-                      variant={programme.migrationRoute === "directa" ? "official" : "neutral"}
-                    >
-                      {programme.migrationRoute
-                        ? label("migrationRouteBadge", programme.migrationRoute)
-                        : t("estudios.routeUnverified", "Sin verificar")}
-                    </Badge>
-                  </div>
-
-                  <div className="flex items-start gap-2">
-                    <h3 className="flex-1 text-lg font-bold text-primary dark:text-sky-300 text-pretty">
-                      {programme.title}
-                    </h3>
-                    {onToggleFavourite && (
-                      <button
-                        type="button"
-                        id={`estudio-fav-${programme.id}`}
-                        onClick={() => onToggleFavourite(programme.id)}
-                        aria-pressed={isFavourite(favourites, "programme", programme.id)}
-                        title={
-                          isFavourite(favourites, "programme", programme.id)
-                            ? t("estudios.removeFavourite", "Quitar de mis guardados")
-                            : t("estudios.addFavourite", "Guardar este programa")
-                        }
-                        className="shrink-0 grid place-items-center w-11 h-11 -mt-1.5 -mr-1.5 rounded-full text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 cursor-pointer active:scale-95 transition-transform"
+                      <Badge
+                        variant={programme.migrationRoute === "directa" ? "official" : "neutral"}
                       >
-                        <Heart
-                          className={`w-5 h-5 ${
-                            isFavourite(favourites, "programme", programme.id) ? "fill-current" : ""
-                          }`}
-                          aria-hidden="true"
-                        />
-                      </button>
-                    )}
-                  </div>
-
-                  <p className="flex items-center gap-1.5 text-xs font-semibold text-on-surface-variant dark:text-slate-300">
-                    <Landmark className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-                    {programme.institution}
-                  </p>
-
-                  <p className="text-sm text-on-surface-variant dark:text-slate-400 line-clamp-2 leading-relaxed">
-                    {programme.description}
-                  </p>
-
-                  <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
-                    <div>
-                      <dt className="font-bold text-on-surface dark:text-slate-200">
-                        {t("estudios.duration", "Duración")}
-                      </dt>
-                      <dd className="text-on-surface-variant dark:text-slate-400">
-                        {programme.duration}
-                      </dd>
+                        {programme.migrationRoute
+                          ? label("migrationRouteBadge", programme.migrationRoute)
+                          : t("estudios.routeUnverified", "Sin verificar")}
+                      </Badge>
                     </div>
-                    <div>
-                      <dt className="font-bold text-on-surface dark:text-slate-200">
-                        {t("estudios.cost", "Coste")}
-                      </dt>
-                      <dd className="text-on-surface-variant dark:text-slate-400">
-                        {programme.cost}
-                      </dd>
-                    </div>
-                  </dl>
-                </CardContent>
+
+                    <p className="flex items-center gap-1.5 text-xs font-semibold text-on-surface-variant dark:text-slate-300">
+                      <Landmark className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                      {programme.institution}
+                    </p>
+
+                    <p className="text-sm text-on-surface-variant dark:text-slate-400 line-clamp-2 leading-relaxed">
+                      {programme.description}
+                    </p>
+
+                    <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+                      <div>
+                        <dt className="font-bold text-on-surface dark:text-slate-200">
+                          {t("estudios.duration", "Duración")}
+                        </dt>
+                        <dd className="text-on-surface-variant dark:text-slate-400">
+                          {programme.duration}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="font-bold text-on-surface dark:text-slate-200">
+                          {t("estudios.cost", "Coste")}
+                        </dt>
+                        <dd className="text-on-surface-variant dark:text-slate-400">
+                          {programme.cost}
+                        </dd>
+                      </div>
+                    </dl>
+                  </CardContent>
+                </div>
 
                 <CardFooter>
                   <Button
@@ -250,14 +309,20 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
                     <span>{t("estudios.viewDetails", "Ver Detalles")}</span>
                   </Button>
 
-                  <Button variant="secondary" size="sm" asChild>
+                  {/*
+                    `truncate` only ellipses when the flex item is allowed to
+                    shrink. Without `min-w-0` the label ran past the button's
+                    own edge instead — a long portal name is the common case
+                    here, not the exception.
+                  */}
+                  <Button variant="secondary" size="sm" className="min-w-0 flex-1" asChild>
                     <a
                       href={programme.officialUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       id={`estudio-official-link-${programme.id}`}
                     >
-                      <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
+                      <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                       <span className="truncate">{programme.officialPortalName}</span>
                     </a>
                   </Button>
@@ -406,14 +471,14 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
               </div>
             )}
 
-            <Button variant="secondary" className="w-full" asChild>
+            <Button variant="secondary" className="w-full min-w-0" asChild>
               <a
                 href={selectedProgramme.officialUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 id={`estudio-modal-official-link-${selectedProgramme.id}`}
               >
-                <ExternalLink className="w-4 h-4" aria-hidden="true" />
+                <ExternalLink className="w-4 h-4 shrink-0" aria-hidden="true" />
                 <span className="truncate">{selectedProgramme.officialPortalName}</span>
               </a>
             </Button>

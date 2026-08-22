@@ -23,6 +23,22 @@ const ROUTE_ORDER: MigrationRoute[] = ["directa", "requisito", "ninguna"];
 export const STUDY_BATCH_SIZE = 6;
 
 /**
+ * How the list can be ordered.
+ *
+ * Deliberately not the scholarship options: a programme has no closing date,
+ * so "cierre más próximo" would order by a field no record carries — the shape
+ * of the `daysLeft` defect that matched everything.
+ */
+export const STUDY_SORT_OPTIONS = ["name", "country", "institution"] as const;
+export type StudySortOption = (typeof STUDY_SORT_OPTIONS)[number];
+
+const SORT_KEY: Record<StudySortOption, (programme: StudyProgramme) => string> = {
+  name: (p) => p.title,
+  country: (p) => p.country,
+  institution: (p) => p.institution,
+};
+
+/**
  * Filter options with the count each one would give: one predicate, so the
  * number on a chip is exactly what selecting it renders.
  */
@@ -51,6 +67,13 @@ export const useStudyFilters = (programmes: StudyProgramme[]) => {
   const label = useLabels();
   const [filters, setFilters] = useState<StudyFilters>(EMPTY_STUDY_FILTERS);
   const [visibleCount, setVisibleCount] = useState(STUDY_BATCH_SIZE);
+  const [sortBy, setSortByState] = useState<StudySortOption>("name");
+
+  /** Reordering starts the list again from the top of the new order. */
+  const setSortBy = (next: StudySortOption) => {
+    setSortByState(next);
+    setVisibleCount(STUDY_BATCH_SIZE);
+  };
 
   /** Narrowing the list starts it again from the top of the new list. */
   const setFilter = <K extends keyof StudyFilters>(axis: K, value: StudyFilters[K]) => {
@@ -70,8 +93,11 @@ export const useStudyFilters = (programmes: StudyProgramme[]) => {
   const { valid, rejected } = useMemo(() => validateStudyProgrammes(programmes), [programmes]);
 
   const matching = useMemo(
-    () => valid.filter((programme) => matchesStudyFilters(programme, filters)),
-    [valid, filters]
+    () =>
+      valid
+        .filter((programme) => matchesStudyFilters(programme, filters))
+        .sort((a, b) => SORT_KEY[sortBy](a).localeCompare(SORT_KEY[sortBy](b), "es")),
+    [valid, filters, sortBy]
   );
 
   const visible = matching.slice(0, visibleCount);
@@ -188,6 +214,8 @@ export const useStudyFilters = (programmes: StudyProgramme[]) => {
 
   return {
     filters,
+    sortBy,
+    setSortBy,
     setFilter,
     clearFilters,
     activeFilterCount,
