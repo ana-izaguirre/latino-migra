@@ -3,7 +3,7 @@
 [![Status](https://img.shields.io/badge/status-active%20development-yellow)](https://github.com/users/ana-izaguirre/projects/4)
 [![License](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 [![CI](https://github.com/ana-izaguirre/latino-migra/actions/workflows/ci.yml/badge.svg)](https://github.com/ana-izaguirre/latino-migra/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/coverage-64%25-yellow)](https://github.com/ana-izaguirre/latino-migra/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-65%25-yellow)](https://github.com/ana-izaguirre/latino-migra/actions/workflows/ci.yml)
 [![Vercel](https://img.shields.io/badge/Vercel-Deploy-000000?logo=vercel&logoColor=white)](https://vercel.com/)
 [![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev/)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%26%20Auth-orange?logo=firebase)](https://firebase.google.com/)
@@ -176,6 +176,7 @@ To protect credentials from being committed to Git, configure the following **En
 | Variable | Description | Scope |
 | :--- | :--- | :--- |
 | `GEMINI_API_KEY` | Google Gemini API Key | Server-side only |
+| `CRON_SECRET` | Shared secret guarding `POST /api/cron/sync-scholarships`. Without it the route rejects every request. | Server-side only |
 | `VITE_FIREBASE_API_KEY` | Firebase API Key | Frontend (Vite) |
 | `VITE_FIREBASE_AUTH_DOMAIN` | Firebase Auth Domain (`*.firebaseapp.com`) | Frontend (Vite) |
 | `VITE_FIREBASE_PROJECT_ID` | Firebase Project ID | Frontend (Vite) |

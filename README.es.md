@@ -3,7 +3,7 @@
 [![Status](https://img.shields.io/badge/estado-en%20desarrollo%20activo-yellow)](https://github.com/users/ana-izaguirre/projects/4)
 [![License](https://img.shields.io/badge/licencia-MIT-blue)](./LICENSE)
 [![CI](https://github.com/ana-izaguirre/latino-migra/actions/workflows/ci.yml/badge.svg)](https://github.com/ana-izaguirre/latino-migra/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/cobertura-64%25-yellow)](https://github.com/ana-izaguirre/latino-migra/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/cobertura-65%25-yellow)](https://github.com/ana-izaguirre/latino-migra/actions/workflows/ci.yml)
 [![Vercel](https://img.shields.io/badge/Vercel-Deploy-000000?logo=vercel&logoColor=white)](https://vercel.com/)
 [![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev/)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%26%20Auth-orange?logo=firebase)](https://firebase.google.com/)
@@ -180,6 +180,7 @@ Para evitar exponer credenciales o archivos de configuración en tu repositorio 
 | Variable | Descripción | Ámbito |
 | :--- | :--- | :--- |
 | `GEMINI_API_KEY` | Clave de API de Google Gemini (Servidor) | Backend / Servidor |
+| `CRON_SECRET` | Secreto compartido que protege `POST /api/cron/sync-scholarships`. Sin él la ruta rechaza toda petición. | Backend / Servidor |
 | `VITE_FIREBASE_API_KEY` | Clave API de tu proyecto Firebase | Frontend (Vite) |
 | `VITE_FIREBASE_AUTH_DOMAIN` | Dominio de Auth de Firebase (`*.firebaseapp.com`) | Frontend (Vite) |
 | `VITE_FIREBASE_PROJECT_ID` | ID de tu proyecto de Firebase | Frontend (Vite) |
