@@ -149,7 +149,9 @@ describe("EstudiosSection", () => {
 
     expect(document.getElementById("estudios-list")?.children).toHaveLength(2);
 
-    fireEvent.click(screen.getByRole("button", { name: /Cursos/ }));
+    // Addressed by id, not by its Spanish label: the chip's text now comes
+    // from the shared label module and changes with the language.
+    fireEvent.click(document.getElementById("estudios-kind-chip-curso") as HTMLElement);
 
     const list = document.getElementById("estudios-list");
     expect(list?.children).toHaveLength(1);

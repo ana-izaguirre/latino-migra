@@ -17,13 +17,10 @@ import {
 
 import { STUDY_PROGRAMMES_DATA } from "../data/studyProgrammes";
 import { useLanguage } from "../lib/i18n";
+import { useLabels } from "../lib/labels";
 import {
   EMPTY_STUDY_FILTERS,
-  MIGRATION_ROUTE_BADGE_LABELS,
-  MIGRATION_ROUTE_LABELS,
   REJECTION_REASONS,
-  STUDY_KIND_BADGE_LABELS,
-  STUDY_KIND_LABELS,
   StudyFilters,
   countByOption,
   matchesStudyFilters,
@@ -107,6 +104,7 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
   hideHeading = false,
 }) => {
   const { t } = useLanguage();
+  const label = useLabels();
   const [filters, setFilters] = useState<StudyFilters>(EMPTY_STUDY_FILTERS);
   const [visibleCount, setVisibleCount] = useState(STUDY_BATCH_SIZE);
 
@@ -143,7 +141,7 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
     () =>
       optionsFor(valid, filters, "kind", [
         { id: "todos", label: t("estudios.filterAll", "Todos") },
-        ...KIND_ORDER.map((kind) => ({ id: kind, label: STUDY_KIND_LABELS[kind] })),
+        ...KIND_ORDER.map((kind) => ({ id: kind, label: label("programmeKind", kind) })),
       ]),
     [valid, filters, t]
   );
@@ -154,9 +152,9 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
         { id: "Todos", label: t("estudios.filterAll", "Todos") },
         ...Array.from(new Set(valid.map((p) => p.country)))
           .sort((a, b) => a.localeCompare(b, "es"))
-          .map((country) => ({ id: country, label: country })),
+          .map((country) => ({ id: country, label: label("country", country) })),
       ]),
-    [valid, filters, t]
+    [valid, filters, t, label]
   );
 
   const modalityOptions = useMemo(
@@ -165,9 +163,9 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
         { id: "Todas", label: t("estudios.filterAllF", "Todas") },
         ...Array.from(new Set(valid.map((p) => p.modality)))
           .sort((a, b) => a.localeCompare(b, "es"))
-          .map((modality) => ({ id: modality, label: modality })),
+          .map((modality) => ({ id: modality, label: label("modality", modality) })),
       ]),
-    [valid, filters, t]
+    [valid, filters, t, label]
   );
 
   /**
@@ -179,10 +177,10 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
     () =>
       optionsFor(valid, filters, "migrationRoute", [
         { id: "todas", label: t("estudios.filterAllF", "Todas") },
-        ...ROUTE_ORDER.map((route) => ({ id: route, label: MIGRATION_ROUTE_LABELS[route] })),
+        ...ROUTE_ORDER.map((route) => ({ id: route, label: label("migrationRoute", route) })),
         { id: "sin-verificar", label: t("estudios.routeUnverified", "Sin verificar") },
       ]),
-    [valid, filters, t]
+    [valid, filters, t, label]
   );
 
   /**
@@ -193,12 +191,12 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
    */
   const activeFilterSummary = [
     filters.search.trim() && `"${filters.search.trim()}"`,
-    filters.country !== "Todos" && filters.country,
-    filters.kind !== "todos" && STUDY_KIND_LABELS[filters.kind],
-    filters.modality !== "Todas" && filters.modality,
+    filters.country !== "Todos" && label("country", filters.country),
+    filters.kind !== "todos" && label("programmeKind", filters.kind),
+    filters.modality !== "Todas" && label("modality", filters.modality),
     filters.migrationRoute === "sin-verificar"
       ? t("estudios.routeUnverified", "Sin verificar")
-      : filters.migrationRoute !== "todas" && MIGRATION_ROUTE_LABELS[filters.migrationRoute],
+      : filters.migrationRoute !== "todas" && label("migrationRoute", filters.migrationRoute),
   ].filter((entry): entry is string => Boolean(entry));
 
   /** Scholarships an entry names, keeping only the ones actually loaded. */
@@ -367,9 +365,9 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
                 <Card key={programme.id} id={`estudio-card-${programme.id}`}>
                   <CardContent className="flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <Badge variant="level">{STUDY_KIND_BADGE_LABELS[programme.kind]}</Badge>
-                      <Badge variant="institution">{programme.country}</Badge>
-                      <Badge variant="support">{programme.modality}</Badge>
+                      <Badge variant="level">{label("programmeKindBadge", programme.kind)}</Badge>
+                      <Badge variant="institution">{label("country", programme.country)}</Badge>
+                      <Badge variant="support">{label("modality", programme.modality)}</Badge>
                       {/*
                         Absent, not guessed. An entry nobody has checked says so
                         rather than borrowing the answer from a similar one.
@@ -378,7 +376,7 @@ export const EstudiosSection: React.FC<EstudiosSectionProps> = ({
                         variant={programme.migrationRoute === "directa" ? "official" : "neutral"}
                       >
                         {programme.migrationRoute
-                          ? MIGRATION_ROUTE_BADGE_LABELS[programme.migrationRoute]
+                          ? label("migrationRouteBadge", programme.migrationRoute)
                           : t("estudios.routeUnverified", "Sin verificar")}
                       </Badge>
                     </div>
