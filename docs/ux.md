@@ -253,20 +253,33 @@ Recently addressed and verified by tests:
 - The Becas & Estudios screen carries a fourth tab, **Cursos, Certificados y
   FP**, holding the study routes that do not depend on funding (#56).
   `src/components/EstudiosSection.tsx`.
-- Selecting it hides the scholarship chrome — search, sort, the filter sidebar
-  and the mobile quick filters — because none of it filters what is on screen.
-  A sort control that sorts nothing is an interface lying about its behaviour.
-- Each entry is a `Card`, and the requirements and qualification collapse below
-  `lg` behind the same `Disclosure` the guides and the scholarship detail use.
-  The official-source button is never inside the collapse: it is why the entry
-  exists.
+- Selecting it changes the catalogue, not the screen (#105). The sidebar, the
+  mobile filter sheet, the search box, the card, the detail modal and the
+  pagination are the ones the scholarships use; only the filters inside them
+  and the records they narrow differ. It previously rendered its own
+  full-width filter block above its own results, so one screen looked like two
+  products.
+- The study filter state lives in `src/lib/useStudyFilters.tsx` rather than in
+  the section, so `BecasExplorer` can render its chips in the shared sidebar
+  and sheet. Both copies are in the DOM below `lg`, so each scopes its element
+  ids with a `sidebar-` or `sheet-` prefix.
+- The sort control is still scholarship-only: it orders nothing here, and a
+  sort control that sorts nothing is an interface lying about its behaviour.
+  The clear control and the count beside it read whichever catalogue is
+  showing.
+- Each entry is a `Card` whose footer opens the same detail modal a
+  scholarship's does, holding the migration-route note, what you end up with,
+  the requirements and any scholarships that fund the route. The
+  official-source button is on the card as well as in the modal: it is why the
+  entry exists.
 - Four filters and a name search, migration route first: whether a programme
   opens a way to migrate is why someone is on this platform rather than on a
   course aggregator. An entry nobody has checked shows "sin verificar" rather
   than borrowing an answer, and that is one of the filter's options.
 - The list pages in sixes through one control, matching the scholarship list
-  beside it. Measured at 375px it is 5390px against the catalogue's 5403px;
-  rendering all thirteen at once was 9463px.
+  beside it. Measured at 375px the six cards are 2538px against the
+  scholarship list's comparable height; they were 3509px while the
+  requirements sat inline, against scholarship cards of 463–513px.
 - The tab badge counts what the section will render, not what the dataset
   holds: an entry without an official source does not appear, and a badge
   counting entries rather than results is a defect this screen already had.

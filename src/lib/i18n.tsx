@@ -409,11 +409,7 @@ export const TRANSLATIONS: TranslationDictionary = {
   "estudios.cost": { es: "Coste", en: "Cost" },
   "estudios.outcome": { es: "Qué obtienes", en: "What you end up with" },
   "estudios.requirements": { es: "Requisitos", en: "Requirements" },
-  "estudios.showDetails": {
-    es: "Ver requisitos y titulación",
-    en: "Show requirements and qualification",
-  },
-  "estudios.hideDetails": { es: "Ocultar requisitos", en: "Hide requirements" },
+  "estudios.viewDetails": { es: "Ver Detalles", en: "View details" },
   "estudios.relatedScholarships": { es: "Becas para esta ruta", en: "Scholarships for this route" },
   "estudios.seeAll": { es: "Ver todos los programas", en: "See every programme" },
   "estudios.emptyFilterTitle": {
@@ -468,6 +464,10 @@ export const TRANSLATIONS: TranslationDictionary = {
   "becas.quickFilters": { es: "Filtros Rápidos", en: "Quick Filters" },
   "becas.clear": { es: "Limpiar", en: "Clear" },
   "becas.moreFilters": { es: "Más Filtros", en: "More Filters" },
+  "becas.searchLabel": { es: "Buscar convocatorias", en: "Search calls" },
+  "becas.applyFilters": { es: "Ver", en: "See" },
+  "becas.programmesNoun": { es: "programas", en: "programmes" },
+  "becas.scholarshipsNoun": { es: "convocatorias", en: "calls" },
   "becas.searchFilters": { es: "Filtros de Búsqueda", en: "Search Filters" },
   "becas.clearAll": { es: "Limpiar todo", en: "Clear all" },
   "becas.onlyFavorites": { es: "Ver solo mis favoritas", en: "Show only my saved ones" },

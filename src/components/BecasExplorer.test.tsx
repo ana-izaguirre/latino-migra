@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { renderWithProviders as render } from "../test/renderWithProviders";
 import { BecasExplorer } from "./BecasExplorer";
 import * as firebase from "../lib/firebase";
+import { STUDY_BATCH_SIZE } from "../lib/useStudyFilters";
 
 describe("BecasExplorer Component", () => {
   const defaultProps = {
@@ -532,6 +533,71 @@ describe("BecasExplorer Component", () => {
       // The sheet is portalled to `document.body`, so it is outside the
       // render container that the other assertions use.
       expect(sheet.querySelector("#sheet-country-España")).toBeInTheDocument();
+    });
+
+    /*
+      The studies half of the screen used to render its own filter block,
+      full-width above the results, while the scholarships used a sticky
+      sidebar and a sheet. One screen, two products (#105).
+    */
+    describe("parity with the studies tab", () => {
+      /**
+       * The tab triggers activate on pointer-down rather than on a bare click
+       * event, so the whole pointer sequence has to be fired.
+       */
+      const openStudies = async () => {
+        const user = userEvent.setup();
+        const result = render(<BecasExplorer {...defaultProps} />);
+        await user.click(result.container.querySelector("#tab-estudios")!);
+        return result;
+      };
+
+      it("puts the study filters in the same sidebar as the scholarship ones", async () => {
+        const { container } = await openStudies();
+
+        const sidebar = container.querySelector("aside")!;
+        expect(sidebar.querySelector("#sidebar-estudios-route-chip-directa")).toBeInTheDocument();
+        expect(sidebar.querySelector("#sidebar-estudios-country-chip-Todos")).toBeInTheDocument();
+        // The scholarship chips are not rendered beside them: two filter sets
+        // on one list is how the favourites tab started lying about itself.
+        expect(sidebar.querySelector("#sidebar-country-Todos")).toBeNull();
+      });
+
+      it("opens the same sheet on a phone, with the study filters inside", async () => {
+        const { container } = await openStudies();
+
+        // The trigger lives in the mobile bar, which used to render only for
+        // scholarships — leaving the studies tab with no filters at all below
+        // `lg`, since the sidebar is `hidden lg:block`.
+        fireEvent.click(container.querySelector("#btn-open-mobile-filters")!);
+        const sheet = screen.getByRole("dialog");
+        expect(sheet.querySelector("#sheet-estudios-kind-chip-curso")).toBeInTheDocument();
+        expect(sheet.querySelectorAll("select")).toHaveLength(0);
+      });
+
+      it("clears the filters of the catalogue that is showing", async () => {
+        const { container } = await openStudies();
+
+        const list = () => container.querySelector("#estudios-list");
+        const before = list()!.children.length;
+
+        fireEvent.click(container.querySelector("#sidebar-estudios-kind-chip-certificado")!);
+        expect(list()!.children.length).toBeLessThan(before);
+
+        // Same control as the scholarships use. Wired to `clearFilters` it
+        // reset the scholarship state and left this list narrowed.
+        fireEvent.click(container.querySelector("#clear-filters-btn")!);
+        expect(list()!.children.length).toBe(before);
+      });
+
+      it("pages the study list in the same batches", async () => {
+        const { container } = await openStudies();
+
+        const shown = () => container.querySelector("#estudios-list")!.children.length;
+        expect(shown()).toBe(STUDY_BATCH_SIZE);
+        fireEvent.click(container.querySelector("#btn-load-more-estudios")!);
+        expect(shown()).toBe(STUDY_BATCH_SIZE * 2);
+      });
     });
   });
 
