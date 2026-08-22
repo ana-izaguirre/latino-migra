@@ -214,10 +214,6 @@ describe("AuthModal Component", () => {
   });
 
   /**
-   * Regression for #80. The modal rendered entirely in Spanish whatever the
-   * chosen language — including the strings it asks for personal data with.
-   */
-  /**
    * Regression for #88. The list was nine countries written into the markup, so
    * someone from Panamá, Paraguay or Uruguay could not say where they were
    * from — on a platform whose audience is Latin America.
@@ -259,6 +255,10 @@ describe("AuthModal Component", () => {
     });
   });
 
+  /**
+   * Regression for #80. The modal rendered entirely in Spanish whatever the
+   * chosen language — including the strings it asks for personal data with.
+   */
   describe("in English", () => {
     const en = (key: string) => TRANSLATIONS[key]?.en ?? key;
 

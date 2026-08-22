@@ -85,6 +85,32 @@ mode this project already shipped once.
 The allowlist cannot check that a URL still resolves. Link rot is real and
 this change does not solve it; see *Follow-up*.
 
+## Filters (#83)
+
+Four axes and a name search, all through `FilterChipGroup` with a live count:
+
+| Axis | Options |
+| --- | --- |
+| Migration route | Abre vía / Requisito de un visado / No abre vía / Sin verificar |
+| Country | Every country in the catalogue |
+| Kind | Cursos / Certificados / FP |
+| Modality | Presencial / En línea / Mixta |
+
+**Migration route comes first.** It is the reason somebody is here rather than
+on a course aggregator, and under three other filters it would be buried.
+
+`migrationRoute` is optional on purpose. An entry nobody has checked carries no
+value, and "sin verificar" is one of the filter's options rather than a silent
+omission — an absent field must not be read as "no route", because not knowing
+and knowing there is no route are different facts. `daysLeft` and `isUrgent`
+are what this project gets when a filter answers a question it could not
+answer. `migrationRouteNote` is required whenever `migrationRoute` is set, and
+a unit test fails the build if either appears without the other.
+
+`matchesStudyFilters` is the single definition of the rule. Every chip's count
+is that same predicate with one axis relaxed, so the number on a chip is
+exactly what selecting it renders.
+
 ## Screen behaviour
 
 A fourth tab, **Estudios**, joins Todas las Convocatorias / Mis Becas Favoritas

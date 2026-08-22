@@ -4,13 +4,16 @@ import { SCHOLARSHIPS_DATA } from "../data/scholarships";
 import { STUDY_PROGRAMMES_DATA } from "../data/studyProgrammes";
 import { StudyProgramme } from "../types";
 import {
+  EMPTY_STUDY_FILTERS,
   OFFICIAL_STUDY_DOMAINS,
+  countByOption,
   isOfficialStudyUrl,
+  matchesStudyFilters,
   validateStudyProgramme,
   validateStudyProgrammes,
 } from "./studyProgrammes";
 
-const validProgramme = (overrides: Partial<StudyProgramme> = {}): StudyProgramme => ({
+const programmeFor = (overrides: Partial<StudyProgramme> = {}): StudyProgramme => ({
   id: "test-programme",
   title: "Programa de prueba",
   kind: "curso",
@@ -59,35 +62,35 @@ describe("isOfficialStudyUrl", () => {
 
 describe("validateStudyProgramme", () => {
   it("accepts a complete entry on an official domain", () => {
-    expect(validateStudyProgramme(validProgramme())).toBeNull();
+    expect(validateStudyProgramme(programmeFor())).toBeNull();
   });
 
   it("rejects a blank required field", () => {
-    expect(validateStudyProgramme(validProgramme({ cost: "" }))).toBe("missing-field");
-    expect(validateStudyProgramme(validProgramme({ outcome: "   " }))).toBe("missing-field");
+    expect(validateStudyProgramme(programmeFor({ cost: "" }))).toBe("missing-field");
+    expect(validateStudyProgramme(programmeFor({ outcome: "   " }))).toBe("missing-field");
   });
 
   it("rejects an entry with no requirements", () => {
-    expect(validateStudyProgramme(validProgramme({ requirements: [] }))).toBe("missing-field");
+    expect(validateStudyProgramme(programmeFor({ requirements: [] }))).toBe("missing-field");
   });
 
   it("rejects http", () => {
-    expect(validateStudyProgramme(validProgramme({ officialUrl: "http://www.todofp.es" }))).toBe(
+    expect(validateStudyProgramme(programmeFor({ officialUrl: "http://www.todofp.es" }))).toBe(
       "insecure-url"
     );
   });
 
   it("rejects an off-allowlist domain", () => {
     expect(
-      validateStudyProgramme(validProgramme({ officialUrl: "https://cursos.example.com" }))
+      validateStudyProgramme(programmeFor({ officialUrl: "https://cursos.example.com" }))
     ).toBe("unofficial-domain");
   });
 });
 
 describe("validateStudyProgrammes", () => {
   it("separates what can be shown from what cannot, keeping the rejected ones", () => {
-    const bad = validProgramme({ id: "bad", officialUrl: "https://example.com" });
-    const result = validateStudyProgrammes([validProgramme(), bad]);
+    const bad = programmeFor({ id: "bad", officialUrl: "https://example.com" });
+    const result = validateStudyProgrammes([programmeFor(), bad]);
 
     expect(result.valid.map((p) => p.id)).toEqual(["test-programme"]);
     expect(result.rejected).toEqual([{ id: "bad", reason: "unofficial-domain" }]);
@@ -127,5 +130,108 @@ describe("the shipped catalogue", () => {
       (domain) => !hosts.some((host) => host === domain || host.endsWith(`.${domain}`))
     );
     expect(unused).toEqual([]);
+  });
+});
+
+describe("matchesStudyFilters", () => {
+  const fp = programmeFor({ id: "fp", kind: "fp", country: "España", modality: "Presencial" });
+  const online = programmeFor({
+    id: "online",
+    title: "Curso abierto",
+    institution: "UNED",
+    kind: "curso",
+    country: "España",
+    modality: "En línea",
+    migrationRoute: "ninguna",
+    migrationRouteNote: "No genera estancia.",
+  });
+  const german = programmeFor({
+    id: "de",
+    title: "Ausbildung",
+    kind: "fp",
+    country: "Alemania",
+    modality: "Mixta",
+    migrationRoute: "directa",
+    migrationRouteNote: "El contrato es la base del visado.",
+  });
+  const all = [fp, online, german];
+
+  const withFilters = (overrides: Partial<typeof EMPTY_STUDY_FILTERS>) =>
+    all.filter((p) => matchesStudyFilters(p, { ...EMPTY_STUDY_FILTERS, ...overrides }));
+
+  it("matches everything with no filters", () => {
+    expect(withFilters({})).toHaveLength(3);
+  });
+
+  it("narrows by country, kind and modality", () => {
+    expect(withFilters({ country: "Alemania" }).map((p) => p.id)).toEqual(["de"]);
+    expect(withFilters({ kind: "curso" }).map((p) => p.id)).toEqual(["online"]);
+    expect(withFilters({ modality: "En línea" }).map((p) => p.id)).toEqual(["online"]);
+  });
+
+  it("narrows by migration route", () => {
+    expect(withFilters({ migrationRoute: "directa" }).map((p) => p.id)).toEqual(["de"]);
+    expect(withFilters({ migrationRoute: "ninguna" }).map((p) => p.id)).toEqual(["online"]);
+  });
+
+  it("treats an unrecorded route as unverified rather than as 'no route'", () => {
+    // `fp` carries no migrationRoute at all. It must not answer "ninguna":
+    // not knowing and knowing there is no route are different facts.
+    expect(withFilters({ migrationRoute: "sin-verificar" }).map((p) => p.id)).toEqual(["fp"]);
+    expect(withFilters({ migrationRoute: "ninguna" }).map((p) => p.id)).not.toContain("fp");
+  });
+
+  it("searches the title and the institution, case- and space-insensitively", () => {
+    expect(withFilters({ search: "ausbildung" }).map((p) => p.id)).toEqual(["de"]);
+    expect(withFilters({ search: "  UNED " }).map((p) => p.id)).toEqual(["online"]);
+    expect(withFilters({ search: "nada" })).toHaveLength(0);
+  });
+
+  it("combines filters rather than widening", () => {
+    expect(withFilters({ country: "España", kind: "fp" }).map((p) => p.id)).toEqual(["fp"]);
+    expect(withFilters({ country: "Alemania", kind: "curso" })).toHaveLength(0);
+  });
+});
+
+describe("countByOption", () => {
+  const all = [
+    programmeFor({ id: "a", kind: "fp", country: "España" }),
+    programmeFor({ id: "b", kind: "curso", country: "España" }),
+    programmeFor({ id: "c", kind: "curso", country: "Alemania" }),
+  ];
+
+  it("counts an option with the other filters as they are", () => {
+    const filters = { ...EMPTY_STUDY_FILTERS, country: "España" };
+
+    // Within España: one fp, one curso — not the two cursos in the catalogue.
+    expect(countByOption(all, filters, "kind", "curso")).toBe(1);
+    expect(countByOption(all, filters, "kind", "fp")).toBe(1);
+    expect(countByOption(all, filters, "kind", "todos")).toBe(2);
+  });
+
+  it("gives a count that equals what selecting the option renders", () => {
+    const filters = { ...EMPTY_STUDY_FILTERS, kind: "curso" as const };
+    for (const country of ["Todos", "España", "Alemania"]) {
+      const selected = { ...filters, country };
+      expect(countByOption(all, filters, "country", country)).toBe(
+        all.filter((p) => matchesStudyFilters(p, selected)).length
+      );
+    }
+  });
+});
+
+describe("the shipped catalogue's migration routes", () => {
+  it("never records a route without saying why", () => {
+    const unexplained = STUDY_PROGRAMMES_DATA.filter(
+      (p) => p.migrationRoute && !p.migrationRouteNote?.trim()
+    ).map((p) => p.id);
+    expect(unexplained).toEqual([]);
+  });
+
+  it("never leaves a note without the route it explains", () => {
+    const orphaned = STUDY_PROGRAMMES_DATA.filter(
+      (p) => p.migrationRouteNote && !p.migrationRoute
+    ).map((p) => p.id);
+    expect(orphaned).toEqual([]);
   });
 });

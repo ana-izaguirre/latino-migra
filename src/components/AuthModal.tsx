@@ -15,6 +15,9 @@ interface AuthModalProps {
   onSignOut: () => void;
 }
 
+/** Resolves a key to the visitor's language. `useLanguage().t`, in practice. */
+type Translate = (key: string, fallback?: string) => string;
+
 /**
  * Every country the platform is for, alphabetically.
  *
@@ -27,9 +30,6 @@ interface AuthModalProps {
 const originCountries = [...LATIN_AMERICAN_COUNTRIES].sort((a, b) =>
   a.name.localeCompare(b.name, "es")
 );
-
-/** Resolves a key to the visitor's language. `useLanguage().t`, in practice. */
-type Translate = (key: string, fallback?: string) => string;
 
 /**
  * What to tell the visitor when sign-in did not complete.
